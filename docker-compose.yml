@@ -1,0 +1,97 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: juana-maria-web-app
+    environment:
+      # DB is addressed by its UNIQUE container name (juana-maria-web-db), never
+      # the bare `db` alias: every project on the shared `proxy` network names
+      # its Postgres `db`, so the bare alias round-robins across all projects'
+      # DBs and the app would connect to the wrong one (-> auth failure -> 502).
+      - DATABASE_URL=postgresql://juana_maria_web:${POSTGRES_PASSWORD}@juana-maria-web-db:5432/juana_maria_web
+      - VIRTUAL_HOST=juana-maria.nexttech.com.ar
+      - VIRTUAL_PORT=7017
+      - UMAMI_WEBSITE_ID=b5d4b173-a160-49f5-8f0d-076e804d0007
+      - FLASK_DEBUG=0
+    expose:
+      - "7017"
+    ports:
+      - "7017:7017"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - proxy
+      - internal
+    labels:
+      - "com.github.nginx-proxy.nginx_proxy=true"
+      - com.github.nginxproxy.nginx-proxy.startup_wait=30
+
+  db:
+    image: postgres:16
+    container_name: juana-maria-web-db
+    environment:
+      - POSTGRES_DB=juana_maria_web
+      - POSTGRES_USER=juana_maria_web
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U juana_maria_web -d juana_maria_web"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    # db stays OFF the shared `proxy` network on purpose (see DATABASE_URL note
+    # above). Only the private `internal` bridge so its name is unique here.
+    networks:
+      - internal
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: juana-maria-web-postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://juana_maria_web:${POSTGRES_PASSWORD}@juana-maria-web-db:5432/juana_maria_web?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    # Central Prometheus auto-discovers this exporter over the `proxy` network
+    # via these labels (monitoring/prometheus.yml `docker-exporters` job) — no
+    # edit to the central config is needed.
+    labels:
+      prometheus-scrape: "true"
+      prometheus-port: "9187"
+      prometheus-job: "juana-maria-web-postgres"
+    # `proxy` so the central prometheus scrapes it; `internal` so it can reach
+    # the db by its unique container name.
+    networks:
+      - proxy
+      - internal
+
+  promtail:
+    # Config is baked into the image (Dockerfile.promtail) instead of bind-mounted:
+    # under Jenkins the workspace lives in a named volume, so a `./promtail.yml`
+    # host bind-mount resolves to an empty dir and crashes the container.
+    build:
+      context: .
+      dockerfile: Dockerfile.promtail
+    image: juana-maria-web-promtail
+    container_name: juana-maria-web-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  pgdata:

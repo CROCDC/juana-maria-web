@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 100" preserveAspectRatio="none">
+  <!-- Mask shape for section dividers: solid at the bottom, a soft swell on
+       top. White = the part that shows the section's colour. -->
+  <path fill="#fff" d="M0,100 L0,46 C 220,104 430,8 640,34 C 840,58 1010,108 1200,52 L1200,100 Z"/>
+</svg>

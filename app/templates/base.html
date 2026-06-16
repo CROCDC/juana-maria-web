@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Juana María — Ballenera de 1941 · 85 años navegando el Río de la Plata{% endblock %}</title>
+    <meta
+      name="description"
+      content="La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. Ochenta y cinco años navegando el Río de la Plata." />
+    <meta name="theme-color" content="#150e08" />
+    <link rel="canonical" href="{{ request.url_root }}" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content="Juana María" />
+    <meta property="og:title" content="Juana María — ballenera de 1941" />
+    <meta
+      property="og:description"
+      content="Doble proa de madera dibujada por Manuel M. Campos. 85 años navegando el Río de la Plata." />
+    <meta property="og:url" content="{{ request.url_root }}" />
+    <meta
+      property="og:image"
+      content="{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}" />
+    <meta
+      property="og:image:secure_url"
+      content="{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="720" />
+    <meta
+      property="og:image:alt"
+      content="La Juana María navegando a toda vela en el Río de la Plata." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Juana María — ballenera de 1941" />
+    <meta
+      name="twitter:description"
+      content="Doble proa de madera dibujada por Manuel M. Campos. 85 años navegando el Río de la Plata." />
+    <meta
+      name="twitter:image"
+      content="{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}" />
+
+    <!-- Fonts: preload the two LCP faces. Hrefs are unversioned so they match
+         the URLs resolved from fonts.css's relative @font-face src (no ?v=),
+         avoiding a duplicate "preloaded but not used" fetch. -->
+    <link
+      rel="preload"
+      href="/static/fonts/cormorant-garamond-600-normal-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin />
+    <link
+      rel="preload"
+      href="/static/fonts/spectral-400-normal-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin />
+
+    {# Per-page <head> extras (e.g. the index hero-image LCP preload). #}
+    {% block head_extra %}{% endblock %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+
+    {# Without JS the scroll-reveal class never flips to .is-in, so reveal
+       content would stay invisible. Show it all when JS is disabled. #}
+    <noscript>
+      <style>
+        .reveal { opacity: 1 !important; transform: none !important; }
+      </style>
+    </noscript>
+
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}" />
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}" />
+
+    {# Umami analytics (privacy-friendly). Only emitted when UMAMI_WEBSITE_ID is set. #}
+    {% if config.get('UMAMI_WEBSITE_ID') %}
+    <script async src="https://analytics.nexttech.com.ar/script.js" data-website-id="{{ config.UMAMI_WEBSITE_ID }}"></script>
+    {% endif %}
+  </head>
+  <body>
+    {# On the index, anchors stay bare ("#section") for smooth in-page scroll;
+       elsewhere (e.g. 404) they become "/#section" so they resolve home. #}
+    {% set nav_base = "" if is_index | default(false) else url_for("index") %}
+    <a class="skip-link" href="#top">Saltar al contenido</a>
+    <header class="nav" id="nav">
+      <a class="brand" href="{{ nav_base }}#top" aria-label="Juana María, inicio">
+        Juana María <small>1941</small>
+      </a>
+      <nav aria-label="Principal">
+        <button
+          class="nav-toggle"
+          id="navToggle"
+          aria-expanded="false"
+          aria-controls="navLinks"
+          aria-label="Abrir menú">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="{{ nav_base }}#historia">Historia</a></li>
+          <li><a href="{{ nav_base }}#diseno">Doble proa</a></li>
+          <li><a href="{{ nav_base }}#madera">La madera</a></li>
+          <li><a href="{{ nav_base }}#galeria">Galería</a></li>
+          <li><a href="{{ nav_base }}#ficha">Ficha técnica</a></li>
+          <li><a href="{{ nav_base }}#pericos">Los Pericos</a></li>
+          <li><a href="{{ nav_base }}#seminarios">Seminarios</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="top">{% block content %}{% endblock %}</main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <div class="footer__grid">
+          <div>
+            <div class="footer__brand">Juana María</div>
+            <p>
+              Ballenera de doble proa, dibujo de Manuel M. Campos, botada en 1941
+              en el Tigre. Hoy al cuidado de Martín Wasserman, historiador naval;
+              sigue navegando el Río de la Plata.
+            </p>
+            <a
+              class="social"
+              href="https://www.instagram.com/velaclasica/"
+              target="_blank"
+              rel="noopener"
+              aria-label="Seguir en Instagram: @velaclasica">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                   stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5.2" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+              <span>@velaclasica</span>
+            </a>
+          </div>
+          <div>
+            <h2>Aguas</h2>
+            <ul>
+              <li>San Isidro, Buenos Aires</li>
+              <li>Yacht Club San Isidro</li>
+              <li>Río de la Plata</li>
+            </ul>
+          </div>
+          <div>
+            <h2>Navegar</h2>
+            <ul>
+              <li><a class="link-underline" href="{{ nav_base }}#historia">Historia</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#galeria">Galería</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#ficha">Ficha técnica</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#seminarios">Seminarios</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer__bar">
+          <span>&copy; {{ current_year }} Juana María — Argentina</span>
+          <span>Ballenera Campos · 1941 — {{ current_year }}</span>
+        </div>
+      </div>
+
+      {# Shared Next Tech footer. Transparent component; inherits the dark
+         .footer background (var(--abyss)). Script must load before the tag. #}
+      <script src="https://nexttech.com.ar/static/js/nexttechFooter.js"></script>
+      <nexttech-footer source="juana-maria"></nexttech-footer>
+    </footer>
+
+    {# Overlays (lightbox, etc.) live outside <main> so the page can be made
+       inert behind them without disabling the dialog itself. #}
+    {% block overlays %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  </body>
+</html>

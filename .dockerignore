@@ -1,0 +1,17 @@
+.git
+.venv
+__pycache__
+*.pyc
+.env
+node_modules
+tests/
+tests/screenshots/
+media/
+media-web/
+research/
+docs/
+instance/
+.mypy_cache/
+.pytest_cache/
+.claude/
+*.db

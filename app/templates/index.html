@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% from "_macros.html" import resp_img with context %}
+
+{% block head_extra %}
+    <!-- Preload the hero image (LCP) — index only -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      imagesrcset="{{ url_for('static', filename='img/hero/under-full-sail-1280.webp') }} 1280w, {{ url_for('static', filename='img/hero/under-full-sail-1920.webp') }} 1920w"
+      imagesizes="100vw"
+      fetchpriority="high" />
+
+    {# Structured data: the site as a WebSite (homepage). #}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Juana María",
+      "url": "{{ request.url_root }}",
+      "inLanguage": "es-AR",
+      "description": "La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. Ochenta y cinco años navegando el Río de la Plata.",
+      "image": "{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}"
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <div class="hero__media">
+    {{ resp_img('hero/under-full-sail',
+        'La Juana María navegando a vela llena sobre el Río de la Plata al atardecer',
+        '100vw', priority=true, position='50% 42%') }}
+  </div>
+  <div class="hero__scrim"></div>
+  <div class="hero__inner reveal is-in">
+    <p class="eyebrow hero__eyebrow">Ballenera de doble proa · Río de la Plata</p>
+    <h1>Juana María</h1>
+    <p class="hero__sub">
+      Botada en 1941. Dibujada en madera por Manuel M. Campos.
+      Ochenta y cinco años saliendo al mismo río.
+    </p>
+    <div class="hero__years" aria-hidden="true">
+      <b data-count="85">85</b>
+      <span>años navegando</span>
+    </div>
+  </div>
+  <a class="scroll-cue" href="#prologo" aria-label="Bajar">
+    <span>Bajar</span>
+    <i></i>
+  </a>
+</section>
+
+<!-- ========================================================= PRÓLOGO -->
+<section class="section surface-canvas" id="prologo">
+  <div class="wrap">
+    <div class="intro__grid">
+      <p class="intro__lead reveal">
+        <span class="drop">D</span>esde 1941, la misma quilla de madera abre las
+        aguas pardas del Plata. Una ballenera de <em class="script">doble proa</em>,
+        nacida en un astillero del Tigre, que nunca dejó de navegar.
+      </p>
+      <div class="prose reveal" data-delay="1">
+        <p>
+          La <strong>Juana María</strong> es una <em>ballenera</em>: el tipo de
+          velero que el arquitecto naval Manuel M. Campos imaginó para un río
+          ancho, poco profundo y caprichoso. Casco de viraró, popa y proa en
+          punta, orza rebatible: un velero noble, pensado para cruzar el Plata
+          con seguridad y aplomo.
+        </p>
+        <p>
+          Pasó del juez Tedín a la familia Blanco, fue protagonista de dos
+          videoclips de Los Pericos y hoy la cuida un historiador naval.
+          Ochenta y cinco años después, sigue saliendo al agua.
+        </p>
+        <p><a class="link-underline" href="#historia">Conocé su historia &rarr;</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== 85 AÑOS BAND -->
+<section class="section surface-dark years">
+  <div class="wrap">
+    <p class="eyebrow reveal" style="justify-content:center">1941 &mdash; {{ current_year }}</p>
+    <p class="years__figure reveal" aria-hidden="true" data-count="85">85</p>
+    <p class="years__caption reveal">años navegando</p>
+    <p class="years__note reveal" data-delay="1">
+      Más de ocho décadas en el agua, en el mismo tramo del Río de la Plata
+      para el que fue dibujada. Pocas embarcaciones de madera en la Argentina
+      pueden contar una vida tan larga &mdash; y todavía en navegación.
+    </p>
+    <dl class="years__stats reveal" data-delay="2">
+      <div><dt>1941</dt><dd>botada en el Tigre</dd></div>
+      <div><dt>10,65 m</dt><dd>de eslora</dd></div>
+      <div><dt>0,60 m</dt><dd>de calado</dd></div>
+      <div><dt>Viraró</dt><dd>casco de madera</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ======================================================== HISTORIA -->
+<section class="section surface-canvas" id="historia">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">La bitácora</p>
+      <h2 class="h-section">Una larga línea de agua</h2>
+    </div>
+    <div class="timeline">
+      <article class="t-item is-mark reveal">
+        <p class="t-year">1939</p>
+        <h3>Nace la ballenera</h3>
+        <p>
+          Manuel M. Campos (1894&ndash;1987) dibuja la primera ballenera, la
+          <em class="script">Nutria</em>: una doble proa pensada para el Río de
+          la Plata, inspirada en los veleros noruegos de doble proa de Colin
+          Archer.
+        </p>
+      </article>
+      <article class="t-item is-mark reveal">
+        <p class="t-year">1941</p>
+        <h3>Se bota la Juana María</h3>
+        <p>
+          Construida en madera en el astillero de Agustín Cadenazzi, en el
+          Tigre &mdash; corazón histórico de la construcción náutica del Delta.
+          Encargada, según la tradición, por el juez Tedín.
+        </p>
+      </article>
+      <article class="t-item reveal">
+        <p class="t-year">1942&ndash;43</p>
+        <h3>La misma tabla de dibujo</h3>
+        <p>
+          De la mano de Campos sale la <em class="script">LEHG II</em>, con la
+          que Vito Dumas da la vuelta al mundo en solitario por los tres grandes
+          cabos. La Juana María pertenece a esa estirpe.
+        </p>
+      </article>
+      <article class="t-item reveal">
+        <p class="t-year">2021&ndash;22</p>
+        <h3>Frente a cámara</h3>
+        <p>
+          Protagoniza dos videoclips de Los Pericos, filmados en su propia
+          travesía por el Plata &mdash; entonces al mando de Marcelo Blanco,
+          percusionista de la banda. En los créditos de <em>La Distancia</em>
+          aparece nombrada: «Barco a vela: Juana María».
+        </p>
+      </article>
+      <article class="t-item is-mark reveal">
+        <p class="t-year">2026</p>
+        <h3>Un nuevo capítulo</h3>
+        <p>
+          La Juana María pasa a manos de <strong>Martín Wasserman</strong>,
+          historiador especializado en historia náutica &mdash; un timonel a la
+          altura de su propia historia.
+        </p>
+      </article>
+      <article class="t-item is-mark reveal">
+        <p class="t-year">Hoy</p>
+        <h3>85 años navegando</h3>
+        <p>
+          A más de ocho décadas de su botadura, sigue saliendo al Río de la
+          Plata: cuidada, estudiada y bien navegada.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================== DOBLE PROA -->
+<section class="section surface-wood" id="diseno">
+  <div class="wrap">
+    <div class="feature feature--flip">
+      <div class="feature__media reveal">
+        <!-- Lazy: preload=none + no autoplay; main.js sets the source and plays
+             it once the section nears the viewport (saves a 2.6 MB eager fetch). -->
+        <video
+          muted loop playsinline preload="none"
+          data-lazy-video
+          data-src="{{ url_for('static', filename='video/double-ender-aerial.mp4') }}"
+          poster="{{ url_for('static', filename='video/double-ender-aerial-poster.webp') }}"></video>
+        <p class="feature__caption">Vista cenital &mdash; proa y proa</p>
+      </div>
+      <div class="reveal" data-delay="1">
+        <p class="eyebrow">El diseño</p>
+        <h2 class="h-section">Una canoa marina<br />para un río ancho</h2>
+        <p class="lede">
+          Campos buscaba un barco seguro y cómodo para el Plata: poco calado
+          para sus bancos, líneas suaves, mucha obra muerta. La ballenera fue su
+          respuesta.
+        </p>
+        <ul class="feature__list">
+          <li>
+            <b>2</b>
+            <span><strong>Doble proa.</strong> Termina en punta en proa y en
+            popa &mdash; desde el aire se ve la canoa perfecta que parte el agua
+            por igual hacia los dos lados.</span>
+          </li>
+          <li>
+            <b>0,60</b>
+            <span><strong>Calado mínimo</strong> (en metros) y orza rebatible,
+            para navegar entre los bajíos y bancos del Río de la Plata.</span>
+          </li>
+          <li>
+            <b>~25</b>
+            <span><strong>balleneras</strong> dibujó Campos. La Juana María, de
+            1941, es de las más tempranas del tipo.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== LA MADERA -->
+<section class="section surface-dark" id="madera">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Madera, bronce y barniz</p>
+      <h2 class="h-section">Hecha a mano, cuidada a mano</h2>
+      <p class="lede">
+        Cuadernas y forro de viraró; quilla, roda y codaste de lapacho. Adentro,
+        una cabina de madera barnizada que huele a otro tiempo, con herrajes de
+        bronce que el sol del Plata vuelve dorados.
+      </p>
+    </div>
+
+    <div class="wood-grid">
+      <figure class="reveal span-2">
+        {{ resp_img('interior/galley-and-nav',
+            'Interior de la Juana María: camarote de madera barnizada con cocina y mesa de cartas',
+            '(min-width: 720px) 100vw, 100vw') }}
+      </figure>
+      <figure class="reveal" data-delay="1">
+        {{ resp_img('details/bronze-fitting',
+            'Herraje de bronce a bordo recortado contra el atardecer',
+            '(min-width: 720px) 50vw, 100vw') }}
+      </figure>
+      <figure class="reveal" data-delay="2">
+        {{ resp_img('on-deck/foredeck-detail',
+            'Detalle de la cubierta de proa de madera',
+            '(min-width: 720px) 50vw, 100vw') }}
+      </figure>
+    </div>
+
+    <!-- Builder's plaque: first-party evidence of who drew and built her -->
+    <div class="plaque reveal">
+      <div class="plaque__photo">
+        {{ resp_img('details/plaque-closeup',
+            'Placa de bronce del constructor, con el nombre Juana María grabado',
+            '(min-width: 760px) 50vw, 100vw') }}
+      </div>
+      <div class="plaque__engrave">
+        <p class="eyebrow" style="justify-content:center">La placa de bronce</p>
+        <p class="pl-name">Juana María</p>
+        <p class="pl-line">Manuel M. Campos &mdash; dibujante</p>
+        <hr />
+        <p class="pl-builder">Agustín Cadenazzi</p>
+        <p class="pl-line">Constructor &mdash; Tigre</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= GALERÍA -->
+<section class="section surface-dark" id="galeria">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Galería</p>
+      <h2 class="h-section">Ochenta y cinco años de luz</h2>
+    </div>
+    <div class="gallery" id="gallery">
+      {% set shots = [
+        ('hero/under-full-sail', 'A vela llena, atardecer en el Plata'),
+        ('moored/profile-with-name', '«Juana María» en el casco'),
+        ('sailing/golden-hour', 'Hora dorada en el Plata'),
+        ('on-deck/deck-sunrise', 'Cubierta al amanecer'),
+        ('aerial/overhead-01', 'Doble proa, desde el aire'),
+        ('on-deck/foredeck-stormy', 'Proa y cielo de tormenta'),
+        ('moored/two-boats-night', 'Noche en el Delta'),
+        ('sailing/bsas-skyline', 'Frente a la silueta de Buenos Aires'),
+        ('hero/heeling-blue', 'A toda vela, cielo abierto'),
+        ('aerial/wing-on-wing', 'A vuelo de pájaro'),
+        ('moored/night-profile', 'Perfil nocturno'),
+        ('aerial/sailing-away', 'Rumbo abierto'),
+      ] %}
+      {% for key, caption in shots %}
+        <button
+          class="gallery__item reveal"
+          type="button"
+          data-full="{{ url_for('static', filename='img/' ~ key ~ '-1280.webp') }}"
+          data-caption="{{ caption }}"
+          aria-label="Ampliar: {{ caption }}">
+          {# alt="" — the button's aria-label and the figcaption already name it #}
+          {{ resp_img(key, '', '(min-width: 980px) 33vw, (min-width: 560px) 50vw, 100vw') }}
+          <figcaption>{{ caption }}</figcaption>
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== FICHA TÉCNICA -->
+<section class="section surface-wood" id="ficha">
+  <div class="wrap">
+    <div class="spec">
+      <div class="reveal">
+        <p class="eyebrow">Ficha técnica</p>
+        <h2 class="h-section">Registro de a bordo</h2>
+        <div class="feature__media" style="margin-top:2rem">
+          {{ resp_img('moored/profile-with-name',
+              'La Juana María amarrada, de perfil, con su nombre en el casco',
+              '(min-width: 900px) 40vw, 100vw') }}
+        </div>
+      </div>
+      <dl class="spec__list reveal" data-delay="1">
+        <div><dt>Tipo</dt><dd>Ballenera de doble proa<small>Diseño de Manuel M. Campos</small></dd></div>
+        <div><dt>Botadura</dt><dd>1941<small>Astillero Agustín Cadenazzi, Tigre</small></dd></div>
+        <div><dt>Eslora</dt><dd>10,65 m</dd></div>
+        <div><dt>Manga</dt><dd>2,47 m</dd></div>
+        <div><dt>Calado</dt><dd>0,60 m<small>Con orza rebatible</small></dd></div>
+        <div><dt>Casco</dt><dd>Madera de viraró<small>Quilla, roda y codaste de lapacho</small></dd></div>
+        <div><dt>Motor</dt><dd>Yanmar 20 HP diésel</dd></div>
+        <div><dt>Velamen</dt><dd>Algodón egipcio + North Sails<small>Dos juegos: el original de algodón y uno nuevo de Dacron</small></dd></div>
+        <div><dt>Bandera</dt><dd>Argentina<small>Prefectura Naval Argentina</small></dd></div>
+        <div><dt>Aguas</dt><dd>Río de la Plata<small>Base en el Yacht Club San Isidro (YCSI), Buenos Aires</small></dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================== SEMINARIOS -->
+<section class="section surface-canvas-deep" id="seminarios">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">El oficio de navegar</p>
+      <h2 class="h-section">Seminarios de náutica</h2>
+      <p class="lede">
+        Con la Juana María al cuidado de un historiador naval, su cubierta se
+        vuelve también un aula. Cuatro miradas al arte de navegar &mdash; el de
+        antes y el de siempre.
+      </p>
+    </div>
+
+    <div class="seminars">
+      <article class="seminar reveal">
+        <div class="seminar__img">
+          {{ resp_img('sailing/bsas-skyline',
+              'La Juana María navegando con su vela mesana izada',
+              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+        </div>
+        <h3>Navegación con mesana</h3>
+        <p>
+          Equilibrar y gobernar el barco con la vela de popa: cómo la mesana
+          ayuda a capear, fondear y mantener el rumbo cuando se navega a vela.
+        </p>
+      </article>
+
+      <article class="seminar reveal" data-delay="1">
+        <div class="seminar__img">
+          {{ resp_img('seminars/astronomica',
+              'Marineros tomando la altura del sol con sextante a bordo de un velero',
+              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+        </div>
+        <h3>Navegación astronómica</h3>
+        <p>
+          Hallar la posición con el sol y las estrellas. Sextante, almanaque y
+          horizonte &mdash; la navegación de altura, como se hacía mucho antes
+          del GPS.
+        </p>
+      </article>
+
+      <article class="seminar reveal" data-delay="2">
+        <div class="seminar__img seminar__img--pale">
+          {{ resp_img('seminars/pinula',
+              'Astrolabio náutico de bronce de 1626, con su alidada de pínulas',
+              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+        </div>
+        <h3>Navegación con pínula</h3>
+        <p>
+          Medir alturas y rumbos con instrumentos de pínulas: el astrolabio
+          náutico y la ballestilla, los ojos del navegante antes de la
+          electrónica.
+        </p>
+      </article>
+
+      <article class="seminar reveal" data-delay="3">
+        <div class="seminar__img seminar__img--pale">
+          {{ resp_img('seminars/historia',
+              'Carta portulana del siglo XVI con rosas de los vientos',
+              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+        </div>
+        <h3>Historia náutica</h3>
+        <p>
+          Del portulano al Río de la Plata: cartas, derroteros y la cultura
+          marinera que dio origen a barcos como la Juana María.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= LOS PERICOS -->
+<section class="section surface-dark" id="pericos">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">En cámara</p>
+      <h2 class="h-section">La estrella de Los Pericos</h2>
+      <p class="lede">
+        La Juana María protagoniza dos videoclips de Los Pericos, dirigidos por
+        Belén Asad, filmados en la misma travesía de San Isidro al Río de la
+        Plata. Capitán: Marcelo Blanco. Timonel: Mateo Blanco.
+      </p>
+    </div>
+    <div class="videos">
+      <div class="video-card reveal">
+        <button
+          class="video-facade"
+          type="button"
+          data-embed="https://www.youtube-nocookie.com/embed/f_ZN-yupAVg?autoplay=1&rel=0"
+          data-title="La Distancia — Los Pericos"
+          data-bg="{{ url_for('static', filename='img/sailing/bsas-skyline-640.webp') }}"
+          aria-label="Reproducir: La Distancia, de Los Pericos">
+          <span class="play" aria-hidden="true"></span>
+        </button>
+        <div class="video-card__meta">
+          <b>La Distancia</b>
+          <span>Los Pericos · con Dolores Barreiro · 2022</span>
+        </div>
+      </div>
+      <div class="video-card reveal" data-delay="1">
+        <button
+          class="video-facade"
+          type="button"
+          data-embed="https://player.vimeo.com/video/644130051?autoplay=1"
+          data-title="El Próximo Viernes — Los Pericos"
+          data-bg="{{ url_for('static', filename='img/sailing/golden-hour-640.webp') }}"
+          aria-label="Reproducir: El Próximo Viernes, de Los Pericos">
+          <span class="play" aria-hidden="true"></span>
+        </button>
+        <div class="video-card__meta">
+          <b>El Próximo Viernes</b>
+          <span>Los Pericos · dos balleneras en formación · 2021</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block overlays %}
+<!-- ========================================================= LIGHTBOX -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Imagen ampliada" aria-describedby="lbCaption">
+  <button class="lb-close" id="lbClose" type="button" aria-label="Cerrar">&times;</button>
+  <button class="lb-btn lb-prev" id="lbPrev" type="button" aria-label="Anterior">&lsaquo;</button>
+  <button class="lb-btn lb-next" id="lbNext" type="button" aria-label="Siguiente">&rsaquo;</button>
+  <figure>
+    <img id="lbImg" src="" alt="" />
+    <figcaption aria-live="polite" aria-atomic="true">
+      <span id="lbCaption"></span>
+      <span class="lb-count" id="lbCount"></span>
+    </figcaption>
+  </figure>
+</div>
+{% endblock %}

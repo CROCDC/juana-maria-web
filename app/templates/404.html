@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada — Juana María{% endblock %}
+
+{% block content %}
+<section class="section surface-dark error-page">
+  <div class="wrap error-page__inner">
+    <p class="eyebrow" style="justify-content: center">Error 404</p>
+    <p class="error-page__code" aria-hidden="true">404</p>
+    <h1 class="h-display">Esta página zarpó sin avisar</h1>
+    <p class="lede">
+      No encontramos lo que buscabas en estas aguas. Volvé al puerto y seguí
+      navegando.
+    </p>
+    <a class="btn btn--solid" href="{{ url_for('index') }}">Volver al inicio</a>
+  </div>
+</section>
+{% endblock %}

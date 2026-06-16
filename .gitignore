@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Environment
+.env
+instance/
+*.db
+
+# Tests
+tests/screenshots/
+.pytest_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+
+# Editor / agent
+.claude/
+
+# Source media library (raw/working assets). NOT served by the app (it uses
+# app/static/), and too large for GitHub (a single file exceeds the 100MB limit).
+# Keep these out of the repo; use git-lfs or external storage if you need them tracked.
+media/
+media-web/

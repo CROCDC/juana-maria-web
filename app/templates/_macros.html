@@ -1,0 +1,19 @@
+{# Responsive <picture>: WebP srcset (+ JPEG fallback) with intrinsic
+   width/height from the manifest so images never shift layout.
+   Import with context so IMG / IMG_WIDTHS globals are visible. #}
+{% macro resp_img(key, alt, sizes, klass='', priority=false, position='') %}
+  {%- set dims = IMG.get(key, {'w': 1600, 'h': 1067}) -%}
+  {%- set widths = IMG_WIDTHS | select('le', dims.w) | list -%}
+  {%- if not widths -%}{%- set widths = [dims.w] -%}{%- endif -%}
+  <picture>
+    <source type="image/webp"
+            srcset="{% for w in widths %}{{ url_for('static', filename='img/' ~ key ~ '-' ~ w ~ '.webp') }} {{ w }}w{% if not loop.last %}, {% endif %}{% endfor %}"
+            sizes="{{ sizes }}">
+    <img src="{{ url_for('static', filename='img/' ~ key ~ '-fallback.jpg') }}"
+         alt="{{ alt }}"
+         width="{{ dims.w }}" height="{{ dims.h }}"
+         class="{{ klass }}"
+         {% if position %}style="object-position: {{ position }};"{% endif %}
+         {% if priority %}fetchpriority="high" decoding="async"{% else %}loading="lazy" decoding="async"{% endif %}>
+  </picture>
+{% endmacro %}

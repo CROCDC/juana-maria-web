@@ -1,0 +1,94 @@
+{
+  "hero/under-full-sail": {
+    "w": 2560,
+    "h": 1440
+  },
+  "sailing/golden-hour": {
+    "w": 2560,
+    "h": 1434
+  },
+  "sailing/bsas-skyline": {
+    "w": 2560,
+    "h": 1440
+  },
+  "aerial/overhead-01": {
+    "w": 2560,
+    "h": 1440
+  },
+  "aerial/overhead-02": {
+    "w": 2560,
+    "h": 1440
+  },
+  "aerial/wing-on-wing": {
+    "w": 2560,
+    "h": 2560
+  },
+  "aerial/sailing-away": {
+    "w": 2560,
+    "h": 1440
+  },
+  "moored/profile-with-name": {
+    "w": 1920,
+    "h": 2368
+  },
+  "moored/at-club-with-sister": {
+    "w": 1920,
+    "h": 2368
+  },
+  "moored/night-profile": {
+    "w": 2048,
+    "h": 2560
+  },
+  "moored/two-boats-night": {
+    "w": 2048,
+    "h": 2560
+  },
+  "on-deck/deck-sunrise": {
+    "w": 2048,
+    "h": 2560
+  },
+  "on-deck/foredeck-stormy": {
+    "w": 2048,
+    "h": 2560
+  },
+  "on-deck/foredeck-detail": {
+    "w": 2048,
+    "h": 2560
+  },
+  "interior/galley-and-nav": {
+    "w": 1920,
+    "h": 2368
+  },
+  "details/plaque-full": {
+    "w": 1920,
+    "h": 2368
+  },
+  "details/plaque-closeup": {
+    "w": 1420,
+    "h": 869
+  },
+  "details/bronze-fitting": {
+    "w": 2049,
+    "h": 2560
+  },
+  "heritage/teseo": {
+    "w": 2560,
+    "h": 1920
+  },
+  "hero/heeling-blue": {
+    "w": 2083,
+    "h": 2560
+  },
+  "seminars/astronomica": {
+    "w": 1280,
+    "h": 817
+  },
+  "seminars/pinula": {
+    "w": 1280,
+    "h": 1600
+  },
+  "seminars/historia": {
+    "w": 1280,
+    "h": 764
+  }
+}
