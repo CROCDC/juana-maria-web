@@ -1,18 +1,30 @@
 {# Shared layout for a single topic page. Children set the eyebrow, an optional
-   lead paragraph, and the body. The page heading is the topic title (one <h1>
-   per page); the home page keeps its own <h1>. #}
+   lead paragraph, and the body. The page opens with a banner hero built from the
+   topic's own image (the same key its home card uses, tying the two together);
+   the heading is the topic title (one <h1> per page). The body sits on cream
+   below. #}
 {% extends "base.html" %}
+{% from "_macros.html" import resp_img with context %}
 
 {% block title %}{{ topic.title }} — Juana María{% endblock %}
 
 {% block content %}
+<!-- ===================================================== TOPIC HERO -->
+<section class="topic-hero">
+  <div class="topic-hero__media" aria-hidden="true">
+    {{ resp_img(topic.image, '', '100vw', position='50% 45%') }}
+  </div>
+  <div class="topic-hero__scrim"></div>
+  <div class="wrap topic-hero__inner reveal is-in">
+    <p class="eyebrow" style="justify-content:center">{% block topic_eyebrow %}A bordo{% endblock %}</p>
+    <h1 class="topic-hero__title">{{ topic.title }}</h1>
+    {% block topic_lead %}{% endblock %}
+  </div>
+</section>
+
+<!-- ===================================================== TOPIC BODY -->
 <section class="section surface-canvas topic-page" id="top-section">
   <div class="wrap wrap--narrow">
-    <div class="section-head reveal">
-      <p class="eyebrow">{% block topic_eyebrow %}A bordo{% endblock %}</p>
-      <h1 class="h-section">{{ topic.title }}</h1>
-      {% block topic_lead %}{% endblock %}
-    </div>
     {% block topic_body %}{% endblock %}
   </div>
 </section>

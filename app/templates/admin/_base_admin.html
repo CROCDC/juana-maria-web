@@ -10,11 +10,22 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
   </head>
   <body class="admin">
-    <main class="admin__card">
+    <main class="admin__card{% block card_class %}{% endblock %}">
       <header class="admin__head">
         <a class="admin__brand" href="{{ url_for('index') }}">Juana María</a>
         <span class="admin__tag">Admin</span>
       </header>
+      {# Section nav — only once logged in (so the login screen stays clean). #}
+      {% if session.get('is_admin') %}
+      <nav class="admin__nav" aria-label="Secciones del admin">
+        <a href="{{ url_for('admin_topics') }}"
+           class="admin__nav-link{% if request.endpoint == 'admin_topics' %} is-active{% endif %}"
+           {% if request.endpoint == 'admin_topics' %}aria-current="page"{% endif %}>Tópicos</a>
+        <a href="{{ url_for('admin_crew') }}"
+           class="admin__nav-link{% if request.endpoint == 'admin_crew' %} is-active{% endif %}"
+           {% if request.endpoint == 'admin_crew' %}aria-current="page"{% endif %}>Tripulantes</a>
+      </nav>
+      {% endif %}
       {% block body %}{% endblock %}
     </main>
   </body>

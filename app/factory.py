@@ -1,6 +1,7 @@
 import json
 import os
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from flask import Flask, Response, request, url_for
@@ -9,6 +10,15 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
+
+# The site's audience and admin are in Argentina; crew applications are stored in
+# UTC but shown to the admin in local time. Fall back to a fixed UTC-3 offset if
+# the zone database is unavailable (e.g. a slim container without tzdata) —
+# Argentina has observed no DST since 2009, so the offset is constant.
+try:
+    _BA_TZ: ZoneInfo | timezone = ZoneInfo("America/Argentina/Buenos_Aires")
+except Exception:  # noqa: BLE001 — missing tzdata must not crash app import
+    _BA_TZ = timezone(timedelta(hours=-3))
 
 # gzip/brotli for text responses (HTML/CSS/JS/SVG). Render-blocking CSS/HTML
 # shrink ~4-5x, cutting time-to-first-render. woff2/images are already
@@ -92,6 +102,15 @@ def create_app() -> Flask:
     def override_url_for() -> dict[str, object]:
         # Templates calling url_for('static', filename=...) get ?v=<mtime> automatically.
         return {"url_for": static_url}
+
+    @app.template_filter("localdt")
+    def _localdt(value: datetime | None) -> str:
+        """Render a stored (UTC) datetime in Buenos Aires local time for the admin."""
+        if value is None:
+            return "—"
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(_BA_TZ).strftime("%d/%m/%Y · %H:%M")
 
     image_manifest = _load_image_manifest(app.static_folder)
     # Responsive image widths produced by scripts/build_images.py (descending).

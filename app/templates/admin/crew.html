@@ -1,0 +1,46 @@
+{% extends "admin/_base_admin.html" %}
+{% block title %}Tripulantes — Admin · Juana María{% endblock %}
+{% block card_class %} admin__card--wide{% endblock %}
+
+{% block body %}
+<h1>Inscripciones de tripulantes</h1>
+<p class="admin__hint">
+  Quienes se anotaron desde el formulario de «Programa de tripulantes», de la más
+  reciente a la más antigua. {{ applications | length }}
+  inscripci{{ 'ón' if applications | length == 1 else 'ones' }} en total.
+</p>
+
+{% if not applications %}
+<p class="admin__empty">Todavía no hay inscripciones.</p>
+{% else %}
+<ul class="admin__apps">
+  {% for app in applications %}
+  <li class="admin__app">
+    <div class="admin__app-top">
+      <span class="admin__app-name">{{ app.full_name }}</span>
+      {% if app.experience %}
+      <span class="admin__app-exp">{{ app.experience }}</span>
+      {% endif %}
+    </div>
+    <div class="admin__app-contact">
+      <a href="mailto:{{ app.email }}">{{ app.email }}</a>
+      {% if app.phone %}
+      <span class="admin__app-sep" aria-hidden="true">·</span>
+      <a href="tel:{{ app.phone }}">{{ app.phone }}</a>
+      {% endif %}
+    </div>
+    {% if app.message %}
+    <p class="admin__app-msg">{{ app.message }}</p>
+    {% endif %}
+    <p class="admin__app-date">
+      <time datetime="{{ app.created_at.isoformat() }}">{{ app.created_at | localdt }}</time>
+    </p>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<form method="post" action="{{ url_for('admin_logout') }}" class="admin__logout">
+  <button type="submit" class="admin__link">Cerrar sesión</button>
+</form>
+{% endblock %}

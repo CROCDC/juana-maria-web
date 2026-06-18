@@ -152,6 +152,15 @@ def register_routes(app: Flask) -> None:
             "admin/topics.html", rows=rows, saved=request.args.get("saved")
         )
 
+    @app.route("/admin/crew", methods=["GET"])
+    @_login_required
+    def admin_crew() -> Any:
+        # Read-only list of crew-program applications, newest first (the repo
+        # already orders by created_at desc). Dates are shown in local time via
+        # the `localdt` template filter.
+        applications = CrewApplicationRepository.get_all()
+        return render_template("admin/crew.html", applications=applications)
+
     # ----- SEO / infra --------------------------------------------------------
 
     @app.route("/robots.txt")

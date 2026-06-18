@@ -203,6 +203,41 @@ def test_admin_logout_clears_session(client: Any, app_instance: Any) -> None:
     assert client.get("/admin/topics").status_code == 302
 
 
+# ----- Admin (crew applications list) ----------------------------------------
+
+def test_admin_crew_requires_login(client: Any) -> None:
+    resp = client.get("/admin/crew")
+    assert resp.status_code == 302
+    assert "/admin/login" in resp.headers["Location"]
+
+
+def test_admin_crew_lists_submitted_applications(client: Any, app_instance: Any) -> None:
+    app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
+    with app_instance.app_context():
+        CrewApplicationRepository.create(
+            full_name="Grace Hopper",
+            email="grace@example.com",
+            phone="+54 11 5555 1234",
+            experience="Avanzada",
+            message="Quiero sumarme a una salida.",
+        )
+    client.post("/admin/login", data={"password": ADMIN_PW})
+    body = client.get("/admin/crew").get_data(as_text=True)
+    assert "Inscripciones de tripulantes" in body
+    assert "Grace Hopper" in body
+    assert "grace@example.com" in body
+    assert "Avanzada" in body
+
+
+def test_admin_crew_shows_empty_state_with_no_applications(
+    client: Any, app_instance: Any
+) -> None:
+    app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
+    client.post("/admin/login", data={"password": ADMIN_PW})
+    body = client.get("/admin/crew").get_data(as_text=True)
+    assert "Todavía no hay inscripciones" in body
+
+
 # ----- Error paths ------------------------------------------------------------
 
 def test_unknown_path_returns_404(client: Any) -> None:

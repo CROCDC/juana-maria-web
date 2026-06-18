@@ -147,12 +147,18 @@ section[id],
 }
 
 .surface-canvas {
-  background: var(--canvas);
+  /* A faint "light from above" warmth so the cream reads with the same depth as
+     the gradient dark/wood surfaces instead of as a flat fill. */
+  background:
+    radial-gradient(125% 75% at 50% -8%, rgba(249, 244, 233, 0.75), transparent 52%),
+    var(--canvas);
   color: var(--ink);
 }
 
 .surface-canvas-deep {
-  background: var(--canvas-deep);
+  background:
+    radial-gradient(125% 75% at 50% -8%, rgba(240, 230, 209, 0.7), transparent 52%),
+    var(--canvas-deep);
   color: var(--ink);
 }
 
@@ -201,11 +207,16 @@ section[id],
 
 .h-display {
   font-size: clamp(2.6rem, 1.6rem + 4.6vw, 5rem);
+  line-height: 1.06;
   letter-spacing: -0.012em;
 }
 
 .h-section {
   font-size: clamp(2.1rem, 1.4rem + 3vw, 3.6rem);
+  line-height: 1.06;
+  /* Match the display headings' refined negative tracking (the h1-h4 base sets
+     +0.005em, which reads loose on big Cormorant Garamond). */
+  letter-spacing: -0.01em;
   max-width: 18ch;
 }
 
@@ -279,13 +290,17 @@ section[id],
   color: var(--gilt);
   background: transparent;
   border-radius: 2px;
-  transition: background 0.4s var(--ease), color 0.4s var(--ease), border-color 0.4s var(--ease);
+  transition: background 0.4s var(--ease), color 0.4s var(--ease),
+    border-color 0.4s var(--ease), transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
 }
 
-.btn:hover {
+.btn:hover,
+.btn:focus-visible {
   background: var(--bronze);
   color: var(--abyss);
   border-color: var(--bronze);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -14px rgba(179, 135, 61, 0.55);
 }
 
 .btn--solid {
@@ -587,74 +602,6 @@ section[id],
   .intro__grid {
     grid-template-columns: 1.15fr 1fr;
     align-items: start;
-  }
-}
-
-/* ============================================================= 85 years band */
-.years {
-  text-align: center;
-}
-
-.years__figure {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(8rem, 4rem + 26vw, 22rem);
-  line-height: 0.82;
-  color: transparent;
-  background: linear-gradient(180deg, var(--gilt), var(--bronze) 55%, var(--teak-light));
-  -webkit-background-clip: text;
-  background-clip: text;
-  letter-spacing: -0.02em;
-  margin: 0;
-  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
-}
-
-.years__caption {
-  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.4rem);
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: var(--brass);
-  margin-top: -0.4rem;
-}
-
-.years__note {
-  max-width: 50ch;
-  margin: 2.2rem auto 0;
-  color: rgba(240, 230, 209, 0.8);
-}
-
-.years__stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1px;
-  margin-top: 3.4rem;
-  background: var(--hairline-soft);
-  border: 1px solid var(--hairline-soft);
-}
-
-.years__stats div {
-  background: var(--abyss);
-  padding: 1.5rem 1rem;
-}
-
-.years__stats dt {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
-  font-weight: 600;
-  color: var(--gilt);
-}
-
-.years__stats dd {
-  margin: 0.3rem 0 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(240, 230, 209, 0.62);
-}
-
-@media (min-width: 720px) {
-  .years__stats {
-    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -1474,25 +1421,6 @@ section[id],
   border-bottom-right-radius: var(--r-lg);
 }
 
-/* De-box the 85 stats: rounded cells with air, not a hard hairline grid */
-.years__stats {
-  background: transparent;
-  border: 0;
-  gap: clamp(0.6rem, 1.6vw, 1rem);
-}
-
-.years__stats div {
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid var(--hairline-soft);
-  border-radius: var(--r-card);
-  transition: border-color 0.5s var(--ease), transform 0.5s var(--ease);
-}
-
-.years__stats div:hover {
-  border-color: var(--hairline);
-  transform: translateY(-3px);
-}
-
 /* -------- Wave dividers — sections flow into one another ---------------- */
 /* Each coloured section "rises" into the section above it through a soft wave
    of its own colour: a colour block masked to a wave shape, sitting just above
@@ -1526,40 +1454,11 @@ section[id],
   transform: translateY(-99%) scaleX(-1);
 }
 
-/* -------- Gilded shimmer sweeping across the big "85" ------------------- */
-.years__figure {
-  background: linear-gradient(
-    105deg,
-    var(--teak-light) 0%,
-    var(--bronze) 24%,
-    var(--gilt) 42%,
-    #fff7e4 50%,
-    var(--gilt) 58%,
-    var(--bronze) 76%,
-    var(--teak-light) 100%
-  );
-  background-size: 280% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: gilt 9s linear infinite;
-}
-
-@keyframes gilt {
-  from { background-position: 280% 0; }
-  to { background-position: -20% 0; }
-}
-
 /* -------- Reveal: media scales in slightly for life --------------------- */
 .reveal .feature__media,
 .wood-grid .reveal,
 .reveal .plaque__photo {
   transition: transform 1s var(--ease);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .years__figure {
-    animation: none;
-  }
 }
 
 /* ==========================================================================
@@ -1626,17 +1525,6 @@ section[id],
 .plaque,
 .plaque__engrave {
   border: 0;
-}
-
-/* The 85-band stats float free — no box, no border. */
-.years__stats div {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding-block: 1.1rem;
-}
-.years__stats div:hover {
-  transform: none;
 }
 
 /* ============================================================== Seminarios */
@@ -1738,7 +1626,6 @@ section[id],
 .h-section,
 .hero h1,
 .intro__lead,
-.years__caption,
 .seminar h3,
 .footer__brand {
   text-wrap: balance;
@@ -1747,7 +1634,6 @@ section[id],
 .lede,
 .prose p,
 .hero__sub,
-.years__note,
 .t-item p,
 .seminar p,
 .video-card__meta span {
@@ -1855,81 +1741,80 @@ section[id],
   box-shadow: 0 1px 0 var(--hairline-soft), 0 10px 30px -20px rgba(0, 0, 0, 0.9);
 }
 
-/* ------------------------------------------------------------- Topic bands */
-/* The home hub: each published topic gets its own full-width band — a
-   hero-style image strip with a scrim, centred copy and a button to its page.
-   Same layering as .crew-cta, one band per topic so none is cramped. */
-
-.topic-band {
+/* --------------------------------------------------------------- Topic pages */
+/* Extra top room so the first section clears the fixed nav (no hero here). */
+/* Topic hero: each topic page opens with its own image as a banner, mirroring
+   the home hero/crew-cta layering so the topic pages feel as finished as the
+   home (and visually echo the card the visitor clicked to get here). */
+.topic-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   display: grid;
   align-items: center;
-  min-height: clamp(360px, 52vh, 540px);
+  min-height: clamp(340px, 50vh, 540px);
   text-align: center;
 }
 
-.topic-band__media {
+.topic-hero__media {
   position: absolute;
   inset: 0;
   z-index: -2;
 }
 
-.topic-band__media picture {
+.topic-hero__media picture {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.topic-band__media img {
+.topic-hero__media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.topic-band__scrim {
+.topic-hero__scrim {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(
-    180deg,
-    rgba(21, 14, 8, 0.78) 0%,
-    rgba(21, 14, 8, 0.5) 48%,
-    rgba(21, 14, 8, 0.82) 100%
-  );
+  /* Darken the top (under the solid nav) and bottom (text + wave-divider join)
+     while keeping the middle light so the photo reads; a soft radial gives the
+     centred title a backing on bright images. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(21, 14, 8, 0.62) 0%,
+      rgba(21, 14, 8, 0.32) 42%,
+      rgba(21, 14, 8, 0.8) 100%
+    ),
+    radial-gradient(120% 95% at 50% 52%, transparent 32%, rgba(21, 14, 8, 0.34));
 }
 
-.topic-band__inner {
-  padding-block: clamp(2.6rem, 7vw, 4.6rem);
+/* Extra top room so the title clears the fixed (solid) nav. */
+.topic-hero__inner {
+  padding-block: clamp(6rem, 11vw, 8.5rem) clamp(2.4rem, 6vw, 4rem);
   color: var(--sail);
 }
 
-.topic-band__title {
-  font-size: clamp(2rem, 1.4rem + 3vw, 3.6rem);
-  margin: 0.5rem 0 1rem;
+.topic-hero__title {
+  font-size: clamp(2.4rem, 1.5rem + 4.2vw, 4.4rem);
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+  margin: 0.4rem 0 0;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.45);
 }
 
-.topic-band__lede {
-  max-width: 46ch;
-  margin: 0 auto 2rem;
-  font-size: clamp(1.02rem, 1rem + 0.4vw, 1.28rem);
+.topic-hero__inner .lede {
+  max-width: 54ch;
+  margin: 1.2rem auto 0;
   color: rgba(249, 244, 233, 0.92);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.4);
 }
 
-.topic-band__btn {
-  font-size: 0.84rem;
-}
-
-/* --------------------------------------------------------------- Topic pages */
-/* Extra top room so the first section clears the fixed nav (no hero here). */
+/* The body section: the hero already clears the nav, so no big top padding. */
 .topic-page {
-  padding-top: clamp(7rem, 12vw, 10rem);
-  min-height: 70vh;
-}
-
-.topic-page .section-head {
-  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  min-height: 40vh;
 }
 
 .topic-pending__note {
@@ -1964,13 +1849,19 @@ section[id],
 .form-row select,
 .form-row textarea {
   width: 100%;
-  padding: 0.7rem 0.85rem;
+  padding: 0.85rem 1rem;
   font: inherit;
   color: var(--ink);
   background: var(--sail);
   border: 1px solid var(--hairline-soft);
-  border-radius: 4px;
-  transition: border-color 0.3s;
+  border-radius: var(--r-card);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-row input:hover,
+.form-row select:hover,
+.form-row textarea:hover {
+  border-color: var(--bronze);
 }
 
 .form-row textarea {
@@ -2014,15 +1905,19 @@ section[id],
   color: var(--sail);
   background: var(--walnut);
   border: 1px solid var(--bronze);
-  border-radius: 4px;
-  padding: 0.7rem 2rem;
+  border-radius: var(--r-card);
+  padding: 0.7rem 2.2rem;
   cursor: pointer;
-  transition: background 0.3s, color 0.3s;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease),
+    transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
-.form-actions button:hover {
+.form-actions button:hover,
+.form-actions button:focus-visible {
   background: var(--bronze);
   color: var(--abyss);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -14px rgba(179, 135, 61, 0.5);
 }
 
 .form-success {
@@ -2088,6 +1983,8 @@ section[id],
 
 .crew-cta__title {
   font-size: clamp(2.4rem, 1.5rem + 4.4vw, 4.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.01em;
   margin: 0.5rem 0 1rem;
 }
 
