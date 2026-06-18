@@ -111,6 +111,21 @@ def client(app_instance: Any, db_clean: None) -> Iterator[Any]:
         yield c
 
 
+# ----- Project-specific: reference data --------------------------------------
+# Topic visibility is seed/reference data (app/content/topics.py + the factory's
+# ensure_seeded on boot), but db_clean TRUNCATEs every table between tests. Re-seed
+# it at the start of each test so the nav/hub/topic routes have their default
+# published state instead of an empty table. autouse + depends on db_clean so it
+# runs after the previous test's truncation and before the current test body.
+@pytest.fixture(autouse=True)
+def _seed_topic_visibility(app_instance: Any, db_clean: None) -> None:
+    from app.content.topics import DEFAULT_ENABLED
+    from app.repositories.topic_visibility_repository import TopicVisibilityRepository
+
+    with app_instance.app_context():
+        TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+
+
 # ----- Live server + Playwright -----------------------------------------------
 
 @pytest.fixture(scope="session")

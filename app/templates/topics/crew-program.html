@@ -1,0 +1,87 @@
+{% extends "topics/_base_topic.html" %}
+{% block topic_eyebrow %}Sumate a la tripulación{% endblock %}
+
+{% block topic_lead %}
+<p class="lede">
+  La Juana María recibe tripulantes a bordo. Dejanos tus datos y nos ponemos en
+  contacto cuando se arme la próxima salida.
+</p>
+{% endblock %}
+
+{% block topic_body %}
+{% if sent %}
+<div class="form-success reveal" role="status">
+  <h2>¡Gracias! Recibimos tu inscripción.</h2>
+  <p>
+    Te vamos a escribir cuando haya una próxima navegación con lugar para
+    tripulantes. Mientras tanto, podés seguirnos en
+    <a class="link-underline" href="https://www.instagram.com/velaclasica/"
+       target="_blank" rel="noopener">@velaclasica</a>.
+  </p>
+  <p><a class="link-underline" href="{{ url_for('topic_crew_program') }}">Cargar otra inscripción</a></p>
+</div>
+{% else %}
+{% if errors %}
+<p class="form-error-summary reveal" role="alert">
+  Revisá los campos marcados y volvé a enviar.
+</p>
+{% endif %}
+<form class="form reveal" method="post" action="{{ url_for('topic_crew_program') }}" novalidate>
+  <div class="form-row">
+    <label for="full_name">Nombre y apellido <span aria-hidden="true">*</span></label>
+    <input
+      id="full_name"
+      name="full_name"
+      type="text"
+      autocomplete="name"
+      required
+      value="{{ form.get('full_name', '') }}"
+      {% if errors.get('full_name') %}aria-invalid="true" aria-describedby="err-full_name"{% endif %} />
+    {% if errors.get('full_name') %}<p class="form-error" id="err-full_name">{{ errors['full_name'] }}</p>{% endif %}
+  </div>
+
+  <div class="form-row">
+    <label for="email">Email <span aria-hidden="true">*</span></label>
+    <input
+      id="email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      required
+      value="{{ form.get('email', '') }}"
+      {% if errors.get('email') %}aria-invalid="true" aria-describedby="err-email"{% endif %} />
+    {% if errors.get('email') %}<p class="form-error" id="err-email">{{ errors['email'] }}</p>{% endif %}
+  </div>
+
+  <div class="form-row">
+    <label for="phone">Teléfono</label>
+    <input
+      id="phone"
+      name="phone"
+      type="tel"
+      autocomplete="tel"
+      value="{{ form.get('phone', '') }}" />
+  </div>
+
+  <div class="form-row">
+    <label for="experience">Experiencia náutica</label>
+    {% set exp = form.get('experience', '') %}
+    <select id="experience" name="experience">
+      <option value="">Prefiero no aclarar</option>
+      {% for opt in ['Ninguna', 'Básica', 'Intermedia', 'Avanzada'] %}
+      <option value="{{ opt }}"{% if exp == opt %} selected{% endif %}>{{ opt }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="message">Contanos sobre vos</label>
+    <textarea id="message" name="message" rows="4">{{ form.get('message', '') }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit">Enviar inscripción</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

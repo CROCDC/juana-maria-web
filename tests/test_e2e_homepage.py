@@ -28,8 +28,14 @@ from playwright.sync_api import Browser, BrowserContext, Page, expect
 
 @pytest.fixture()
 def desktop_context(browser_instance: Browser) -> Iterator[BrowserContext]:
-    """A desktop-sized context (the default `page` fixture is mobile, 375px)."""
-    ctx = browser_instance.new_context(viewport={"width": 1280, "height": 800})
+    """A desktop-sized context (the default `page` fixture is mobile, 375px).
+
+    reduced_motion keeps E2E deterministic: scroll-reveal shows immediately and
+    the gallery carousel does not autoplay, so a slide stays put to be clicked.
+    """
+    ctx = browser_instance.new_context(
+        viewport={"width": 1280, "height": 800}, reduced_motion="reduce"
+    )
     try:
         yield ctx
     finally:
@@ -51,8 +57,10 @@ def test_homepage_loads_with_hero_and_all_sections(
         expect(page.get_by_role("heading", level=1, name="Juana María")).to_be_visible()
         expect(page.get_by_text("Botada en 1941.")).to_be_visible()
 
-        # Every section the nav promises is actually anchored on the page.
-        for anchor in ("historia", "diseno", "madera", "galeria", "ficha", "pericos", "seminarios"):
+        # The home ("about") topic keeps these anchored sections; seminars moved
+        # to its own topic page, Los Pericos was removed, and the "Madera, bronce
+        # y barniz" (#madera) section is temporarily hidden at the client's request.
+        for anchor in ("historia", "diseno", "galeria", "ficha"):
             expect(page.locator(f"section#{anchor}")).to_have_count(1)
     finally:
         page.close()
@@ -60,14 +68,14 @@ def test_homepage_loads_with_hero_and_all_sections(
 
 # ----- In-page navigation (desktop) -------------------------------------------
 
-def test_desktop_nav_link_jumps_to_history_section(
+def test_prologue_link_jumps_to_history_section(
     live_server: str, desktop_context: BrowserContext
 ) -> None:
     page = desktop_context.new_page()
     try:
         page.goto(f"{live_server}/", wait_until="networkidle")
 
-        page.locator("#navLinks").get_by_role("link", name="Historia").click()
+        page.locator("#prologo").get_by_role("link", name="Conocé su historia").click()
 
         page.wait_for_url("**/#historia")
         expect(page.get_by_role("heading", name="Una larga línea de agua")).to_be_visible()
@@ -75,9 +83,29 @@ def test_desktop_nav_link_jumps_to_history_section(
         page.close()
 
 
+# ----- Topic navigation (multi-page) ------------------------------------------
+
+def test_desktop_nav_opens_published_topic_page(
+    live_server: str, desktop_context: BrowserContext
+) -> None:
+    page = desktop_context.new_page()
+    try:
+        page.goto(f"{live_server}/", wait_until="networkidle")
+
+        # crew-program is published by default, so its link is in the nav.
+        page.locator("#navLinks").get_by_role("link", name="Programa de tripulantes").click()
+
+        page.wait_for_url("**/crew-program")
+        expect(
+            page.get_by_role("heading", level=1, name="Programa de tripulantes")
+        ).to_be_visible()
+    finally:
+        page.close()
+
+
 # ----- Mobile hamburger menu --------------------------------------------------
 
-def test_mobile_menu_opens_and_closes_on_link_click(
+def test_mobile_menu_opens_and_closes(
     live_server: str, page: Page  # the mobile (375px) `page` fixture from conftest
 ) -> None:
     page.goto(f"{live_server}/", wait_until="networkidle")
@@ -90,8 +118,9 @@ def test_mobile_menu_opens_and_closes_on_link_click(
     expect(toggle).to_have_attribute("aria-expanded", "true")
     expect(page.locator("#navLinks")).to_have_class("nav-links is-open")
 
-    # Tapping a link navigates AND collapses the menu (closeMenu in main.js).
-    page.locator("#navLinks").get_by_role("link", name="Galería").click()
+    # Escape collapses the overlay (closeMenu in main.js). The open overlay
+    # covers the toggle, so it can't be re-clicked to close.
+    page.keyboard.press("Escape")
     expect(toggle).to_have_attribute("aria-expanded", "false")
 
 
@@ -108,7 +137,9 @@ def test_gallery_lightbox_opens_navigates_and_closes(
         caption = page.locator("#lbCaption")
         expect(lightbox).to_be_hidden()
 
-        page.locator(".gallery__item").first.click()
+        # Autoplay is off under reduced motion (desktop_context), so the first
+        # slide stays in view; clicking it opens the lightbox at that photo.
+        page.locator(".carousel__slide").first.click()
 
         expect(lightbox).to_be_visible()
         expect(caption).to_have_text("A vela llena, atardecer en el Plata")
@@ -125,23 +156,23 @@ def test_gallery_lightbox_opens_navigates_and_closes(
         page.close()
 
 
-# ----- Click-to-load video facade ---------------------------------------------
+# ----- Crew-program intake form -----------------------------------------------
 
-def test_video_facade_click_swaps_in_youtube_iframe(
+def test_crew_form_submission_shows_thank_you(
     live_server: str, desktop_context: BrowserContext
 ) -> None:
     page = desktop_context.new_page()
     try:
-        page.goto(f"{live_server}/", wait_until="networkidle")
+        page.goto(f"{live_server}/crew-program", wait_until="networkidle")
 
-        # Facade is a button until clicked; then main.js replaces it with an iframe.
-        facade = page.get_by_role("button", name="Reproducir: La Distancia, de Los Pericos")
-        facade.scroll_into_view_if_needed()
-        facade.click()
+        page.fill("#full_name", "Grace Hopper")
+        page.fill("#email", "grace@example.com")
+        page.select_option("#experience", "Avanzada")
+        page.fill("#message", "Quiero sumarme a la tripulación.")
+        page.get_by_role("button", name="Enviar inscripción").click()
 
-        iframe = page.locator("iframe[src*='youtube-nocookie.com/embed/f_ZN-yupAVg']")
-        expect(iframe).to_have_count(1)
-        expect(facade).to_have_count(0)  # the facade button is gone
+        page.wait_for_url("**/crew-program?sent=1")
+        expect(page.get_by_text("Recibimos tu inscripción")).to_be_visible()
     finally:
         page.close()
 

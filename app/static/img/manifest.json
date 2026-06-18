@@ -3,6 +3,10 @@
     "w": 2560,
     "h": 1440
   },
+  "hero/returning-from-colonia": {
+    "w": 2083,
+    "h": 2560
+  },
   "sailing/golden-hour": {
     "w": 2560,
     "h": 1434
@@ -74,21 +78,5 @@
   "heritage/teseo": {
     "w": 2560,
     "h": 1920
-  },
-  "hero/heeling-blue": {
-    "w": 2083,
-    "h": 2560
-  },
-  "seminars/astronomica": {
-    "w": 1280,
-    "h": 817
-  },
-  "seminars/pinula": {
-    "w": 1280,
-    "h": 1600
-  },
-  "seminars/historia": {
-    "w": 1280,
-    "h": 764
   }
 }

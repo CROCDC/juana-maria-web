@@ -9,10 +9,13 @@ If your project makes `tests/` a package, switch both imports to `from .pages ..
 
 from __future__ import annotations
 
-# Every public (no-auth) path the app serves. Juana María is a single-page
-# brochure site: the only route is the homepage (see app/routes.py).
+# Every public (no-auth) path the responsive/overflow layers exercise. The home
+# is always public; "/crew-program" is the one topic published by default (see
+# DEFAULT_ENABLED in app/content/topics.py), so it's a stable second page. Other
+# topics are off by default and 404 until switched on in the admin panel.
 PUBLIC_PAGES: list[str] = [
     "/",
+    "/crew-program",
 ]
 
 # (name, width, height): mobile, large mobile, tablet portrait, tablet landscape,

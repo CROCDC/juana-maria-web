@@ -17,3 +17,25 @@
          {% if priority %}fetchpriority="high" decoding="async"{% else %}loading="lazy" decoding="async"{% endif %}>
   </picture>
 {% endmacro %}
+
+{# One secondary topic as a compact, scannable card for the home "A bordo" hub
+   grid. The whole card is a single link; the gold uppercase CTA label is
+   decorative. Driven by the nav_topics shape (.title .blurb .image .cta_label
+   .endpoint). `delay` staggers the scroll-reveal across the row (0/1/2). One
+   tidy grid of these replaces the old stack of full-bleed per-topic bands. #}
+{% macro topic_card(topic, delay=0) %}
+  <li class="hub-card reveal"{% if delay %} data-delay="{{ delay }}"{% endif %}>
+    <a class="hub-card__link" href="{{ url_for(topic.endpoint) }}">
+      <span class="hub-card__media" aria-hidden="true">
+        {{ resp_img(topic.image, '', '(min-width: 980px) 33vw, (min-width: 620px) 50vw, 100vw') }}
+      </span>
+      <span class="hub-card__body">
+        <span class="hub-card__title">{{ topic.title }}</span>
+        <span class="hub-card__blurb">{{ topic.blurb }}</span>
+        {# Decorative affordance: the whole card is already the link, so hide the
+           CTA label from the a11y tree (the link's name is title + blurb). #}
+        <span class="hub-card__cta" aria-hidden="true">{{ topic.cta_label }} <i>&rarr;</i></span>
+      </span>
+    </a>
+  </li>
+{% endmacro %}

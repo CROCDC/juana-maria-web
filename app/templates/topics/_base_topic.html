@@ -1,0 +1,19 @@
+{# Shared layout for a single topic page. Children set the eyebrow, an optional
+   lead paragraph, and the body. The page heading is the topic title (one <h1>
+   per page); the home page keeps its own <h1>. #}
+{% extends "base.html" %}
+
+{% block title %}{{ topic.title }} — Juana María{% endblock %}
+
+{% block content %}
+<section class="section surface-canvas topic-page" id="top-section">
+  <div class="wrap wrap--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">{% block topic_eyebrow %}A bordo{% endblock %}</p>
+      <h1 class="h-section">{{ topic.title }}</h1>
+      {% block topic_lead %}{% endblock %}
+    </div>
+    {% block topic_body %}{% endblock %}
+  </div>
+</section>
+{% endblock %}

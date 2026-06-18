@@ -45,7 +45,9 @@ def test_side_menu_opens_full_screen(
         expect(toggle).to_have_attribute("aria-expanded", "true")
         nav_links = page.locator("#navLinks")
         expect(nav_links).to_have_class("nav-links is-open")
-        for label in ("Historia", "Doble proa", "Galería", "Ficha técnica", "Seminarios"):
+        # Nav is driven by the published topics: the home ("about") topic is
+        # always present, plus crew-program (the one published by default).
+        for label in ("Sobre la Juana María", "Programa de tripulantes"):
             expect(nav_links.get_by_role("link", name=label)).to_be_visible()
 
         # The overlay covers the full viewport width (no horizontal gap/overflow).

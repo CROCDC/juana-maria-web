@@ -28,6 +28,15 @@ from flask import session
 from flask.sessions import SecureCookieSessionInterface
 from werkzeug.serving import make_server
 
+# app/__init__.py eagerly runs ``app = create_app()`` at import (gunicorn's
+# ``run:app`` target needs it), and create_app() calls db.create_all(). Importing
+# the factory here would therefore connect to whatever DATABASE_URL the env / .env
+# holds (a Postgres that isn't reachable from the host) and fail before
+# testcontainers even starts. Pin a throwaway in-memory SQLite for that import-time
+# instantiation only; the real test app is built by build_app() against the
+# testcontainers Postgres. setdefault so an explicit DATABASE_URL still wins.
+os.environ.setdefault("DATABASE_URL", "sqlite://")
+
 from app.factory import create_app, db
 
 if TYPE_CHECKING:

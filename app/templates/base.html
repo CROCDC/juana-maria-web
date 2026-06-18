@@ -84,7 +84,13 @@
        elsewhere (e.g. 404) they become "/#section" so they resolve home. #}
     {% set nav_base = "" if is_index | default(false) else url_for("index") %}
     <a class="skip-link" href="#top">Saltar al contenido</a>
-    <header class="nav" id="nav">
+    {# Off the home page there's no dark hero behind the fixed nav, so it must be
+       solid from the start or the light links would sit invisibly on cream. #}
+    {# With more than four published topics the long labels overflow an inline
+       top nav (and squeeze the brand onto two lines), so collapse to the
+       off-canvas hamburger menu at every width — see .nav--menu in styles.css. #}
+    {% set nav_count = nav_topics | length %}
+    <header class="nav{% if not is_index | default(false) %} nav--solid{% endif %}{% if nav_count > 4 %} nav--menu{% endif %}" id="nav">
       <a class="brand" href="{{ nav_base }}#top" aria-label="Juana María, inicio">
         Juana María <small>1941</small>
       </a>
@@ -97,14 +103,13 @@
           aria-label="Abrir menú">
           <span></span><span></span><span></span>
         </button>
+        {# Top nav is driven by the published topics (app/content/topics.py +
+           admin visibility). The home topic ("Sobre la Juana María") is always
+           present; the rest appear as they're switched on in the admin panel. #}
         <ul class="nav-links" id="navLinks">
-          <li><a href="{{ nav_base }}#historia">Historia</a></li>
-          <li><a href="{{ nav_base }}#diseno">Doble proa</a></li>
-          <li><a href="{{ nav_base }}#madera">La madera</a></li>
-          <li><a href="{{ nav_base }}#galeria">Galería</a></li>
-          <li><a href="{{ nav_base }}#ficha">Ficha técnica</a></li>
-          <li><a href="{{ nav_base }}#pericos">Los Pericos</a></li>
-          <li><a href="{{ nav_base }}#seminarios">Seminarios</a></li>
+          {% for t in nav_topics %}
+          <li><a href="{{ url_for(t.endpoint) }}">{{ t.nav_label }}</a></li>
+          {% endfor %}
         </ul>
       </nav>
     </header>
@@ -117,9 +122,9 @@
           <div>
             <div class="footer__brand">Juana María</div>
             <p>
-              Ballenera de doble proa, dibujo de Manuel M. Campos, botada en 1941
-              en el Tigre. Hoy al cuidado de Martín Wasserman, historiador naval;
-              sigue navegando el Río de la Plata.
+              (REVISION) Ballenera de doble proa, dibujo de Manuel M. Campos, botada en 1941
+              en el Tigre. Hoy al cuidado de un historiador naval; sigue
+              navegando el Río de la Plata. (REVISION)
             </p>
             <a
               class="social"
@@ -150,7 +155,10 @@
               <li><a class="link-underline" href="{{ nav_base }}#historia">Historia</a></li>
               <li><a class="link-underline" href="{{ nav_base }}#galeria">Galería</a></li>
               <li><a class="link-underline" href="{{ nav_base }}#ficha">Ficha técnica</a></li>
-              <li><a class="link-underline" href="{{ nav_base }}#seminarios">Seminarios</a></li>
+              {# Published topics (everything beyond the home "about" topic). #}
+              {% for t in nav_topics if not t.is_home %}
+              <li><a class="link-underline" href="{{ url_for(t.endpoint) }}">{{ t.nav_label }}</a></li>
+              {% endfor %}
             </ul>
           </div>
         </div>

@@ -55,6 +55,16 @@ def create_app() -> Flask:
     # it's wired through a plain env var, not a secret. Templates guard on it.
     app.config["UMAMI_WEBSITE_ID"] = os.environ.get("UMAMI_WEBSITE_ID")
 
+    # Sessions (admin login). SECRET_KEY signs the session cookie; production
+    # injects a real value via the environment. The dev fallback only exists so
+    # local runs work out of the box — never use it in production.
+    app.config["SECRET_KEY"] = os.environ.get(
+        "SECRET_KEY", "dev-insecure-secret-key-change-me"
+    )
+    # Admin panel password (controls topic visibility). If unset, admin login is
+    # effectively disabled — no password can match.
+    app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD")
+
     db.init_app(app)
     migrate.init_app(app, db)
     compress.init_app(app)
@@ -96,13 +106,40 @@ def create_app() -> Flask:
             "IMG_WIDTHS": image_widths,
         }
 
+    @app.context_processor
+    def inject_topics() -> dict[str, object]:
+        # Nav + hub iterate over the currently published topics. The home topic
+        # is always present; the rest depend on their admin-controlled state.
+        # Guarded so an error page still renders if the DB is unreachable.
+        from app.content.topics import HOME_TOPIC, TOGGLEABLE_TOPICS
+
+        try:
+            from app.repositories.topic_visibility_repository import (
+                TopicVisibilityRepository,
+            )
+
+            state = TopicVisibilityRepository.get_state_map()
+        except Exception:  # noqa: BLE001 — never let nav rendering 500 the page
+            state = {}
+
+        published = [HOME_TOPIC] + [
+            t for t in TOGGLEABLE_TOPICS if state.get(t.slug, False)
+        ]
+        return {"nav_topics": published}
+
     with app.app_context():
         # Importing models registers them with SQLAlchemy so Flask-Migrate
         # autogenerate can detect them.
         from app import models  # noqa: F401
+        from app.content.topics import DEFAULT_ENABLED
+        from app.repositories.topic_visibility_repository import (
+            TopicVisibilityRepository,
+        )
         from app.routes import register_routes
 
         register_routes(app)
         db.create_all()
+        # Insert a visibility row for any topic that doesn't have one yet.
+        TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
 
     return app

@@ -1,5 +1,5 @@
-// Juana María — site interactions: nav, scroll reveal, gallery lightbox,
-// and click-to-load video facades. Vanilla JS, no dependencies.
+// Juana María — site interactions: nav, scroll reveal, gallery carousel +
+// lightbox, and click-to-load video facades. Vanilla JS, no dependencies.
 (function () {
   "use strict";
 
@@ -122,6 +122,98 @@
     counters.forEach(function (el) { countIO.observe(el); });
   }
 
+  /* ----------------------------------------------------- Gallery carousel */
+  // One-photo-at-a-time slider with autoplay, prev/next, dots and swipe. The
+  // interval runs continuously but only advances when canPlay() is true, so
+  // hover, keyboard focus, an open lightbox, a hidden tab or reduced-motion all
+  // pause it without fragile start/stop bookkeeping.
+  var carTrack = document.getElementById("carouselTrack");
+  if (carTrack && carTrack.children.length) {
+    var carEl = document.getElementById("gallery");
+    var carLb = document.getElementById("lightbox");
+    var carDots = document.getElementById("carouselDots");
+    var carPrev = carEl.querySelector(".carousel__prev");
+    var carNext = carEl.querySelector(".carousel__next");
+    var slides = Array.prototype.slice.call(carTrack.children);
+    var AUTOPLAY_MS = 5000;
+    var cur = 0;
+    var carTimer = null;
+    var hovering = false;
+    var focusWithin = false;
+
+    var dots = slides.map(function (_, i) {
+      var d = document.createElement("button");
+      d.type = "button";
+      d.className = "carousel__dot";
+      d.setAttribute("aria-label", "Ir a la foto " + (i + 1));
+      d.addEventListener("click", function () { go(i); restart(); });
+      carDots.appendChild(d);
+      return d;
+    });
+
+    function update() {
+      carTrack.style.transform = "translateX(" + (-cur * 100) + "%)";
+      dots.forEach(function (d, i) { d.classList.toggle("is-active", i === cur); });
+      // Only the visible slide is tab-reachable (and openable in the lightbox).
+      slides.forEach(function (s, i) {
+        if (i === cur) s.removeAttribute("tabindex");
+        else s.setAttribute("tabindex", "-1");
+      });
+    }
+    function go(i) { cur = (i + slides.length) % slides.length; update(); }
+    function nextSlide() { go(cur + 1); }
+    function prevSlide() { go(cur - 1); }
+
+    function lbOpen() { return carLb && carLb.classList.contains("is-open"); }
+    function canPlay() {
+      return !reduceMotion && slides.length > 1 && !hovering && !focusWithin &&
+        !document.hidden && !lbOpen();
+    }
+    function restart() {
+      if (carTimer) window.clearInterval(carTimer);
+      if (reduceMotion || slides.length < 2) return;
+      carTimer = window.setInterval(function () { if (canPlay()) nextSlide(); }, AUTOPLAY_MS);
+    }
+
+    if (carPrev) carPrev.addEventListener("click", function () { prevSlide(); restart(); });
+    if (carNext) carNext.addEventListener("click", function () { nextSlide(); restart(); });
+    carEl.addEventListener("mouseenter", function () { hovering = true; });
+    carEl.addEventListener("mouseleave", function () { hovering = false; });
+    carEl.addEventListener("focusin", function () { focusWithin = true; });
+    carEl.addEventListener("focusout", function () { focusWithin = false; });
+
+    // Swipe (pointer = mouse + touch + pen) and suppress the click that follows
+    // a drag so a swipe doesn't also open the lightbox.
+    var downX = 0, pointerDown = false, dragged = false;
+    carTrack.addEventListener("pointerdown", function (e) {
+      pointerDown = true; dragged = false; downX = e.clientX;
+    });
+    carTrack.addEventListener("pointermove", function (e) {
+      if (pointerDown && Math.abs(e.clientX - downX) > 8) dragged = true;
+    });
+    window.addEventListener("pointerup", function (e) {
+      if (!pointerDown) return;
+      pointerDown = false;
+      var dx = e.clientX - downX;
+      if (Math.abs(dx) > 45) { (dx < 0 ? nextSlide : prevSlide)(); restart(); }
+    });
+    carTrack.addEventListener("click", function (e) {
+      if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; }
+    }, true);
+
+    // Slides other than the current one sit off-screen in the clipped track, so
+    // their loading="lazy" images would never enter the viewport and never load
+    // (blank flashes on autoplay). When the carousel nears, eager-load them all.
+    whenNear(carEl, function () {
+      carTrack.querySelectorAll('img[loading="lazy"]').forEach(function (img) {
+        img.loading = "eager";
+      });
+    }, "400px 0px");
+
+    update();
+    restart();
+  }
+
   /* ------------------------------------------------------------ Lightbox */
   var gallery = document.getElementById("gallery");
   var lb = document.getElementById("lightbox");
@@ -129,7 +221,7 @@
     var lbImg = document.getElementById("lbImg");
     var lbCaption = document.getElementById("lbCaption");
     var lbCount = document.getElementById("lbCount");
-    var items = Array.prototype.slice.call(gallery.querySelectorAll(".gallery__item"));
+    var items = Array.prototype.slice.call(gallery.querySelectorAll(".carousel__slide"));
     // Everything on the page except the dialog itself — inerted while open so
     // focus/AT can't reach the nav, content or footer behind the overlay.
     var backdrop = Array.prototype.filter.call(document.body.children, function (el) {

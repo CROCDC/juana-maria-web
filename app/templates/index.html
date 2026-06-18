@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import resp_img with context %}
+{% from "_macros.html" import resp_img, topic_card with context %}
 
 {% block head_extra %}
     <!-- Preload the hero image (LCP) — index only -->
@@ -26,6 +26,12 @@
 {% endblock %}
 
 {% block content %}
+
+{# Page shape: the boat's story runs as ONE uninterrupted arc
+   (hero → prólogo → historia → diseño → ficha → galería); the other topics live
+   together in the "A bordo" zone at the end (crew-program as a full-bleed band,
+   the rest as a compact card grid). No per-topic bands are intercut into the
+   story. The crew band + hub set are declared inline near the bottom. #}
 
 <!-- ============================================================ HERO -->
 <section class="hero">
@@ -71,33 +77,14 @@
           con seguridad y aplomo.
         </p>
         <p>
-          Pasó del juez Tedín a la familia Blanco, fue protagonista de dos
-          videoclips de Los Pericos y hoy la cuida un historiador naval.
-          Ochenta y cinco años después, sigue saliendo al agua.
+          (REVISION) Pasó por varias manos a lo largo de las décadas y hoy la cuida un
+          historiador naval. Ochenta y cinco años después, sigue saliendo al
+          agua. (REVISION)
         </p>
-        <p><a class="link-underline" href="#historia">Conocé su historia &rarr;</a></p>
+        {# The old "Conocé su historia →" jump-link was removed: #historia now
+           sits directly below this fused cream block, so the link was a no-op. #}
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ===================================================== 85 AÑOS BAND -->
-<section class="section surface-dark years">
-  <div class="wrap">
-    <p class="eyebrow reveal" style="justify-content:center">1941 &mdash; {{ current_year }}</p>
-    <p class="years__figure reveal" aria-hidden="true" data-count="85">85</p>
-    <p class="years__caption reveal">años navegando</p>
-    <p class="years__note reveal" data-delay="1">
-      Más de ocho décadas en el agua, en el mismo tramo del Río de la Plata
-      para el que fue dibujada. Pocas embarcaciones de madera en la Argentina
-      pueden contar una vida tan larga &mdash; y todavía en navegación.
-    </p>
-    <dl class="years__stats reveal" data-delay="2">
-      <div><dt>1941</dt><dd>botada en el Tigre</dd></div>
-      <div><dt>10,65 m</dt><dd>de eslora</dd></div>
-      <div><dt>0,60 m</dt><dd>de calado</dd></div>
-      <div><dt>Viraró</dt><dd>casco de madera</dd></div>
-    </dl>
   </div>
 </section>
 
@@ -125,7 +112,7 @@
         <p>
           Construida en madera en el astillero de Agustín Cadenazzi, en el
           Tigre &mdash; corazón histórico de la construcción náutica del Delta.
-          Encargada, según la tradición, por el juez Tedín.
+          Encargada, según la tradición, por un magistrado de la época.
         </p>
       </article>
       <article class="t-item reveal">
@@ -137,23 +124,13 @@
           cabos. La Juana María pertenece a esa estirpe.
         </p>
       </article>
-      <article class="t-item reveal">
-        <p class="t-year">2021&ndash;22</p>
-        <h3>Frente a cámara</h3>
-        <p>
-          Protagoniza dos videoclips de Los Pericos, filmados en su propia
-          travesía por el Plata &mdash; entonces al mando de Marcelo Blanco,
-          percusionista de la banda. En los créditos de <em>La Distancia</em>
-          aparece nombrada: «Barco a vela: Juana María».
-        </p>
-      </article>
       <article class="t-item is-mark reveal">
         <p class="t-year">2026</p>
         <h3>Un nuevo capítulo</h3>
         <p>
-          La Juana María pasa a manos de <strong>Martín Wasserman</strong>,
-          historiador especializado en historia náutica &mdash; un timonel a la
-          altura de su propia historia.
+          (REVISION) La Juana María pasa a manos de <strong>un historiador especializado
+          en historia náutica</strong> &mdash; un timonel a la altura de su
+          propia historia. (REVISION)
         </p>
       </article>
       <article class="t-item is-mark reveal">
@@ -213,7 +190,49 @@
   </div>
 </section>
 
+<!-- ===================================================== FICHA TÉCNICA -->
+<section class="section surface-wood" id="ficha">
+  <div class="wrap">
+    <div class="spec">
+      <div class="reveal">
+        <p class="eyebrow">Ficha técnica</p>
+        <h2 class="h-section">Registro de a bordo</h2>
+        {# Folded in from the retired "85 años" band: its one unique line (the
+           rarity claim). Every stat from that band already lives in the list
+           below, so only this sentence needed a new home. #}
+        <p class="lede">
+          Más de ocho décadas en el mismo tramo del Río de la Plata para el que
+          fue dibujada. Pocas embarcaciones de madera en la Argentina pueden
+          contar una vida tan larga &mdash; y todavía en navegación.
+        </p>
+        <div class="feature__media" style="margin-top:2rem">
+          {{ resp_img('moored/profile-with-name',
+              'La Juana María amarrada, de perfil, con su nombre en el casco',
+              '(min-width: 900px) 40vw, 100vw') }}
+        </div>
+      </div>
+      <dl class="spec__list reveal" data-delay="1">
+        <div><dt>Tipo</dt><dd>Ballenera de doble proa<small>Diseño de Manuel M. Campos</small></dd></div>
+        <div><dt>Botadura</dt><dd>1941<small>Astillero Agustín Cadenazzi, Tigre</small></dd></div>
+        <div><dt>Eslora</dt><dd>10,65 m</dd></div>
+        <div><dt>Manga</dt><dd>2,47 m</dd></div>
+        <div><dt>Calado</dt><dd>0,60 m<small>Con orza rebatible</small></dd></div>
+        <div><dt>Casco</dt><dd>Madera de viraró<small>Quilla, roda y codaste de lapacho</small></dd></div>
+        <div><dt>Motor</dt><dd>Yanmar 20 HP diésel</dd></div>
+        <div><dt>Velamen</dt><dd>Algodón egipcio + North Sails<small>Dos juegos: el original de algodón y uno nuevo de Dacron</small></dd></div>
+        <div><dt>Bandera</dt><dd>Argentina<small>Prefectura Naval Argentina</small></dd></div>
+        <div><dt>Aguas</dt><dd>Río de la Plata<small>Base en el Yacht Club San Isidro (YCSI), Buenos Aires</small></dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
 <!-- ======================================================== LA MADERA -->
+{# Temporarily hidden at the client's request ("lo ocultamos por ahora"): the
+   whole "Madera, bronce y barniz" section — its copy, the wood-grid images and
+   the builder's plaque. Wrapped in a Jinja comment so it renders nothing while
+   staying easy to restore; just remove the {# ... #} wrapper to bring it back. #}
+{#
 <section class="section surface-dark" id="madera">
   <div class="wrap">
     <div class="section-head reveal">
@@ -262,6 +281,7 @@
     </div>
   </div>
 </section>
+#}
 
 <!-- ========================================================= GALERÍA -->
 <section class="section surface-dark" id="galeria">
@@ -270,183 +290,107 @@
       <p class="eyebrow">Galería</p>
       <h2 class="h-section">Ochenta y cinco años de luz</h2>
     </div>
-    <div class="gallery" id="gallery">
-      {% set shots = [
-        ('hero/under-full-sail', 'A vela llena, atardecer en el Plata'),
-        ('moored/profile-with-name', '«Juana María» en el casco'),
-        ('sailing/golden-hour', 'Hora dorada en el Plata'),
-        ('on-deck/deck-sunrise', 'Cubierta al amanecer'),
-        ('aerial/overhead-01', 'Doble proa, desde el aire'),
-        ('on-deck/foredeck-stormy', 'Proa y cielo de tormenta'),
-        ('moored/two-boats-night', 'Noche en el Delta'),
-        ('sailing/bsas-skyline', 'Frente a la silueta de Buenos Aires'),
-        ('hero/heeling-blue', 'A toda vela, cielo abierto'),
-        ('aerial/wing-on-wing', 'A vuelo de pájaro'),
-        ('moored/night-profile', 'Perfil nocturno'),
-        ('aerial/sailing-away', 'Rumbo abierto'),
-      ] %}
-      {% for key, caption in shots %}
-        <button
-          class="gallery__item reveal"
-          type="button"
-          data-full="{{ url_for('static', filename='img/' ~ key ~ '-1280.webp') }}"
-          data-caption="{{ caption }}"
-          aria-label="Ampliar: {{ caption }}">
-          {# alt="" — the button's aria-label and the figcaption already name it #}
-          {{ resp_img(key, '', '(min-width: 980px) 33vw, (min-width: 560px) 50vw, 100vw') }}
-          <figcaption>{{ caption }}</figcaption>
-        </button>
+    {% set shots = [
+      ('hero/under-full-sail', 'A vela llena, atardecer en el Plata'),
+      ('moored/profile-with-name', '«Juana María» en el casco'),
+      ('sailing/golden-hour', 'Hora dorada en el Plata'),
+      ('on-deck/deck-sunrise', 'Cubierta al amanecer'),
+      ('aerial/overhead-01', 'Doble proa, desde el aire'),
+      ('on-deck/foredeck-stormy', 'Proa y cielo de tormenta'),
+      ('moored/two-boats-night', 'Noche en el Delta'),
+      ('sailing/bsas-skyline', 'Frente a la silueta de Buenos Aires'),
+      ('hero/heeling-blue', 'A toda vela, cielo abierto'),
+      ('aerial/wing-on-wing', 'A vuelo de pájaro'),
+      ('moored/night-profile', 'Perfil nocturno'),
+      ('aerial/sailing-away', 'Rumbo abierto'),
+    ] %}
+    {# Auto-rotating photo carousel (one shot at a time). main.js drives the
+       autoplay, prev/next, dots and swipe, and opens the lightbox when a slide
+       is tapped. Autoplay pauses on hover/focus/swipe and when the tab is
+       hidden, and is disabled under prefers-reduced-motion. #}
+    <div class="carousel reveal" id="gallery"
+         aria-roledescription="carrusel"
+         aria-label="Galería de fotos de la Juana María">
+      <div class="carousel__viewport">
+        <div class="carousel__track" id="carouselTrack">
+          {% for key, caption in shots %}
+          <button
+            class="carousel__slide"
+            type="button"
+            data-full="{{ url_for('static', filename='img/' ~ key ~ '-1280.webp') }}"
+            data-caption="{{ caption }}"
+            aria-label="Ampliar: {{ caption }}">
+            {# alt="" — the aria-label and the caption already name it #}
+            {{ resp_img(key, '', '(min-width: 980px) 80vw, 100vw') }}
+            <span class="carousel__cap">{{ caption }}</span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      <button class="carousel__btn carousel__prev" type="button" aria-label="Foto anterior">&lsaquo;</button>
+      <button class="carousel__btn carousel__next" type="button" aria-label="Foto siguiente">&rsaquo;</button>
+      <div class="carousel__dots" id="carouselDots" aria-label="Ir a una foto"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================== A BORDO · PROGRAMA DE TRIPULANTES -->
+{# "A bordo" zone — the page's hub, AFTER the story. The crew-program is the
+   business goal, so it keeps its own full-bleed CTA band (art-directed crop,
+   markup unchanged); shown only while the topic is published (it drops out of
+   nav_topics when toggled off in the admin). #}
+{% set crew = nav_topics | selectattr('slug', 'equalto', 'crew-program') | list | first %}
+{% if crew %}
+<section class="crew-cta" id="tripulantes">
+  <div class="crew-cta__media" aria-hidden="true">
+    {{ resp_img(crew.image, '', '100vw', position='50% 45%') }}
+  </div>
+  <div class="crew-cta__scrim"></div>
+  <div class="wrap crew-cta__inner reveal is-in">
+    <p class="eyebrow" style="justify-content:center">Sumate a bordo</p>
+    <h2 class="crew-cta__title">{{ crew.title }}</h2>
+    <p class="crew-cta__lede">
+      La Juana María recibe tripulantes a bordo. Anotate y navegá una ballenera
+      de madera de 1941 por el mismo Río de la Plata para el que fue dibujada.
+    </p>
+    <a class="btn btn--solid crew-cta__btn" href="{{ url_for(crew.endpoint) }}">
+      {{ crew.cta_label }}
+    </a>
+  </div>
+</section>
+{% endif %}
+
+<!-- ===================================================== A BORDO · HUB GRID -->
+{# Every published topic OTHER than the home + crew-program, as a compact card
+   grid — one tidy "contents" block, replacing the old full-bleed per-topic
+   bands that used to be intercut through the story. Driven entirely by
+   nav_topics: disabled topics drop out automatically and the whole section
+   disappears when none are published. #}
+{% set hub_topics = nav_topics
+     | rejectattr('is_home')
+     | rejectattr('slug', 'equalto', 'crew-program')
+     | list %}
+{% if hub_topics %}
+<section class="section surface-canvas hub" id="a-bordo">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">A bordo</p>
+      <h2 class="h-section">Más de la Juana María</h2>
+    </div>
+    {# data-topics (not data-count) on purpose: main.js animates every
+       [data-count] node as a number counter, which would wipe these cards. #}
+    <ul class="hub-grid" role="list" data-topics="{{ hub_topics | length }}">
+      {% for t in hub_topics %}
+        {{ topic_card(t, loop.index0 % 3) }}
       {% endfor %}
-    </div>
+    </ul>
   </div>
 </section>
+{% endif %}
 
-<!-- ===================================================== FICHA TÉCNICA -->
-<section class="section surface-wood" id="ficha">
-  <div class="wrap">
-    <div class="spec">
-      <div class="reveal">
-        <p class="eyebrow">Ficha técnica</p>
-        <h2 class="h-section">Registro de a bordo</h2>
-        <div class="feature__media" style="margin-top:2rem">
-          {{ resp_img('moored/profile-with-name',
-              'La Juana María amarrada, de perfil, con su nombre en el casco',
-              '(min-width: 900px) 40vw, 100vw') }}
-        </div>
-      </div>
-      <dl class="spec__list reveal" data-delay="1">
-        <div><dt>Tipo</dt><dd>Ballenera de doble proa<small>Diseño de Manuel M. Campos</small></dd></div>
-        <div><dt>Botadura</dt><dd>1941<small>Astillero Agustín Cadenazzi, Tigre</small></dd></div>
-        <div><dt>Eslora</dt><dd>10,65 m</dd></div>
-        <div><dt>Manga</dt><dd>2,47 m</dd></div>
-        <div><dt>Calado</dt><dd>0,60 m<small>Con orza rebatible</small></dd></div>
-        <div><dt>Casco</dt><dd>Madera de viraró<small>Quilla, roda y codaste de lapacho</small></dd></div>
-        <div><dt>Motor</dt><dd>Yanmar 20 HP diésel</dd></div>
-        <div><dt>Velamen</dt><dd>Algodón egipcio + North Sails<small>Dos juegos: el original de algodón y uno nuevo de Dacron</small></dd></div>
-        <div><dt>Bandera</dt><dd>Argentina<small>Prefectura Naval Argentina</small></dd></div>
-        <div><dt>Aguas</dt><dd>Río de la Plata<small>Base en el Yacht Club San Isidro (YCSI), Buenos Aires</small></dd></div>
-      </dl>
-    </div>
-  </div>
-</section>
-
-<!-- ====================================================== SEMINARIOS -->
-<section class="section surface-canvas-deep" id="seminarios">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <p class="eyebrow">El oficio de navegar</p>
-      <h2 class="h-section">Seminarios de náutica</h2>
-      <p class="lede">
-        Con la Juana María al cuidado de un historiador naval, su cubierta se
-        vuelve también un aula. Cuatro miradas al arte de navegar &mdash; el de
-        antes y el de siempre.
-      </p>
-    </div>
-
-    <div class="seminars">
-      <article class="seminar reveal">
-        <div class="seminar__img">
-          {{ resp_img('sailing/bsas-skyline',
-              'La Juana María navegando con su vela mesana izada',
-              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-        </div>
-        <h3>Navegación con mesana</h3>
-        <p>
-          Equilibrar y gobernar el barco con la vela de popa: cómo la mesana
-          ayuda a capear, fondear y mantener el rumbo cuando se navega a vela.
-        </p>
-      </article>
-
-      <article class="seminar reveal" data-delay="1">
-        <div class="seminar__img">
-          {{ resp_img('seminars/astronomica',
-              'Marineros tomando la altura del sol con sextante a bordo de un velero',
-              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-        </div>
-        <h3>Navegación astronómica</h3>
-        <p>
-          Hallar la posición con el sol y las estrellas. Sextante, almanaque y
-          horizonte &mdash; la navegación de altura, como se hacía mucho antes
-          del GPS.
-        </p>
-      </article>
-
-      <article class="seminar reveal" data-delay="2">
-        <div class="seminar__img seminar__img--pale">
-          {{ resp_img('seminars/pinula',
-              'Astrolabio náutico de bronce de 1626, con su alidada de pínulas',
-              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-        </div>
-        <h3>Navegación con pínula</h3>
-        <p>
-          Medir alturas y rumbos con instrumentos de pínulas: el astrolabio
-          náutico y la ballestilla, los ojos del navegante antes de la
-          electrónica.
-        </p>
-      </article>
-
-      <article class="seminar reveal" data-delay="3">
-        <div class="seminar__img seminar__img--pale">
-          {{ resp_img('seminars/historia',
-              'Carta portulana del siglo XVI con rosas de los vientos',
-              '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-        </div>
-        <h3>Historia náutica</h3>
-        <p>
-          Del portulano al Río de la Plata: cartas, derroteros y la cultura
-          marinera que dio origen a barcos como la Juana María.
-        </p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ======================================================= LOS PERICOS -->
-<section class="section surface-dark" id="pericos">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <p class="eyebrow">En cámara</p>
-      <h2 class="h-section">La estrella de Los Pericos</h2>
-      <p class="lede">
-        La Juana María protagoniza dos videoclips de Los Pericos, dirigidos por
-        Belén Asad, filmados en la misma travesía de San Isidro al Río de la
-        Plata. Capitán: Marcelo Blanco. Timonel: Mateo Blanco.
-      </p>
-    </div>
-    <div class="videos">
-      <div class="video-card reveal">
-        <button
-          class="video-facade"
-          type="button"
-          data-embed="https://www.youtube-nocookie.com/embed/f_ZN-yupAVg?autoplay=1&rel=0"
-          data-title="La Distancia — Los Pericos"
-          data-bg="{{ url_for('static', filename='img/sailing/bsas-skyline-640.webp') }}"
-          aria-label="Reproducir: La Distancia, de Los Pericos">
-          <span class="play" aria-hidden="true"></span>
-        </button>
-        <div class="video-card__meta">
-          <b>La Distancia</b>
-          <span>Los Pericos · con Dolores Barreiro · 2022</span>
-        </div>
-      </div>
-      <div class="video-card reveal" data-delay="1">
-        <button
-          class="video-facade"
-          type="button"
-          data-embed="https://player.vimeo.com/video/644130051?autoplay=1"
-          data-title="El Próximo Viernes — Los Pericos"
-          data-bg="{{ url_for('static', filename='img/sailing/golden-hour-640.webp') }}"
-          aria-label="Reproducir: El Próximo Viernes, de Los Pericos">
-          <span class="play" aria-hidden="true"></span>
-        </button>
-        <div class="video-card__meta">
-          <b>El Próximo Viernes</b>
-          <span>Los Pericos · dos balleneras en formación · 2021</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+{# Seminarios moved to its own topic page — app/templates/topics/seminars.html.
+   The Los Pericos audiovisual section was removed; it'll be reworked under the
+   "apariciones audiovisuales" scheme inside the "Sobre la Juana María" topic. #}
 
 {% endblock %}
 

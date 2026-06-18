@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {# Admin is private: keep it out of search engines. #}
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{% block title %}Admin — Juana María{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml" />
+  </head>
+  <body class="admin">
+    <main class="admin__card">
+      <header class="admin__head">
+        <a class="admin__brand" href="{{ url_for('index') }}">Juana María</a>
+        <span class="admin__tag">Admin</span>
+      </header>
+      {% block body %}{% endblock %}
+    </main>
+  </body>
+</html>

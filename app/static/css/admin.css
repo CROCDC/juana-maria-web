@@ -1,0 +1,208 @@
+/* ==========================================================================
+   Juana María — admin panel (topic visibility)
+   Small, self-contained stylesheet for the private /admin screens. Shares the
+   site palette but not its public layout.
+   ========================================================================== */
+
+:root {
+  --abyss: #150e08;
+  --walnut: #241710;
+  --canvas: #f0e6d1;
+  --sail: #f9f4e9;
+  --ink: #221a10;
+  --ink-soft: #4b3c2a;
+  --bronze: #b3873d;
+  --brass: #cda35c;
+  --hairline-soft: rgba(120, 92, 50, 0.28);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Spectral", Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.admin {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--abyss);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+.admin__card {
+  width: 100%;
+  max-width: 540px;
+  background: var(--sail);
+  border: 1px solid var(--hairline-soft);
+  border-radius: 6px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+}
+
+.admin__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.admin__brand {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.admin__tag {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.admin h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.1rem);
+  margin: 0 0 0.6rem;
+}
+
+.admin__hint {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  margin: 0 0 1.4rem;
+}
+
+.admin__ok {
+  margin: 0 0 1.2rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 3px solid #3f7d3f;
+  background: rgba(63, 125, 63, 0.1);
+  font-size: 0.92rem;
+}
+
+.admin__error {
+  margin: 0 0 1.2rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 3px solid #a23b2e;
+  background: rgba(162, 59, 46, 0.1);
+  font-size: 0.92rem;
+}
+
+.admin__form label {
+  display: block;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.admin__form input[type="password"] {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--hairline-soft);
+  border-radius: 4px;
+  margin-bottom: 1.2rem;
+}
+
+.admin__form input[type="password"]:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.admin__topics {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.admin__topics li {
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.admin__topic {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 0.25rem;
+  cursor: pointer;
+  /* override the uppercase label style for the checkbox rows */
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.admin__topic input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--bronze);
+  flex: none;
+}
+
+.admin__topic-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin__topic-label {
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.admin__topic-path {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin button[type="submit"] {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  color: var(--sail);
+  background: var(--walnut);
+  border: 1px solid var(--bronze);
+  border-radius: 4px;
+  padding: 0.7rem 1.6rem;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.admin button[type="submit"]:hover {
+  background: var(--bronze);
+  color: var(--abyss);
+}
+
+.admin__logout {
+  margin: 1.4rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--hairline-soft);
+}
+
+.admin__link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.admin__link:hover {
+  color: var(--bronze);
+}

@@ -1,0 +1,73 @@
+{% extends "topics/_base_topic.html" %}
+{% from "_macros.html" import resp_img with context %}
+
+{% block topic_eyebrow %}El oficio de navegar{% endblock %}
+
+{% block topic_lead %}
+<p class="lede">
+  (REVISION) Con la Juana María al cuidado de un historiador naval, su cubierta se vuelve
+  también un aula. Especialistas suben a bordo para compartir el arte de
+  navegar &mdash; el de antes y el de siempre. Cada seminario se anuncia aquí
+  cuando se programa. (REVISION)
+</p>
+{% endblock %}
+
+{% block topic_body %}
+<div class="seminars">
+  {# Each seminar has its own id so it can be linked individually
+     (e.g. /seminars#astronomica) as it gets scheduled. #}
+  <article class="seminar reveal" id="mesana">
+    <div class="seminar__img">
+      {{ resp_img('sailing/bsas-skyline',
+          'La Juana María navegando con su vela mesana izada',
+          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+    </div>
+    <h2>Navegación con mesana</h2>
+    <p>
+      Equilibrar y gobernar el barco con la vela de popa: cómo la mesana
+      ayuda a capear, fondear y mantener el rumbo cuando se navega a vela.
+    </p>
+  </article>
+
+  <article class="seminar reveal" id="astronomica" data-delay="1">
+    <div class="seminar__img">
+      {{ resp_img('seminars/astronomica',
+          'Marineros tomando la altura del sol con sextante a bordo de un velero',
+          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+    </div>
+    <h2>Navegación astronómica</h2>
+    <p>
+      Hallar la posición con el sol y las estrellas. Sextante, almanaque y
+      horizonte &mdash; la navegación de altura, como se hacía mucho antes
+      del GPS.
+    </p>
+  </article>
+
+  <article class="seminar reveal" id="pinula" data-delay="2">
+    <div class="seminar__img seminar__img--pale">
+      {{ resp_img('seminars/pinula',
+          'Astrolabio náutico de bronce de 1626, con su alidada de pínulas',
+          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+    </div>
+    <h2>Navegación con pínula</h2>
+    <p>
+      Medir alturas y rumbos con instrumentos de pínulas: el astrolabio
+      náutico y la ballestilla, los ojos del navegante antes de la
+      electrónica.
+    </p>
+  </article>
+
+  <article class="seminar reveal" id="historia" data-delay="3">
+    <div class="seminar__img seminar__img--pale">
+      {{ resp_img('seminars/historia',
+          'Carta portulana del siglo XVI con rosas de los vientos',
+          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
+    </div>
+    <h2>Historia náutica</h2>
+    <p>
+      Del portulano al Río de la Plata: cartas, derroteros y la cultura
+      marinera que dio origen a barcos como la Juana María.
+    </p>
+  </article>
+</div>
+{% endblock %}

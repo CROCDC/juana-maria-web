@@ -9,10 +9,9 @@ Convention (CONVENTIONS.md §4):
 
 For Flask-Migrate autogenerate to detect a model it must be imported here, since
 this package is imported inside the factory's app context.
-
-Example:
-
-    from app.models.contact_message import ContactMessage
-
-    __all__ = ["ContactMessage"]
 """
+
+from app.models.crew_application import CrewApplication
+from app.models.topic_visibility import TopicVisibility
+
+__all__ = ["CrewApplication", "TopicVisibility"]
