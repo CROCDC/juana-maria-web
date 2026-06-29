@@ -1,4 +1,24 @@
 {% extends "topics/_base_topic.html" %}
-{% block topic_eyebrow %}Un día de navegación{% endblock %}
-{# TODO: replace with the five rumbos (one paragraph each) once the copy lands. #}
-{% block topic_body %}{% include "topics/_pending.html" %}{% endblock %}
+{% block topic_eyebrow %}Adónde apunta la proa{% endblock %}
+
+{% block topic_lead %}
+<p class="lede">
+  Cada salida elige su rumbo. Estos son los de la Juana María sobre el Río de la
+  Plata: del atardecer frente a Buenos Aires al cruce a la Banda Oriental.
+</p>
+{% endblock %}
+
+{% block topic_body %}
+{# Rendered from the RUMBOS registry (app/content/rumbos.py) so the page and the
+   crew-program form's rumbo select always offer the same set. #}
+<div class="rumbos">
+  {% for r in rumbos %}
+  <article class="rumbo reveal" id="{{ r.key }}"{% if not loop.first %} data-delay="{{ loop.index0 }}"{% endif %}>
+    <p class="rumbo__index" aria-hidden="true">{{ '%02d' % loop.index }}</p>
+    <h2 class="rumbo__name">{{ r.name }}</h2>
+    <p class="rumbo__where">{{ r.where }}</p>
+    <p class="rumbo__text">{{ r.body }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% endblock %}

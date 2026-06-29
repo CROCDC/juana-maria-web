@@ -119,10 +119,16 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_globals() -> dict[str, object]:
         # Global template variables (footer year + responsive-image metadata).
+        # RUMBOS is the single source of truth shared by the routes page and the
+        # crew-program form's "rumbo de preferencia" select (see content/rumbos).
+        from app.content.rumbos import RUMBOS, RUMBOS_BY_KEY
+
         return {
             "current_year": date.today().year,
             "IMG": image_manifest,
             "IMG_WIDTHS": image_widths,
+            "rumbos": RUMBOS,
+            "rumbos_by_key": RUMBOS_BY_KEY,
         }
 
     @app.context_processor
@@ -149,6 +155,8 @@ def create_app() -> Flask:
     with app.app_context():
         # Importing models registers them with SQLAlchemy so Flask-Migrate
         # autogenerate can detect them.
+        from sqlalchemy import inspect as sa_inspect
+
         from app import models  # noqa: F401
         from app.content.topics import DEFAULT_ENABLED
         from app.repositories.topic_visibility_repository import (
@@ -157,8 +165,12 @@ def create_app() -> Flask:
         from app.routes import register_routes
 
         register_routes(app)
-        db.create_all()
-        # Insert a visibility row for any topic that doesn't have one yet.
-        TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+        # The schema is owned by Alembic (`flask db upgrade`, run from the Docker
+        # entrypoint before the server starts), not db.create_all(). Seed the
+        # reference rows only once the table exists, so importing the app before
+        # the first migration runs (e.g. during `flask db upgrade` itself) never
+        # crashes on a missing table.
+        if sa_inspect(db.engine).has_table("topic_visibility"):
+            TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
 
     return app

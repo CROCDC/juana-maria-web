@@ -302,9 +302,22 @@ body.admin {
   padding: 0.15rem 0.6rem;
 }
 
+/* A minor flagged for attention: warmer red pill so it stands out in the list. */
+.admin__app-exp--warn {
+  color: #fff;
+  background: #a23b2e;
+  border-color: #a23b2e;
+}
+
 .admin__app-contact {
   margin-top: 0.3rem;
   font-size: 0.92rem;
+}
+
+.admin__app-meta {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
 }
 
 .admin__app-contact a {

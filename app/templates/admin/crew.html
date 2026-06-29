@@ -18,17 +18,33 @@
   <li class="admin__app">
     <div class="admin__app-top">
       <span class="admin__app-name">{{ app.full_name }}</span>
-      {% if app.experience %}
-      <span class="admin__app-exp">{{ app.experience }}</span>
-      {% endif %}
+      <span class="admin__app-exp{% if not app.is_adult %} admin__app-exp--warn{% endif %}">
+        {{ 'Mayor de 18' if app.is_adult else 'Menor de 18' }}
+      </span>
     </div>
     <div class="admin__app-contact">
       <a href="mailto:{{ app.email }}">{{ app.email }}</a>
-      {% if app.phone %}
+      {% if app.whatsapp %}
       <span class="admin__app-sep" aria-hidden="true">·</span>
-      <a href="tel:{{ app.phone }}">{{ app.phone }}</a>
+      <a href="https://wa.me/{{ app.whatsapp | replace(' ', '') | replace('+', '') | replace('-', '') | replace('(', '') | replace(')', '') }}"
+         target="_blank" rel="noopener">WhatsApp: {{ app.whatsapp }}</a>
+      {% endif %}
+      {% if app.instagram %}
+      <span class="admin__app-sep" aria-hidden="true">·</span>
+      <a href="https://instagram.com/{{ app.instagram | replace('@', '') }}"
+         target="_blank" rel="noopener">{{ app.instagram if app.instagram.startswith('@') else '@' ~ app.instagram }}</a>
       {% endif %}
     </div>
+    {% if app.preferred_date or app.preferred_route %}
+    <p class="admin__app-meta">
+      {% if app.preferred_date %}<span>📅 {{ app.preferred_date }}</span>{% endif %}
+      {% if app.preferred_date and app.preferred_route %}<span class="admin__app-sep" aria-hidden="true">·</span>{% endif %}
+      {% if app.preferred_route %}
+      {% set rumbo = rumbos_by_key.get(app.preferred_route) %}
+      <span>🧭 {{ rumbo.name if rumbo else app.preferred_route }}</span>
+      {% endif %}
+    </p>
+    {% endif %}
     {% if app.message %}
     <p class="admin__app-msg">{{ app.message }}</p>
     {% endif %}

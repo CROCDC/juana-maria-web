@@ -17,6 +17,7 @@ from flask import (
 )
 from werkzeug.wrappers import Response as WerkzeugResponse
 
+from app.content.rumbos import RUMBOS_BY_KEY
 from app.content.topics import TOGGLEABLE_TOPICS, Topic, get_topic
 from app.repositories.crew_application_repository import CrewApplicationRepository
 from app.repositories.topic_visibility_repository import TopicVisibilityRepository
@@ -31,11 +32,15 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 def _validate_crew_form(data: dict[str, str]) -> dict[str, str]:
     errors: dict[str, str] = {}
     if not data["full_name"]:
-        errors["full_name"] = "Ingresá tu nombre y apellido."
+        errors["full_name"] = "Ingresá tu nombre."
     if not data["email"]:
         errors["email"] = "Ingresá tu email."
     elif not _EMAIL_RE.match(data["email"]):
         errors["email"] = "Revisá el email: no parece válido."
+    if not data["whatsapp"]:
+        errors["whatsapp"] = "Dejanos un WhatsApp: es por donde te contactamos."
+    if data["is_adult"] not in ("si", "no"):
+        errors["is_adult"] = "Contanos si sos mayor de 18 años."
     return errors
 
 
@@ -91,13 +96,29 @@ def register_routes(app: Flask) -> None:
             data = {
                 "full_name": request.form.get("full_name", "").strip(),
                 "email": request.form.get("email", "").strip(),
-                "phone": request.form.get("phone", "").strip(),
-                "experience": request.form.get("experience", "").strip(),
+                "whatsapp": request.form.get("whatsapp", "").strip(),
+                "instagram": request.form.get("instagram", "").strip(),
+                "is_adult": request.form.get("is_adult", "").strip(),
+                "preferred_date": request.form.get("preferred_date", "").strip(),
+                "preferred_route": request.form.get("preferred_route", "").strip(),
                 "message": request.form.get("message", "").strip(),
             }
             errors = _validate_crew_form(data)
             if not errors:
-                CrewApplicationRepository.create(**data)
+                # Persist the rumbo only if it's a known key (enum from RUMBOS);
+                # ignore anything else so the column stays a clean enum value.
+                route = data["preferred_route"]
+                preferred_route = route if route in RUMBOS_BY_KEY else ""
+                CrewApplicationRepository.create(
+                    full_name=data["full_name"],
+                    email=data["email"],
+                    whatsapp=data["whatsapp"],
+                    is_adult=data["is_adult"] == "si",
+                    instagram=data["instagram"],
+                    preferred_date=data["preferred_date"],
+                    preferred_route=preferred_route,
+                    message=data["message"],
+                )
                 # Post/Redirect/Get: ?sent=1 shows the thank-you state.
                 return redirect(url_for("topic_crew_program", sent=1))
 

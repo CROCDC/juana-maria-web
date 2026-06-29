@@ -115,8 +115,11 @@ def test_crew_form_valid_submission_persists(client: Any, app_instance: Any) -> 
         data={
             "full_name": "Ada Lovelace",
             "email": "ada@example.com",
-            "phone": "+54 11 5555 5555",
-            "experience": "Intermedia",
+            "whatsapp": "+54 11 5555 5555",
+            "instagram": "@ada",
+            "is_adult": "si",
+            "preferred_date": "un sábado de noviembre",
+            "preferred_route": "banda-oriental",
             "message": "Quiero navegar.",
         },
     )
@@ -127,7 +130,45 @@ def test_crew_form_valid_submission_persists(client: Any, app_instance: Any) -> 
         saved = CrewApplicationRepository.get_all()
     assert len(saved) == 1
     assert saved[0].email == "ada@example.com"
-    assert saved[0].experience == "Intermedia"
+    assert saved[0].whatsapp == "+54 11 5555 5555"
+    assert saved[0].instagram == "@ada"
+    assert saved[0].is_adult is True
+    assert saved[0].preferred_date == "un sábado de noviembre"
+    # The rumbo is stored as the enum key from RUMBOS, not free text.
+    assert saved[0].preferred_route == "banda-oriental"
+
+
+def test_crew_form_ignores_unknown_rumbo(client: Any, app_instance: Any) -> None:
+    # A preferred_route that isn't a known RUMBOS key is dropped, not stored.
+    client.post(
+        "/crew-program",
+        data={
+            "full_name": "Eve",
+            "email": "eve@example.com",
+            "whatsapp": "123",
+            "is_adult": "si",
+            "preferred_route": "not-a-rumbo",
+        },
+    )
+    with app_instance.app_context():
+        saved = CrewApplicationRepository.get_all()
+    assert len(saved) == 1
+    assert saved[0].preferred_route is None
+
+
+def test_crew_form_requires_whatsapp_and_age(client: Any, app_instance: Any) -> None:
+    # whatsapp and the age question are both required; missing them blocks the
+    # submission even when name + email are valid.
+    resp = client.post(
+        "/crew-program",
+        data={"full_name": "Sin WhatsApp", "email": "ok@example.com"},
+    )
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert "Dejanos un WhatsApp" in body
+    assert "si sos mayor de 18" in body
+    with app_instance.app_context():
+        assert CrewApplicationRepository.get_all() == []
 
 
 def test_crew_form_thank_you_state_after_redirect(client: Any) -> None:
@@ -217,8 +258,10 @@ def test_admin_crew_lists_submitted_applications(client: Any, app_instance: Any)
         CrewApplicationRepository.create(
             full_name="Grace Hopper",
             email="grace@example.com",
-            phone="+54 11 5555 1234",
-            experience="Avanzada",
+            whatsapp="+54 11 5555 1234",
+            instagram="@grace",
+            is_adult=True,
+            preferred_route="southeast",
             message="Quiero sumarme a una salida.",
         )
     client.post("/admin/login", data={"password": ADMIN_PW})
@@ -226,7 +269,10 @@ def test_admin_crew_lists_submitted_applications(client: Any, app_instance: Any)
     assert "Inscripciones de tripulantes" in body
     assert "Grace Hopper" in body
     assert "grace@example.com" in body
-    assert "Avanzada" in body
+    assert "@grace" in body
+    # The admin resolves the stored rumbo key ("southeast") to its display name.
+    assert "Rumbo Sudeste" in body
+    assert "Mayor de 18" in body
 
 
 def test_admin_crew_shows_empty_state_with_no_applications(

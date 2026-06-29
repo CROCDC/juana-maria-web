@@ -11,15 +11,21 @@ class CrewApplicationRepository:
     def create(
         full_name: str,
         email: str,
-        phone: str | None = None,
-        experience: str | None = None,
+        whatsapp: str,
+        is_adult: bool = False,
+        instagram: str | None = None,
+        preferred_date: str | None = None,
+        preferred_route: str | None = None,
         message: str | None = None,
     ) -> CrewApplication:
         application = CrewApplication(
             full_name=full_name,
             email=email,
-            phone=phone or None,
-            experience=experience or None,
+            whatsapp=whatsapp,
+            is_adult=is_adult,
+            instagram=instagram or None,
+            preferred_date=preferred_date or None,
+            preferred_route=preferred_route or None,
             message=message or None,
         )
         db.session.add(application)

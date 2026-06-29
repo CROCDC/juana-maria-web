@@ -3,8 +3,8 @@
 
 {% block topic_lead %}
 <p class="lede">
-  La Juana María recibe tripulantes a bordo. Dejanos tus datos y nos ponemos en
-  contacto cuando se arme la próxima salida.
+  Sumate a la tripulación por un día y compartí una navegación por el Río de la
+  Plata.
 </p>
 {% endblock %}
 
@@ -13,20 +13,67 @@
 <div class="form-success reveal" role="status">
   <h2>¡Gracias! Recibimos tu inscripción.</h2>
   <p>
-    Te vamos a escribir cuando haya una próxima navegación con lugar para
-    tripulantes. Mientras tanto, podés seguirnos en
+    Nos vamos a comunicar con vos por WhatsApp para coordinar la próxima
+    navegación con lugar para tripulantes. Mientras tanto, podés seguirnos en
     <a class="link-underline" href="https://www.instagram.com/velaclasica/"
        target="_blank" rel="noopener">@velaclasica</a>.
   </p>
   <p><a class="link-underline" href="{{ url_for('topic_crew_program') }}">Cargar otra inscripción</a></p>
 </div>
 {% else %}
+<div class="prose reveal">
+  <p>
+    Un barco es una comunidad navegando. Navegar con tripulantes enriquece la
+    experiencia, facilita las maniobras y permite compartir conocimientos. La
+    Juana María es una comunidad con historia, y es posible sumarse.
+  </p>
+  <p>
+    Si quisieras incorporarte a la tripulación durante un día, completá este
+    formulario para que podamos contactarte, ofrecerte información y coordinar
+    nuestra navegación por el Río de la Plata.
+  </p>
+
+  <p><strong>Es gratis: sólo compartimos los gastos operativos.</strong></p>
+  <p>
+    La navegación es gratuita. Sólo existen unos pocos gastos operativos de
+    poner en movimiento al barco (derecho de amarra, combustible, servicio de
+    marinería, etc.), que nos distribuimos equitativamente entre toda la
+    tripulación a bordo. Únicamente te pediremos que participes con tu parte en
+    esos gastos mínimos compartidos.
+  </p>
+  <p>
+    Como son montos pequeños pero cambiantes (últimamente rondaban, por persona,
+    el precio de una pizza en Buenos Aires), los calculamos y actualizamos en
+    cada salida, y te los comentamos al contactarte para conocer tu parecer.
+  </p>
+
+  <p><strong>No es necesario tener experiencia: podrás ganarla a bordo.</strong></p>
+  <p>
+    No es necesario contar con experiencia náutica para sumarte a una navegación
+    durante un día. Y si la tuvieras, ¡bienvenida!: la navegación es un
+    aprendizaje constante.
+  </p>
+</div>
+
 {% if errors %}
 <p class="form-error-summary reveal" role="alert">
   Revisá los campos marcados y volvé a enviar.
 </p>
 {% endif %}
 <form class="form reveal" method="post" action="{{ url_for('topic_crew_program') }}" novalidate>
+  <div class="form-row">
+    <label for="email">Correo electrónico <span aria-hidden="true">*</span></label>
+    <input
+      id="email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      required
+      value="{{ form.get('email', '') }}"
+      {% if errors.get('email') %}aria-invalid="true" aria-describedby="err-email"{% endif %} />
+    {% if errors.get('email') %}<p class="form-error" id="err-email">{{ errors['email'] }}</p>{% endif %}
+  </div>
+
   <div class="form-row">
     <label for="full_name">Nombre y apellido <span aria-hidden="true">*</span></label>
     <input
@@ -41,41 +88,73 @@
   </div>
 
   <div class="form-row">
-    <label for="email">Email <span aria-hidden="true">*</span></label>
+    <label for="whatsapp">WhatsApp <span aria-hidden="true">*</span></label>
+    <p class="form-hint" id="hint-whatsapp">Nos comunicamos con vos por este medio.</p>
     <input
-      id="email"
-      name="email"
-      type="email"
-      autocomplete="email"
-      required
-      value="{{ form.get('email', '') }}"
-      {% if errors.get('email') %}aria-invalid="true" aria-describedby="err-email"{% endif %} />
-    {% if errors.get('email') %}<p class="form-error" id="err-email">{{ errors['email'] }}</p>{% endif %}
-  </div>
-
-  <div class="form-row">
-    <label for="phone">Teléfono</label>
-    <input
-      id="phone"
-      name="phone"
+      id="whatsapp"
+      name="whatsapp"
       type="tel"
       autocomplete="tel"
-      value="{{ form.get('phone', '') }}" />
+      required
+      aria-describedby="hint-whatsapp{% if errors.get('whatsapp') %} err-whatsapp{% endif %}"
+      value="{{ form.get('whatsapp', '') }}"
+      {% if errors.get('whatsapp') %}aria-invalid="true"{% endif %} />
+    {% if errors.get('whatsapp') %}<p class="form-error" id="err-whatsapp">{{ errors['whatsapp'] }}</p>{% endif %}
   </div>
 
   <div class="form-row">
-    <label for="experience">Experiencia náutica</label>
-    {% set exp = form.get('experience', '') %}
-    <select id="experience" name="experience">
-      <option value="">Prefiero no aclarar</option>
-      {% for opt in ['Ninguna', 'Básica', 'Intermedia', 'Avanzada'] %}
-      <option value="{{ opt }}"{% if exp == opt %} selected{% endif %}>{{ opt }}</option>
+    <label for="instagram">Instagram</label>
+    <input
+      id="instagram"
+      name="instagram"
+      type="text"
+      autocapitalize="none"
+      spellcheck="false"
+      placeholder="@tucuenta"
+      value="{{ form.get('instagram', '') }}" />
+  </div>
+
+  <div class="form-row">
+    <span class="form-label" id="label-is_adult">¿Sos mayor de 18 años? <span aria-hidden="true">*</span></span>
+    {% set adult = form.get('is_adult', '') %}
+    <div class="form-radio-group" role="radiogroup" aria-labelledby="label-is_adult"
+         {% if errors.get('is_adult') %}aria-describedby="err-is_adult"{% endif %}>
+      <label class="form-radio">
+        <input type="radio" name="is_adult" value="si" required {% if adult == 'si' %}checked{% endif %} />
+        <span>Sí</span>
+      </label>
+      <label class="form-radio">
+        <input type="radio" name="is_adult" value="no" {% if adult == 'no' %}checked{% endif %} />
+        <span>No</span>
+      </label>
+    </div>
+    {% if errors.get('is_adult') %}<p class="form-error" id="err-is_adult">{{ errors['is_adult'] }}</p>{% endif %}
+  </div>
+
+  <div class="form-row">
+    <label for="preferred_date">¿Cuándo te gustaría salir a navegar?</label>
+    <input
+      id="preferred_date"
+      name="preferred_date"
+      type="text"
+      placeholder="Ej.: un fin de semana de noviembre"
+      value="{{ form.get('preferred_date', '') }}" />
+  </div>
+
+  <div class="form-row">
+    <label for="preferred_route">¿Tenés algún rumbo de preferencia?</label>
+    {% set route = form.get('preferred_route', '') %}
+    {# Options come from the shared RUMBOS registry; the value stored is the key. #}
+    <select id="preferred_route" name="preferred_route">
+      <option value="">Sin preferencia</option>
+      {% for r in rumbos %}
+      <option value="{{ r.key }}"{% if route == r.key %} selected{% endif %}>{{ r.name }} · {{ r.where }}</option>
       {% endfor %}
     </select>
   </div>
 
   <div class="form-row">
-    <label for="message">Contanos sobre vos</label>
+    <label for="message">¿Algún comentario, consulta o inquietud?</label>
     <textarea id="message" name="message" rows="4">{{ form.get('message', '') }}</textarea>
   </div>
 

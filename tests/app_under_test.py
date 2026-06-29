@@ -4,15 +4,14 @@ The framework-specific glue conftest.py imports:
   build_app, apply_migrations, client, LiveServer, session_cookie.
 
 Adapted to juana-maria-web's factory, which differs from the stock template in
-two ways:
+one way:
   - ``create_app()`` takes NO config argument; it reads ``DATABASE_URL`` from the
     environment (defaulting to local SQLite). We point it at the test DB by
     setting that env var before building the app.
-  - There are no Alembic migrations yet (``migrations/`` is empty) and no models,
-    so ``flask db upgrade`` has nothing to run. ``apply_migrations`` instead calls
-    ``db.create_all()`` — the same thing the factory already does at startup — so
-    the schema is materialised from whatever models exist (currently none). Swap
-    this for ``flask_migrate.upgrade()`` once real migrations land.
+
+The schema is owned by Alembic, so ``apply_migrations`` runs the real
+``flask db upgrade`` against the fresh test DB — every run exercises the full
+migration chain, exactly as production does on deploy.
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ from werkzeug.serving import make_server
 # testcontainers Postgres. setdefault so an explicit DATABASE_URL still wins.
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 
-from app.factory import create_app, db
+from app.factory import create_app
 
 if TYPE_CHECKING:
     # Playwright's cookie TypedDict lives in a private module; referenced only for
@@ -60,12 +59,13 @@ def build_app(database_url: str) -> Any:
 
 
 def apply_migrations(app: Any, database_url: str) -> None:
-    # No Alembic migrations exist yet (empty migrations/ dir, no models), so the
-    # real migration path is db.create_all() — idempotent and matches what the
-    # factory runs on boot. Replace with flask_migrate.upgrade() once the project
-    # has a migrations history (e.g. when the contact-message model lands).
+    # Run the real Alembic migration chain against the fresh test DB, the same
+    # way production does (Docker entrypoint -> `flask db upgrade`). This exercises
+    # every migration on every test run.
+    from flask_migrate import upgrade
+
     with app.app_context():
-        db.create_all()
+        upgrade()
 
 
 @contextmanager

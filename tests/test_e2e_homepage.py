@@ -165,9 +165,11 @@ def test_crew_form_submission_shows_thank_you(
     try:
         page.goto(f"{live_server}/crew-program", wait_until="networkidle")
 
-        page.fill("#full_name", "Grace Hopper")
         page.fill("#email", "grace@example.com")
-        page.select_option("#experience", "Avanzada")
+        page.fill("#full_name", "Grace Hopper")
+        page.fill("#whatsapp", "+54 11 5555 1234")
+        page.check("input[name='is_adult'][value='si']")
+        page.select_option("#preferred_route", "banda-oriental")
         page.fill("#message", "Quiero sumarme a la tripulación.")
         page.get_by_role("button", name="Enviar inscripción").click()
 
