@@ -19,6 +19,7 @@
   function closeMenu() {
     if (!links || !toggle) return;
     links.classList.remove("is-open");
+    if (nav) nav.classList.remove("menu-open");
     toggle.setAttribute("aria-expanded", "false");
     toggle.setAttribute("aria-label", "Abrir menú");
     document.body.style.overflow = "";
@@ -27,6 +28,10 @@
   if (toggle && links) {
     toggle.addEventListener("click", function () {
       var open = links.classList.toggle("is-open");
+      // The bar's backdrop-filter makes it the containing block for the fixed
+      // overlay (clipping it to the bar's height); drop it while the menu is open
+      // so the overlay covers the full viewport. See .nav.menu-open in styles.css.
+      if (nav) nav.classList.toggle("menu-open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
       document.body.style.overflow = open ? "hidden" : "";

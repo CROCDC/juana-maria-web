@@ -354,6 +354,17 @@ section[id],
   padding-block: 0.85rem;
 }
 
+/* A backdrop-filtered element becomes the containing block for its fixed-position
+   descendants, which would clip the off-canvas menu overlay (.nav-links, fixed
+   inset:0) to the bar's height — so the open menu bleeds over the page when
+   opened mid-scroll or on the solid-nav topic pages. Drop the filter while the
+   menu is open (it's hidden behind the full-screen overlay anyway). JS toggles
+   .menu-open; see main.js. Listed after .is-scrolled to win the specificity tie. */
+.nav.menu-open {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .brand {
   display: flex;
   align-items: baseline;

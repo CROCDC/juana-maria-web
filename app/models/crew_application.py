@@ -32,7 +32,7 @@ class CrewApplication(db.Model):  # type: ignore[name-defined,misc]
     # When they'd like to sail: free text, since plans are usually approximate
     # ("un sábado de noviembre") rather than an exact calendar date.
     preferred_date = db.Column(db.String(120), nullable=True)
-    # Which of the rumbos they'd prefer; stores the rumbo name, empty if none.
+    # Which of the rumbos they'd prefer; stores the rumbo key, empty if none.
     preferred_route = db.Column(db.String(80), nullable=True)
     message = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=_utcnow)

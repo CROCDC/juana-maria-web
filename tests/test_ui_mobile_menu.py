@@ -50,12 +50,55 @@ def test_side_menu_opens_full_screen(
         for label in ("Sobre la Juana María", "Programa de tripulantes"):
             expect(nav_links.get_by_role("link", name=label)).to_be_visible()
 
-        # The overlay covers the full viewport width (no horizontal gap/overflow).
+        # The overlay covers the full viewport — width AND height. Height matters:
+        # a backdrop-filtered nav would clip the fixed overlay to the bar's height
+        # (see test_side_menu_covers_page_when_scrolled), letting the page show
+        # through; assert both dimensions so that regression can't slip past.
         box = nav_links.bounding_box()
         assert box is not None
         assert abs(box["width"] - width) <= 1, f"menu width {box['width']} != {width}"
+        assert box["height"] >= height - 1, f"menu height {box['height']} < {height}"
 
         os.makedirs(_SCREENSHOT_DIR, exist_ok=True)
         page.screenshot(path=os.path.join(_SCREENSHOT_DIR, f"menu-open-{viewport_name}.png"))
+    finally:
+        context.close()
+
+
+def test_side_menu_covers_page_when_scrolled(
+    live_server: str, browser_instance: Browser
+) -> None:
+    """Regression: opening the menu mid-page must still cover the whole viewport.
+
+    The nav bar uses backdrop-filter (always on the solid-nav topic pages, and on
+    the home once scrolled). A backdrop-filtered element becomes the containing
+    block for its fixed-position descendants, which used to clip the open overlay
+    to the bar's height — so the menu links bled over the page content when opened
+    after scrolling. main.js drops the filter (.nav.menu-open) while the menu is
+    open; this guards that fix.
+    """
+    width, height = 390, 844
+    context = browser_instance.new_context(
+        viewport={"width": width, "height": height}, reduced_motion="reduce"
+    )
+    page = context.new_page()
+    try:
+        # A solid-nav topic page (crew-program is published by default) — its nav
+        # carries backdrop-filter at all times, the exact trigger for the bug.
+        page.goto(f"{live_server}/crew-program", wait_until="networkidle")
+        # Scroll past the threshold so .is-scrolled is also active (mid-page).
+        page.evaluate("window.scrollTo(0, 600)")
+        page.wait_for_function("document.getElementById('nav').classList.contains('is-scrolled')")
+
+        page.locator("#navToggle").click()
+        nav_links = page.locator("#navLinks")
+        expect(nav_links).to_have_class("nav-links is-open")
+
+        box = nav_links.bounding_box()
+        assert box is not None
+        # The overlay must fill the viewport in BOTH dimensions; before the fix its
+        # height collapsed to the nav bar (~60px) and the page showed through.
+        assert abs(box["width"] - width) <= 1, f"menu width {box['width']} != {width}"
+        assert box["height"] >= height - 1, f"menu height {box['height']} < {height}"
     finally:
         context.close()
