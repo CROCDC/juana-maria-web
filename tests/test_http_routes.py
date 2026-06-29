@@ -165,8 +165,8 @@ def test_crew_form_requires_whatsapp_and_age(client: Any, app_instance: Any) -> 
     )
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert "Dejanos un WhatsApp" in body
-    assert "si sos mayor de 18" in body
+    assert "Déjanos un WhatsApp" in body
+    assert "si eres mayor de 18" in body
     with app_instance.app_context():
         assert CrewApplicationRepository.get_all() == []
 
@@ -184,7 +184,7 @@ def test_crew_form_invalid_shows_errors_and_saves_nothing(
         "/crew-program", data={"full_name": "Sin Mail", "email": ""}
     )
     assert resp.status_code == 200
-    assert "Ingresá tu email" in resp.get_data(as_text=True)
+    assert "Ingresa tu email" in resp.get_data(as_text=True)
     with app_instance.app_context():
         assert CrewApplicationRepository.get_all() == []
 

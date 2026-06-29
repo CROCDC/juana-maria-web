@@ -28,7 +28,7 @@ RUMBOS: list[Rumbo] = [
     Rumbo(
         key="southeast",
         name="Rumbo Sudeste",
-        where="El horizonte de Buenos Aires",
+        where="el horizonte de Buenos Aires",
         body=(
             "Zarpando desde San Isidro, un antiguo puerto colonial al norte de "
             "Buenos Aires, la Juana María suele poner vela hacia el sudeste para "
@@ -44,7 +44,7 @@ RUMBOS: list[Rumbo] = [
     Rumbo(
         key="delta",
         name="El ancla arriada",
-        where="Un respiro en el Delta",
+        where="un respiro en el Delta",
         body=(
             "Si la altura de la marea lo permite, en ocasiones sacamos al barco "
             "de su amarra para fondear el ancla en alguno de los paraísos "
@@ -58,7 +58,7 @@ RUMBOS: list[Rumbo] = [
     Rumbo(
         key="banda-oriental",
         name="La Banda Oriental",
-        where="Los días navegando",
+        where="los días navegando",
         body=(
             "Seis horas de navegación, el arribo a un puerto extranjero y el "
             "contacto con las tradiciones coloniales del Río de la Plata. "

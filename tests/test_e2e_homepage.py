@@ -75,7 +75,7 @@ def test_prologue_link_jumps_to_history_section(
     try:
         page.goto(f"{live_server}/", wait_until="networkidle")
 
-        page.locator("#prologo").get_by_role("link", name="Conocé su historia").click()
+        page.locator("#prologo").get_by_role("link", name="Conoce su historia").click()
 
         page.wait_for_url("**/#historia")
         expect(page.get_by_role("heading", name="Una larga línea de agua")).to_be_visible()

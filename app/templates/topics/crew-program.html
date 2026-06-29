@@ -1,9 +1,9 @@
 {% extends "topics/_base_topic.html" %}
-{% block topic_eyebrow %}Sumate a la tripulación{% endblock %}
+{% block topic_eyebrow %}Súmate a la tripulación{% endblock %}
 
 {% block topic_lead %}
 <p class="lede">
-  Sumate a la tripulación por un día y compartí una navegación por el Río de la
+  Súmate a la tripulación por un día y comparte una navegación por el Río de la
   Plata.
 </p>
 {% endblock %}
@@ -13,8 +13,8 @@
 <div class="form-success reveal" role="status">
   <h2>¡Gracias! Recibimos tu inscripción.</h2>
   <p>
-    Nos vamos a comunicar con vos por WhatsApp para coordinar la próxima
-    navegación con lugar para tripulantes. Mientras tanto, podés seguirnos en
+    Nos vamos a comunicar contigo por WhatsApp para coordinar la próxima
+    navegación con lugar para tripulantes. Mientras tanto, puedes seguirnos en
     <a class="link-underline" href="https://www.instagram.com/velaclasica/"
        target="_blank" rel="noopener">@velaclasica</a>.
   </p>
@@ -29,7 +29,7 @@
   </p>
   <p>
     Si quisieras incorporarte a la tripulación durante un día, por favor
-    completá este formulario para que podamos contactarte, ofrecerte
+    completa este formulario para que podamos contactarte, ofrecerte
     información y coordinar nuestra navegación por el Río de la Plata.
   </p>
 
@@ -44,7 +44,7 @@
   <p>
     Puesto que son montos pequeños pero cambiantes (últimamente rondaba, por
     persona, el precio de una pizza en Buenos Aires), los calcularemos para
-    actualizarlos y te los comentaremos al contactarnos con vos para conocer tu
+    actualizarlos y te los comentaremos al contactarnos contigo para conocer tu
     parecer.
   </p>
 
@@ -58,12 +58,12 @@
 
 {% if errors %}
 <p class="form-error-summary reveal" role="alert">
-  Revisá los campos marcados y volvé a enviar.
+  Revisa los campos marcados y vuelve a enviar.
 </p>
 {% endif %}
 <form class="form reveal" method="post" action="{{ url_for('topic_crew_program') }}" novalidate>
   <div class="form-row">
-    <label for="email">Correo electrónico <span aria-hidden="true">*</span></label>
+    <label for="email">¿Cuál es tu correo electrónico? <span aria-hidden="true">*</span></label>
     <input
       id="email"
       name="email"
@@ -76,7 +76,7 @@
   </div>
 
   <div class="form-row">
-    <label for="full_name">Nombre y apellido <span aria-hidden="true">*</span></label>
+    <label for="full_name">¿Cómo te llamas? <span aria-hidden="true">*</span></label>
     <input
       id="full_name"
       name="full_name"
@@ -89,8 +89,8 @@
   </div>
 
   <div class="form-row">
-    <label for="whatsapp">WhatsApp <span aria-hidden="true">*</span></label>
-    <p class="form-hint" id="hint-whatsapp">Nos comunicamos con vos por este medio.</p>
+    <label for="whatsapp">¿Cuál es tu contacto de WhatsApp? <span aria-hidden="true">*</span></label>
+    <p class="form-hint" id="hint-whatsapp">Nos comunicaremos contigo por este medio.</p>
     <input
       id="whatsapp"
       name="whatsapp"
@@ -104,7 +104,7 @@
   </div>
 
   <div class="form-row">
-    <label for="instagram">Instagram</label>
+    <label for="instagram">¿Cuál es tu cuenta de Instagram?</label>
     <input
       id="instagram"
       name="instagram"
@@ -116,7 +116,7 @@
   </div>
 
   <div class="form-row">
-    <span class="form-label" id="label-is_adult">¿Sos mayor de 18 años? <span aria-hidden="true">*</span></span>
+    <span class="form-label" id="label-is_adult">¿Eres mayor de 18 años de edad? <span aria-hidden="true">*</span></span>
     {% set adult = form.get('is_adult', '') %}
     <div class="form-radio-group" role="radiogroup" aria-labelledby="label-is_adult"
          {% if errors.get('is_adult') %}aria-describedby="err-is_adult"{% endif %}>
@@ -133,7 +133,7 @@
   </div>
 
   <div class="form-row">
-    <label for="preferred_date">¿Cuándo te gustaría salir a navegar?</label>
+    <label for="preferred_date">¿Cuál es la fecha en la que quisieras salir a navegar en el Río de la Plata?</label>
     <input
       id="preferred_date"
       name="preferred_date"
@@ -143,7 +143,7 @@
   </div>
 
   <div class="form-row">
-    <label for="preferred_route">¿Tenés algún rumbo de preferencia?</label>
+    <label for="preferred_route">¿Tienes algún rumbo de preferencia?</label>
     {% set route = form.get('preferred_route', '') %}
     {# Options come from the shared RUMBOS registry; the value stored is the key. #}
     <select id="preferred_route" name="preferred_route">
@@ -155,7 +155,7 @@
   </div>
 
   <div class="form-row">
-    <label for="message">¿Algún comentario, consulta o inquietud?</label>
+    <label for="message">¿Algún comentario, consulta o inquietud que nos quieras comunicar antes de que nos contactemos contigo?</label>
     <textarea id="message" name="message" rows="4">{{ form.get('message', '') }}</textarea>
   </div>
 

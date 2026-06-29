@@ -32,15 +32,15 @@ _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 def _validate_crew_form(data: dict[str, str]) -> dict[str, str]:
     errors: dict[str, str] = {}
     if not data["full_name"]:
-        errors["full_name"] = "Ingresá tu nombre."
+        errors["full_name"] = "Ingresa tu nombre."
     if not data["email"]:
-        errors["email"] = "Ingresá tu email."
+        errors["email"] = "Ingresa tu email."
     elif not _EMAIL_RE.match(data["email"]):
-        errors["email"] = "Revisá el email: no parece válido."
+        errors["email"] = "Revisa el email: no parece válido."
     if not data["whatsapp"]:
-        errors["whatsapp"] = "Dejanos un WhatsApp: es por donde te contactamos."
+        errors["whatsapp"] = "Déjanos un WhatsApp: es por donde te contactamos."
     if data["is_adult"] not in ("si", "no"):
-        errors["is_adult"] = "Contanos si sos mayor de 18 años."
+        errors["is_adult"] = "Cuéntanos si eres mayor de 18 años."
     return errors
 
 
