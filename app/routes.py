@@ -19,6 +19,7 @@ from werkzeug.wrappers import Response as WerkzeugResponse
 
 from app.content.rumbos import RUMBOS_BY_KEY
 from app.content.topics import TOGGLEABLE_TOPICS, Topic, get_topic
+from app.factory import canonical_root
 from app.repositories.crew_application_repository import CrewApplicationRepository
 from app.repositories.topic_visibility_repository import TopicVisibilityRepository
 
@@ -186,16 +187,17 @@ def register_routes(app: Flask) -> None:
 
     @app.route("/robots.txt")
     def robots() -> Response:
-        body = f"User-agent: *\nAllow: /\nSitemap: {request.url_root}sitemap.xml\n"
+        body = f"User-agent: *\nAllow: /\nSitemap: {canonical_root()}sitemap.xml\n"
         return Response(body, mimetype="text/plain")
 
     @app.route("/sitemap.xml")
     def sitemap() -> Response:
-        # Home plus every currently published topic page.
+        # Home plus every currently published topic page, on the canonical origin.
+        root = canonical_root()
         state = TopicVisibilityRepository.get_state_map()
-        locs = [request.url_root]
+        locs = [root]
         locs += [
-            f"{request.url_root.rstrip('/')}{t.path}"
+            f"{root.rstrip('/')}{t.path}"
             for t in TOGGLEABLE_TOPICS
             if state.get(t.slug, False)
         ]

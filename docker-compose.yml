@@ -10,8 +10,13 @@ services:
       # its Postgres `db`, so the bare alias round-robins across all projects'
       # DBs and the app would connect to the wrong one (-> auth failure -> 502).
       - DATABASE_URL=postgresql://juana_maria_web:${POSTGRES_PASSWORD}@juana-maria-web-db:5432/juana_maria_web
-      - VIRTUAL_HOST=juana-maria.nexttech.com.ar
+      # nginx-proxy routes all three hosts to this app. velaclasica.ar is the
+      # public/canonical domain; the www variant and the internal nexttech
+      # subdomain 301 to it (see CANONICAL_URL / REDIRECT_HOSTS below).
+      - VIRTUAL_HOST=velaclasica.ar,www.velaclasica.ar,juana-maria.nexttech.com.ar
       - VIRTUAL_PORT=7017
+      - CANONICAL_URL=https://velaclasica.ar
+      - REDIRECT_HOSTS=www.velaclasica.ar,juana-maria.nexttech.com.ar
       - UMAMI_WEBSITE_ID=b5d4b173-a160-49f5-8f0d-076e804d0007
       - FLASK_DEBUG=0
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}

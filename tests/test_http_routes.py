@@ -305,6 +305,70 @@ def test_sitemap_lists_only_published_topics(client: Any) -> None:
     assert "/seminars" not in body
 
 
+# ----- Canonical host / domain (app/factory.py) -------------------------------
+# velaclasica.ar is the public/canonical domain; the www variant and the internal
+# nexttech subdomain 301 to it, and SEO URLs are emitted on it regardless of which
+# host served the request. CANONICAL_URL/REDIRECT_HOSTS are unset in dev/tests, so
+# each production-behavior test sets them on the app config (auto-restored).
+
+CANONICAL = "https://velaclasica.ar"
+ALIAS_HOSTS = {"www.velaclasica.ar", "juana-maria.nexttech.com.ar"}
+
+
+def _canonicalize(monkeypatch: Any, app_instance: Any) -> None:
+    monkeypatch.setitem(app_instance.config, "CANONICAL_URL", CANONICAL)
+    monkeypatch.setitem(app_instance.config, "REDIRECT_HOSTS", ALIAS_HOSTS)
+
+
+def test_www_host_301s_to_apex_preserving_path_and_query(
+    client: Any, app_instance: Any, monkeypatch: Any
+) -> None:
+    _canonicalize(monkeypatch, app_instance)
+    resp = client.get("/crew-program?utm=ig", base_url="http://www.velaclasica.ar")
+    assert resp.status_code == 301
+    assert resp.headers["Location"] == "https://velaclasica.ar/crew-program?utm=ig"
+
+
+def test_internal_subdomain_301s_to_apex(
+    client: Any, app_instance: Any, monkeypatch: Any
+) -> None:
+    _canonicalize(monkeypatch, app_instance)
+    resp = client.get("/", base_url="http://juana-maria.nexttech.com.ar")
+    assert resp.status_code == 301
+    assert resp.headers["Location"] == "https://velaclasica.ar/"
+
+
+def test_canonical_host_is_served_not_redirected(
+    client: Any, app_instance: Any, monkeypatch: Any
+) -> None:
+    _canonicalize(monkeypatch, app_instance)
+    assert client.get("/", base_url="http://velaclasica.ar").status_code == 200
+
+
+def test_canonical_and_og_url_use_canonical_origin(
+    client: Any, app_instance: Any, monkeypatch: Any
+) -> None:
+    _canonicalize(monkeypatch, app_instance)
+    body = client.get("/", base_url="http://velaclasica.ar").get_data(as_text=True)
+    assert '<link rel="canonical" href="https://velaclasica.ar/" />' in body
+    assert '<meta property="og:url" content="https://velaclasica.ar/" />' in body
+
+
+def test_sitemap_and_robots_use_canonical_origin(
+    client: Any, app_instance: Any, monkeypatch: Any
+) -> None:
+    _canonicalize(monkeypatch, app_instance)
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "<loc>https://velaclasica.ar/</loc>" in sitemap
+    robots = client.get("/robots.txt").get_data(as_text=True)
+    assert "Sitemap: https://velaclasica.ar/sitemap.xml" in robots
+
+
+def test_no_redirect_when_canonical_unset(client: Any) -> None:
+    # Default dev/test config: alias hosts are served, never redirected.
+    assert client.get("/", base_url="http://www.velaclasica.ar").status_code == 200
+
+
 # ----- Static asset caching (app/factory.py after_request) --------------------
 
 def test_static_asset_has_immutable_cache_header(client: Any) -> None:

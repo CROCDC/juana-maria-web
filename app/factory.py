@@ -4,10 +4,11 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from flask import Flask, Response, request, url_for
+from flask import Flask, Response, current_app, redirect, request, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.wrappers import Response as WerkzeugResponse
 
 load_dotenv()
 
@@ -40,6 +41,18 @@ def _load_image_manifest(static_folder: str | None) -> dict[str, dict[str, int]]
             return json.load(fh)
     except (OSError, ValueError):
         return {}
+
+def canonical_root() -> str:
+    """Absolute public origin (with trailing slash) for SEO URLs and host redirects.
+
+    Returns the configured CANONICAL_URL so canonical/OG/sitemap/robots URLs are
+    emitted on the primary domain regardless of which host served the request.
+    Falls back to the request's own origin in dev/tests, where no public origin
+    is configured.
+    """
+    base = current_app.config.get("CANONICAL_URL")
+    return base.rstrip("/") + "/" if base else request.url_root
+
 
 # Extensions are created at module level so models and repositories can import
 # them (e.g. ``from app.factory import db``).
@@ -75,9 +88,38 @@ def create_app() -> Flask:
     # effectively disabled — no password can match.
     app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD")
 
+    # Public canonical origin (e.g. https://velaclasica.ar). When set, alias hosts
+    # 301 here and SEO URLs are emitted on this origin regardless of which host
+    # served the request. Unset in dev/tests, where the request's own origin is used.
+    app.config["CANONICAL_URL"] = os.environ.get("CANONICAL_URL")
+    # Hosts that 301 to CANONICAL_URL (the www variant + the internal nexttech
+    # subdomain). Comma-separated; matched case-insensitively, port stripped.
+    app.config["REDIRECT_HOSTS"] = {
+        h.strip().lower()
+        for h in os.environ.get("REDIRECT_HOSTS", "").split(",")
+        if h.strip()
+    }
+
     db.init_app(app)
     migrate.init_app(app, db)
     compress.init_app(app)
+
+    @app.before_request
+    def redirect_to_canonical_host() -> WerkzeugResponse | None:
+        # In production the app answers on several hosts (the public apex, its
+        # www, and the internal nexttech subdomain) but only one is canonical:
+        # alias hosts 301 to CANONICAL_URL so users and crawlers converge on a
+        # single origin. No-op in dev/tests (REDIRECT_HOSTS unset).
+        base = app.config["CANONICAL_URL"]
+        redirect_hosts = app.config["REDIRECT_HOSTS"]
+        if not base or not redirect_hosts:
+            return None
+        if request.host.split(":", 1)[0].lower() not in redirect_hosts:
+            return None
+        target = base.rstrip("/") + request.path
+        if request.query_string:
+            target += "?" + request.query_string.decode("latin-1")
+        return redirect(target, code=301)
 
     @app.after_request
     def add_static_cache_headers(response: Response) -> Response:
@@ -129,6 +171,7 @@ def create_app() -> Flask:
             "IMG_WIDTHS": image_widths,
             "rumbos": RUMBOS,
             "rumbos_by_key": RUMBOS_BY_KEY,
+            "canonical_base": canonical_root(),
         }
 
     @app.context_processor
