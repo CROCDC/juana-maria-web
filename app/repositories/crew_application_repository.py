@@ -1,5 +1,3 @@
-"""Data access for crew-program applications (CONVENTIONS §5)."""
-
 from __future__ import annotations
 
 from app.factory import db

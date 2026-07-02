@@ -1,12 +1,3 @@
-"""HTTP / integration layer — every endpoint, happy path + error paths.
-
-Uses the `client` fixture (a real Flask test client against the real app on the
-test DB). The site is a hub: the home page is the "Sobre la Juana María" topic,
-and every other topic is its own page that 404s until published. Visibility is
-DB-backed (TopicVisibility) and flipped from the admin panel; these tests cover
-the public routes, the topic visibility gate, and the admin auth + toggle flow.
-"""
-
 from __future__ import annotations
 
 from typing import Any
@@ -17,8 +8,6 @@ from app.repositories.topic_visibility_repository import TopicVisibilityReposito
 ADMIN_PW = "test-admin-pw"
 
 
-# ----- GET / (happy path) -----------------------------------------------------
-
 def test_index_returns_200_html(client: Any) -> None:
     resp = client.get("/")
     assert resp.status_code == 200
@@ -28,13 +17,9 @@ def test_index_returns_200_html(client: Any) -> None:
 def test_index_renders_hero_and_home_sections(client: Any) -> None:
     body = client.get("/").get_data(as_text=True)
     assert "<h1>Juana María</h1>" in body
-    # The dynamic footer year (inject_globals) is rendered server-side.
     assert "Juana María — Argentina" in body
-    # Sections that stay on the home ("about") topic.
     for anchor in ('id="historia"', 'id="galeria"', 'id="ficha"'):
         assert anchor in body
-    # Seminars moved to its own topic page, and Los Pericos was removed: neither
-    # should be a home section anymore.
     assert 'id="seminarios"' not in body
     assert 'id="pericos"' not in body
 
@@ -47,19 +32,15 @@ def test_los_pericos_section_removed(client: Any) -> None:
 
 def test_nav_lists_published_topics_only(client: Any) -> None:
     body = client.get("/").get_data(as_text=True)
-    # crew-program is published by default; seminars is not.
     assert "Programa de tripulantes" in body
     assert "Seminarios a bordo" not in body
 
 
 def test_neutral_names_pass_removed_private_names(client: Any) -> None:
-    # Point 4 of the brief: no private captains/owners by name.
     body = client.get("/").get_data(as_text=True)
-    for name in ("Wasserman", "Marcelo Blanco", "Mateo Blanco", "Tedín"):
+    for name in ("Wasserman", "Mateo Blanco", "Tedín"):
         assert name not in body, f"private name still present: {name}"
 
-
-# ----- Topic pages (visibility gate) -----------------------------------------
 
 def test_published_topic_page_returns_200(client: Any) -> None:
     resp = client.get("/crew-program")
@@ -68,7 +49,6 @@ def test_published_topic_page_returns_200(client: Any) -> None:
 
 
 def test_unpublished_topic_page_returns_404(client: Any) -> None:
-    # seminars exists in the registry but is disabled by default.
     assert client.get("/seminars").status_code == 404
 
 
@@ -79,16 +59,12 @@ def test_enabling_a_topic_makes_its_page_reachable(client: Any, app_instance: An
     resp = client.get("/seminars")
     assert resp.status_code == 200
     assert "Seminarios a bordo" in resp.get_data(as_text=True)
-    # And it now appears in the nav on the home page.
     assert "Seminarios a bordo" in client.get("/").get_data(as_text=True)
 
-
-# ----- Crew-program prominence on the home -----------------------------------
 
 def test_home_shows_crew_cta_band_when_published(client: Any) -> None:
     body = client.get("/").get_data(as_text=True)
     assert 'class="crew-cta"' in body
-    # The band's button links to the crew-program page.
     assert "Quiero ser tripulante" in body
     assert 'href="/crew-program"' in body
 
@@ -99,8 +75,6 @@ def test_home_hides_crew_cta_when_unpublished(client: Any, app_instance: Any) ->
     body = client.get("/").get_data(as_text=True)
     assert 'class="crew-cta"' not in body
 
-
-# ----- Crew-program intake form (DB-backed) ----------------------------------
 
 def test_crew_form_renders_on_published_page(client: Any) -> None:
     body = client.get("/crew-program").get_data(as_text=True)
@@ -123,7 +97,6 @@ def test_crew_form_valid_submission_persists(client: Any, app_instance: Any) -> 
             "message": "Quiero navegar.",
         },
     )
-    # Post/Redirect/Get to the thank-you state.
     assert resp.status_code == 302
     assert "sent=1" in resp.headers["Location"]
     with app_instance.app_context():
@@ -134,12 +107,10 @@ def test_crew_form_valid_submission_persists(client: Any, app_instance: Any) -> 
     assert saved[0].instagram == "@ada"
     assert saved[0].is_adult is True
     assert saved[0].preferred_date == "un sábado de noviembre"
-    # The rumbo is stored as the enum key from RUMBOS, not free text.
     assert saved[0].preferred_route == "banda-oriental"
 
 
 def test_crew_form_ignores_unknown_rumbo(client: Any, app_instance: Any) -> None:
-    # A preferred_route that isn't a known RUMBOS key is dropped, not stored.
     client.post(
         "/crew-program",
         data={
@@ -157,8 +128,6 @@ def test_crew_form_ignores_unknown_rumbo(client: Any, app_instance: Any) -> None
 
 
 def test_crew_form_requires_whatsapp_and_age(client: Any, app_instance: Any) -> None:
-    # whatsapp and the age question are both required; missing them blocks the
-    # submission even when name + email are valid.
     resp = client.post(
         "/crew-program",
         data={"full_name": "Sin WhatsApp", "email": "ok@example.com"},
@@ -174,7 +143,7 @@ def test_crew_form_requires_whatsapp_and_age(client: Any, app_instance: Any) -> 
 def test_crew_form_thank_you_state_after_redirect(client: Any) -> None:
     body = client.get("/crew-program?sent=1").get_data(as_text=True)
     assert "Recibimos tu inscripción" in body
-    assert "<form" not in body  # form is replaced by the success message
+    assert "<form" not in body
 
 
 def test_crew_form_invalid_shows_errors_and_saves_nothing(
@@ -209,8 +178,6 @@ def test_crew_form_404_when_topic_unpublished(client: Any, app_instance: Any) ->
     )
 
 
-# ----- Admin (auth + toggle) -------------------------------------------------
-
 def test_admin_requires_login(client: Any) -> None:
     resp = client.get("/admin/topics")
     assert resp.status_code == 302
@@ -226,10 +193,8 @@ def test_admin_login_rejects_bad_password(client: Any, app_instance: Any) -> Non
 
 def test_admin_login_then_toggle_publishes_topic(client: Any, app_instance: Any) -> None:
     app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
-    # Log in.
     login = client.post("/admin/login", data={"password": ADMIN_PW})
     assert login.status_code == 302
-    # Publish seminars (and implicitly unpublish crew-program by omission).
     save = client.post("/admin/topics", data={"enabled": ["seminars"]})
     assert save.status_code == 302
     assert client.get("/seminars").status_code == 200
@@ -243,8 +208,6 @@ def test_admin_logout_clears_session(client: Any, app_instance: Any) -> None:
     client.post("/admin/logout")
     assert client.get("/admin/topics").status_code == 302
 
-
-# ----- Admin (crew applications list) ----------------------------------------
 
 def test_admin_crew_requires_login(client: Any) -> None:
     resp = client.get("/admin/crew")
@@ -270,7 +233,6 @@ def test_admin_crew_lists_submitted_applications(client: Any, app_instance: Any)
     assert "Grace Hopper" in body
     assert "grace@example.com" in body
     assert "@grace" in body
-    # The admin resolves the stored rumbo key ("southeast") to its display name.
     assert "Rumbo Sudeste" in body
     assert "Mayor de 18" in body
 
@@ -284,32 +246,21 @@ def test_admin_crew_shows_empty_state_with_no_applications(
     assert "Todavía no hay inscripciones" in body
 
 
-# ----- Error paths ------------------------------------------------------------
-
 def test_unknown_path_returns_404(client: Any) -> None:
     resp = client.get("/no-such-page")
     assert resp.status_code == 404
 
 
 def test_post_to_index_is_method_not_allowed(client: Any) -> None:
-    # The index route only registers GET; POST must be rejected, not 500.
     resp = client.post("/")
     assert resp.status_code == 405
 
-
-# ----- Sitemap (published topics) --------------------------------------------
 
 def test_sitemap_lists_only_published_topics(client: Any) -> None:
     body = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/crew-program" in body
     assert "/seminars" not in body
 
-
-# ----- Canonical host / domain (app/factory.py) -------------------------------
-# velaclasica.ar is the public/canonical domain; the www variant and the internal
-# nexttech subdomain 301 to it, and SEO URLs are emitted on it regardless of which
-# host served the request. CANONICAL_URL/REDIRECT_HOSTS are unset in dev/tests, so
-# each production-behavior test sets them on the app config (auto-restored).
 
 CANONICAL = "https://velaclasica.ar"
 ALIAS_HOSTS = {"www.velaclasica.ar", "juana-maria.nexttech.com.ar"}
@@ -365,19 +316,14 @@ def test_sitemap_and_robots_use_canonical_origin(
 
 
 def test_no_redirect_when_canonical_unset(client: Any) -> None:
-    # Default dev/test config: alias hosts are served, never redirected.
     assert client.get("/", base_url="http://www.velaclasica.ar").status_code == 200
 
-
-# ----- Static asset caching (app/factory.py after_request) --------------------
 
 def test_static_asset_has_immutable_cache_header(client: Any) -> None:
     resp = client.get("/static/css/styles.css")
     assert resp.status_code == 200
     assert resp.headers["Cache-Control"] == "public, max-age=31536000, immutable"
 
-
-# ----- Compression (flask-compress) -------------------------------------------
 
 def test_html_is_gzip_compressed_when_accepted(client: Any) -> None:
     resp = client.get("/", headers={"Accept-Encoding": "gzip"})

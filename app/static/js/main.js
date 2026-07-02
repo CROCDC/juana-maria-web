@@ -1,11 +1,8 @@
-// Juana María — site interactions: nav, scroll reveal, gallery carousel +
-// lightbox, and click-to-load video facades. Vanilla JS, no dependencies.
 (function () {
   "use strict";
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------------------------------------------------------------- Nav */
   var nav = document.getElementById("nav");
   var toggle = document.getElementById("navToggle");
   var links = document.getElementById("navLinks");
@@ -28,9 +25,7 @@
   if (toggle && links) {
     toggle.addEventListener("click", function () {
       var open = links.classList.toggle("is-open");
-      // The bar's backdrop-filter makes it the containing block for the fixed
-      // overlay (clipping it to the bar's height); drop it while the menu is open
-      // so the overlay covers the full viewport. See .nav.menu-open in styles.css.
+
       if (nav) nav.classList.toggle("menu-open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
@@ -39,7 +34,7 @@
     links.querySelectorAll("a").forEach(function (a) {
       a.addEventListener("click", closeMenu);
     });
-    // Escape closes the mobile menu and returns focus to the toggle.
+
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && links.classList.contains("is-open")) {
         closeMenu();
@@ -48,7 +43,6 @@
     });
   }
 
-  /* ------------------------------------------------------- Scroll reveal */
   var reveals = document.querySelectorAll(".reveal");
   if (reduceMotion || !("IntersectionObserver" in window)) {
     reveals.forEach(function (el) { el.classList.add("is-in"); });
@@ -69,8 +63,6 @@
     });
   }
 
-  /* --------------------------------------------------------- Scroll-spy */
-  // Highlight the nav link for the section currently in view.
   var navAnchors = Array.prototype.slice.call(
     document.querySelectorAll('.nav-links a[href^="#"]')
   );
@@ -90,7 +82,7 @@
           if (a) a.classList.add("is-active");
         });
       },
-      // A thin band across the viewport's vertical middle.
+
       { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
     );
     Object.keys(sectionFor).forEach(function (id) {
@@ -98,7 +90,6 @@
     });
   }
 
-  /* ----------------------------------------------------- Count-up numbers */
   var counters = document.querySelectorAll("[data-count]");
   if (counters.length && !reduceMotion && "IntersectionObserver" in window) {
     var countIO = new IntersectionObserver(
@@ -113,7 +104,7 @@
           function tick(ts) {
             if (start === null) start = ts;
             var t = Math.min((ts - start) / dur, 1);
-            // easeOutCubic for a settle at the end
+
             var eased = 1 - Math.pow(1 - t, 3);
             el.textContent = Math.round(eased * target);
             if (t < 1) requestAnimationFrame(tick);
@@ -127,11 +118,6 @@
     counters.forEach(function (el) { countIO.observe(el); });
   }
 
-  /* ----------------------------------------------------- Gallery carousel */
-  // One-photo-at-a-time slider with autoplay, prev/next, dots and swipe. The
-  // interval runs continuously but only advances when canPlay() is true, so
-  // hover, keyboard focus, an open lightbox, a hidden tab or reduced-motion all
-  // pause it without fragile start/stop bookkeeping.
   var carTrack = document.getElementById("carouselTrack");
   if (carTrack && carTrack.children.length) {
     var carEl = document.getElementById("gallery");
@@ -159,7 +145,7 @@
     function update() {
       carTrack.style.transform = "translateX(" + (-cur * 100) + "%)";
       dots.forEach(function (d, i) { d.classList.toggle("is-active", i === cur); });
-      // Only the visible slide is tab-reachable (and openable in the lightbox).
+
       slides.forEach(function (s, i) {
         if (i === cur) s.removeAttribute("tabindex");
         else s.setAttribute("tabindex", "-1");
@@ -187,8 +173,6 @@
     carEl.addEventListener("focusin", function () { focusWithin = true; });
     carEl.addEventListener("focusout", function () { focusWithin = false; });
 
-    // Swipe (pointer = mouse + touch + pen) and suppress the click that follows
-    // a drag so a swipe doesn't also open the lightbox.
     var downX = 0, pointerDown = false, dragged = false;
     carTrack.addEventListener("pointerdown", function (e) {
       pointerDown = true; dragged = false; downX = e.clientX;
@@ -206,9 +190,6 @@
       if (dragged) { e.preventDefault(); e.stopPropagation(); dragged = false; }
     }, true);
 
-    // Slides other than the current one sit off-screen in the clipped track, so
-    // their loading="lazy" images would never enter the viewport and never load
-    // (blank flashes on autoplay). When the carousel nears, eager-load them all.
     whenNear(carEl, function () {
       carTrack.querySelectorAll('img[loading="lazy"]').forEach(function (img) {
         img.loading = "eager";
@@ -219,7 +200,6 @@
     restart();
   }
 
-  /* ------------------------------------------------------------ Lightbox */
   var gallery = document.getElementById("gallery");
   var lb = document.getElementById("lightbox");
   if (gallery && lb) {
@@ -227,14 +207,13 @@
     var lbCaption = document.getElementById("lbCaption");
     var lbCount = document.getElementById("lbCount");
     var items = Array.prototype.slice.call(gallery.querySelectorAll(".carousel__slide"));
-    // Everything on the page except the dialog itself — inerted while open so
-    // focus/AT can't reach the nav, content or footer behind the overlay.
+
     var backdrop = Array.prototype.filter.call(document.body.children, function (el) {
       return el !== lb && el.tagName !== "SCRIPT";
     });
     var index = 0;
     var lastFocused = null;
-    // The dialog's own focusable controls, in tab order.
+
     var focusables = ["lbClose", "lbPrev", "lbNext"].map(function (id) {
       return document.getElementById(id);
     });
@@ -245,7 +224,7 @@
       lbImg.alt = item.getAttribute("data-caption") || "";
       lbCaption.textContent = item.getAttribute("data-caption") || "";
       if (lbCount) lbCount.textContent = index + 1 + " / " + items.length;
-      // Warm the neighbours so prev/next swap instantly (no flash).
+
       [(index + 1) % items.length, (index - 1 + items.length) % items.length].forEach(
         function (i) {
           var url = items[i].getAttribute("data-full");
@@ -263,7 +242,7 @@
       render();
       lb.classList.add("is-open");
       document.body.style.overflow = "hidden";
-      // Make the rest of the page inert so AT/keyboard stay in the dialog.
+
       backdrop.forEach(function (el) { el.setAttribute("inert", ""); });
       focusables[0].focus();
     }
@@ -281,7 +260,6 @@
       render();
     }
 
-    // Trap Tab/Shift+Tab within the dialog's controls.
     function trap(e) {
       var first = focusables[0];
       var last = focusables[focusables.length - 1];
@@ -312,9 +290,6 @@
     });
   }
 
-  /* ----------------------------------------- Lazy media near the viewport */
-  // Defer the heavy hero/heritage <video> and the facade poster images until
-  // their section approaches, so they don't compete with above-the-fold load.
   function whenNear(el, cb, margin) {
     if (!("IntersectionObserver" in window)) { cb(); return; }
     var obs = new IntersectionObserver(
@@ -339,7 +314,7 @@
       video.load();
       if (!reduceMotion) {
         var p = video.play();
-        if (p && p.catch) p.catch(function () {}); // ignore autoplay rejections
+        if (p && p.catch) p.catch(function () {});
       }
     });
   });
@@ -350,7 +325,6 @@
     });
   });
 
-  /* ------------------------------------------------ Video facades (click) */
   document.querySelectorAll(".video-facade").forEach(function (facade) {
     facade.addEventListener("click", function () {
       var src = facade.getAttribute("data-embed");
@@ -359,8 +333,7 @@
       var iframe = document.createElement("iframe");
       iframe.setAttribute("src", src);
       iframe.setAttribute("title", title);
-      // allow="fullscreen" already grants fullscreen; the legacy allowfullscreen
-      // attribute is redundant and triggers a console warning, so it's omitted.
+
       iframe.setAttribute("allow", "autoplay; fullscreen; picture-in-picture");
       facade.replaceWith(iframe);
     });

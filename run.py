@@ -6,7 +6,6 @@ from prometheus_flask_exporter import PrometheusMetrics
 
 from app import app
 
-# Expose /metrics for Prometheus, plus a couple of process gauges.
 metrics = PrometheusMetrics(app)
 
 _process = psutil.Process(os.getpid())
@@ -30,7 +29,5 @@ def _collect_cpu() -> float:
 
 
 if __name__ == "__main__":
-    # Debug on by default for local ``python run.py``; the Docker image and
-    # compose set FLASK_DEBUG=0 so production stays out of debug mode.
     debug = os.environ.get("FLASK_DEBUG", "1") not in ("0", "false", "False", "")
     app.run(host="0.0.0.0", port=7017, debug=debug)

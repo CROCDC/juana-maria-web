@@ -1,15 +1,3 @@
-"""Responsive / visual-regression layer: every public page x every viewport.
-
-Two assertions per cell:
-  1. No horizontal overflow — scrollWidth must not exceed the viewport width
-     (+1px tolerance for sub-pixel rounding).
-  2. A full-page screenshot is written to tests/screenshots/, COMMITTED as the
-     visual baseline; diffs surface during code review.
-
-The overflow assertion is only trustworthy if test_overflow_detection passes
-first (no overflow-x:hidden on html/body) — see that file.
-"""
-
 from __future__ import annotations
 
 import os
@@ -34,10 +22,6 @@ def test_page_responsive(
     width: int,
     height: int,
 ) -> None:
-    # reduced_motion makes the baseline deterministic: main.js then skips the
-    # count-up animation (leaving the literal "85" instead of a frozen mid-count
-    # value) and reveals all scroll-in content immediately. Without it, full-page
-    # screenshots catch animations mid-flight and diff noisily on every run.
     context = browser_instance.new_context(
         viewport={"width": width, "height": height}, reduced_motion="reduce"
     )
@@ -51,10 +35,6 @@ def test_page_responsive(
             f"{scroll_width}px > {width}px"
         )
 
-        # The page lazy-loads images (loading="lazy") and media below the fold;
-        # a naive full-page screenshot leaves those cells blank (e.g. the gallery
-        # grid). Walk the whole page to trigger every lazy load, return to top,
-        # then wait for all images to finish decoding before capturing.
         page.evaluate(
             """async () => {
                 const vh = window.innerHeight;
@@ -65,8 +45,6 @@ def test_page_responsive(
                 window.scrollTo(0, 0);
             }"""
         )
-        # Only require images that actually have a source to finish — the lightbox
-        # placeholder <img id="lbImg" src=""> never decodes and would hang this.
         page.wait_for_function(
             """() => Array.from(document.images)
                 .filter(img => img.currentSrc || (img.getAttribute('src') || '').trim())

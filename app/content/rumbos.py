@@ -1,15 +1,3 @@
-"""The rumbos the Juana María sails — single source of truth.
-
-One entry per rumbo, used in two places that must stay in sync: the public
-"Los rumbos" page (topics/routes.html renders the cards from this list) and the
-crew-program intake form, whose "rumbo de preferencia" select offers exactly
-these options (storing the stable ``key``). Add or reword a rumbo here and both
-the page and the form update together.
-
-Identifiers (``key``) are English/stable per CONVENTIONS §13; the user-facing
-strings (name, where, body) are the site's Spanish copy.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,13 +5,12 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Rumbo:
-    key: str  # stable id: DB value for preferred_route + anchor on the page
-    name: str  # short name, e.g. "Rumbo Sudeste"
-    where: str  # descriptor subtitle, e.g. "El horizonte de Buenos Aires"
-    body: str  # the paragraph shown on the page
+    key: str
+    name: str
+    where: str
+    body: str
 
 
-# Order here is the canonical order on the page and in the form select.
 RUMBOS: list[Rumbo] = [
     Rumbo(
         key="southeast",

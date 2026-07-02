@@ -145,7 +145,6 @@
   <div class="form-row">
     <label for="preferred_route">¿Tienes algún rumbo de preferencia?</label>
     {% set route = form.get('preferred_route', '') %}
-    {# Options come from the shared RUMBOS registry; the value stored is the key. #}
     <select id="preferred_route" name="preferred_route">
       <option value="">Sin preferencia</option>
       {% for r in rumbos %}

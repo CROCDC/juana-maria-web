@@ -2,7 +2,6 @@
 {% from "_macros.html" import resp_img, topic_card with context %}
 
 {% block head_extra %}
-    <!-- Preload the hero image (LCP) — index only -->
     <link
       rel="preload"
       as="image"
@@ -11,7 +10,6 @@
       imagesizes="100vw"
       fetchpriority="high" />
 
-    {# Structured data: the site as a WebSite (homepage). #}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -19,7 +17,7 @@
       "name": "Juana María",
       "url": "{{ request.url_root }}",
       "inLanguage": "es-AR",
-      "description": "La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. Ochenta y cinco años navegando el Río de la Plata.",
+      "description": "La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. {{ years_sailing }} años navegando el Río de la Plata.",
       "image": "{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}"
     }
     </script>
@@ -27,13 +25,6 @@
 
 {% block content %}
 
-{# Page shape: the boat's story runs as ONE uninterrupted arc
-   (hero → prólogo → historia → diseño → ficha → galería); the other topics live
-   together in the "A bordo" zone at the end (crew-program as a full-bleed band,
-   the rest as a compact card grid). No per-topic bands are intercut into the
-   story. The crew band + hub set are declared inline near the bottom. #}
-
-<!-- ============================================================ HERO -->
 <section class="hero">
   <div class="hero__media">
     {{ resp_img('hero/under-full-sail',
@@ -42,14 +33,11 @@
   </div>
   <div class="hero__scrim"></div>
   <div class="hero__inner reveal is-in">
-    <p class="eyebrow hero__eyebrow">Ballenera de doble proa · Río de la Plata</p>
+    <p class="eyebrow hero__eyebrow">Ballenera</p>
     <h1>Juana María</h1>
-    <p class="hero__sub">
-      Botada en 1941. Dibujada en madera por Manuel M. Campos.
-      Ochenta y cinco años saliendo al mismo río.
-    </p>
+    <p class="hero__sub">1941 · Buenos Aires</p>
     <div class="hero__years" aria-hidden="true">
-      <b data-count="85">85</b>
+      <b data-count="{{ years_sailing }}">{{ years_sailing }}</b>
       <span>años navegando</span>
     </div>
   </div>
@@ -59,27 +47,22 @@
   </a>
 </section>
 
-<!-- ========================================================= PRÓLOGO -->
 <section class="section surface-canvas" id="prologo">
   <div class="wrap">
     <div class="intro__grid">
       <p class="intro__lead reveal">
-        <span class="drop">D</span>esde 1941, la misma quilla de madera abre las
-        aguas pardas del Plata. Una ballenera de <em class="script">doble proa</em>,
-        nacida en un astillero del Tigre, que nunca dejó de navegar.
+        <span class="drop">D</span>esde 1941, la misma quilla abre las aguas
+        pardas del Plata. Una ballenera surgida del <em class="script">tablero de
+        Manuel M. Campos</em> y nacida en un astillero del Tigre, que nunca dejó
+        de navegar.
       </p>
       <div class="prose reveal" data-delay="1">
         <p>
-          La <strong>Juana María</strong> es una <em>ballenera</em>: el tipo de
-          velero que el arquitecto naval Manuel M. Campos imaginó para un río
-          ancho, poco profundo y caprichoso. Casco de viraró, popa y proa en
-          punta, orza rebatible: un velero noble, pensado para cruzar el Plata
+          La <strong>Juana María</strong> es una <em>ballenera</em>: un tipo de
+          embarcación que el arquitecto naval Manuel M. Campos diseñó para un río
+          ancho, poco profundo y caprichoso. Casco de viraró, popa en punta como
+          su proa, orza rebatible: un velero noble, pensado para cruzar el Plata
           con seguridad y aplomo.
-        </p>
-        <p>
-          (REVISION) Pasó por varias manos a lo largo de las décadas y hoy la cuida un
-          historiador naval. Ochenta y cinco años después, sigue saliendo al
-          agua. (REVISION)
         </p>
         <p><a class="link-underline" href="#historia">Conoce su historia &rarr;</a></p>
       </div>
@@ -87,7 +70,6 @@
   </div>
 </section>
 
-<!-- ======================================================== HISTORIA -->
 <section class="section surface-canvas" id="historia">
   <div class="wrap">
     <div class="section-head reveal">
@@ -97,60 +79,72 @@
     <div class="timeline">
       <article class="t-item is-mark reveal">
         <p class="t-year">1939</p>
-        <h3>Nace la ballenera</h3>
+        <h3>Nacen las balleneras rioplatenses</h3>
         <p>
-          Manuel M. Campos (1894&ndash;1987) dibuja la primera ballenera, la
-          <em class="script">Nutria</em>: una doble proa pensada para el Río de
-          la Plata, inspirada en los veleros noruegos de doble proa de Colin
-          Archer.
+          Manuel M. Campos (1894&ndash;1987) dibuja la <em class="script">Nutria</em>,
+          primera ballenera en la región: una doble proa pensada para el Río de
+          la Plata, inspirada en los veleros noruegos de doble proa diseñados
+          durante el siglo XIX por Colin Archer (1832&ndash;1921) para la
+          actividad ballenera y la expedición científica.
         </p>
       </article>
       <article class="t-item is-mark reveal">
         <p class="t-year">1941</p>
-        <h3>Se bota la Juana María</h3>
+        <h3>Se construye la Juana María</h3>
         <p>
-          Construida en madera en el astillero de Agustín Cadenazzi, en el
-          Tigre &mdash; corazón histórico de la construcción náutica del Delta.
-          Encargada, según la tradición, por un magistrado de la época.
+          Construida en madera de viraró por el astillero de Agustín Cadenazzi
+          en el Tigre, corazón histórico de la construcción náutica regional.
+          Hoy, la Juana María es la más antigua de las balleneras navegando el
+          Río de la Plata.
         </p>
       </article>
       <article class="t-item reveal">
         <p class="t-year">1942&ndash;43</p>
-        <h3>La misma tabla de dibujo</h3>
+        <h3>El mismo tablero de dibujo</h3>
         <p>
-          De la mano de Campos sale la <em class="script">LEHG II</em>, con la
-          que Vito Dumas da la vuelta al mundo en solitario por los tres grandes
-          cabos. La Juana María pertenece a esa estirpe.
+          De la mano de Campos sale el <em class="script">LEHG II</em>, con el
+          que Vito Dumas da la vuelta al mundo de manera solitaria, conectando
+          los tres grandes cabos. La Juana María pertenece a esa estirpe.
         </p>
       </article>
-      <article class="t-item is-mark reveal">
-        <p class="t-year">2026</p>
-        <h3>Un nuevo capítulo</h3>
+      <article class="t-item reveal">
+        <p class="t-year">Segunda mitad del siglo XX</p>
+        <h3>Orzando las aguas</h3>
         <p>
-          (REVISION) La Juana María pasa a manos de <strong>un historiador especializado
-          en historia náutica</strong> &mdash; un timonel a la altura de su
-          propia historia. (REVISION)
+          La Juana María emprende travesías hacia las profundidades
+          septentrionales del Río Paraná, extensas singladuras marítimas,
+          embarcaderos orientales y puertos del litoral atlántico. De la mano de
+          sus capitanes, la Juana María construyó historias, anécdotas y
+          amistades que perviven en el tiempo.
+        </p>
+      </article>
+      <article class="t-item reveal">
+        <p class="t-year">El siglo XXI</p>
+        <h3>Un símbolo del Río</h3>
+        <p>
+          Parte constitutiva de la cultura náutica, la Juana María encontró
+          capitanes que continuaron honrando su historia, garantizando su
+          cuidado junto a los más prestigiosos carpinteros de ribera y
+          respetando las tradiciones de su mantenimiento con técnicas clásicas y
+          métodos rigurosos.
         </p>
       </article>
       <article class="t-item is-mark reveal">
         <p class="t-year">Hoy</p>
-        <h3>85 años navegando</h3>
+        <h3>{{ years_sailing }} años navegando</h3>
         <p>
-          A más de ocho décadas de su botadura, sigue saliendo al Río de la
-          Plata: cuidada, estudiada y bien navegada.
+          A más de ocho décadas de su botadura, la Juana María sigue saliendo al
+          Río de la Plata: cuidada, estudiada y bien navegada.
         </p>
       </article>
     </div>
   </div>
 </section>
 
-<!-- ====================================================== DOBLE PROA -->
 <section class="section surface-wood" id="diseno">
   <div class="wrap">
-    <div class="feature feature--flip">
-      <div class="feature__media reveal">
-        <!-- Lazy: preload=none + no autoplay; main.js sets the source and plays
-             it once the section nears the viewport (saves a 2.6 MB eager fetch). -->
+    <figure class="aerial reveal">
+      <div class="feature__media">
         <video
           muted loop playsinline preload="none"
           data-lazy-video
@@ -158,47 +152,19 @@
           poster="{{ url_for('static', filename='video/double-ender-aerial-poster.webp') }}"></video>
         <p class="feature__caption">Vista cenital &mdash; proa y proa</p>
       </div>
-      <div class="reveal" data-delay="1">
-        <p class="eyebrow">El diseño</p>
-        <h2 class="h-section">Una canoa marina<br />para un río ancho</h2>
-        <p class="lede">
-          Campos buscaba un barco seguro y cómodo para el Plata: poco calado
-          para sus bancos, líneas suaves, mucha obra muerta. La ballenera fue su
-          respuesta.
-        </p>
-        <ul class="feature__list">
-          <li>
-            <b>2</b>
-            <span><strong>Doble proa.</strong> Termina en punta en proa y en
-            popa &mdash; desde el aire se ve la canoa perfecta que parte el agua
-            por igual hacia los dos lados.</span>
-          </li>
-          <li>
-            <b>0,60</b>
-            <span><strong>Calado mínimo</strong> (en metros) y orza rebatible,
-            para navegar entre los bajíos y bancos del Río de la Plata.</span>
-          </li>
-          <li>
-            <b>~25</b>
-            <span><strong>balleneras</strong> dibujó Campos. La Juana María, de
-            1941, es de las más tempranas del tipo.</span>
-          </li>
-        </ul>
-      </div>
-    </div>
+      <figcaption class="aerial__source">
+        Fuente: cortesía de Diego Blanco (@chapadiego) &amp; Marcelo Blanco (@marcelobohemio)
+      </figcaption>
+    </figure>
   </div>
 </section>
 
-<!-- ===================================================== FICHA TÉCNICA -->
 <section class="section surface-wood" id="ficha">
   <div class="wrap">
     <div class="spec">
       <div class="reveal">
         <p class="eyebrow">Ficha técnica</p>
         <h2 class="h-section">Registro de a bordo</h2>
-        {# Folded in from the retired "85 años" band: its one unique line (the
-           rarity claim). Every stat from that band already lives in the list
-           below, so only this sentence needed a new home. #}
         <p class="lede">
           Más de ocho décadas en el mismo tramo del Río de la Plata para el que
           fue dibujada. Pocas embarcaciones de madera en la Argentina pueden
@@ -217,8 +183,7 @@
         <div><dt>Manga</dt><dd>2,47 m</dd></div>
         <div><dt>Calado</dt><dd>0,60 m<small>Con orza rebatible</small></dd></div>
         <div><dt>Casco</dt><dd>Madera de viraró<small>Quilla, roda y codaste de lapacho</small></dd></div>
-        <div><dt>Motor</dt><dd>Yanmar 20 HP diésel</dd></div>
-        <div><dt>Velamen</dt><dd>Algodón egipcio + North Sails<small>Dos juegos: el original de algodón y uno nuevo de Dacron</small></dd></div>
+        <div><dt>Aparejo</dt><dd>Ketch Cutter</dd></div>
         <div><dt>Bandera</dt><dd>Argentina<small>Prefectura Naval Argentina</small></dd></div>
         <div><dt>Aguas</dt><dd>Río de la Plata<small>Base en el Yacht Club San Isidro (YCSI), Buenos Aires</small></dd></div>
       </dl>
@@ -226,68 +191,13 @@
   </div>
 </section>
 
-<!-- ======================================================== LA MADERA -->
-{# Temporarily hidden at the client's request ("lo ocultamos por ahora"): the
-   whole "Madera, bronce y barniz" section — its copy, the wood-grid images and
-   the builder's plaque. Wrapped in a Jinja comment so it renders nothing while
-   staying easy to restore; just remove the {# ... #} wrapper to bring it back. #}
-{#
-<section class="section surface-dark" id="madera">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <p class="eyebrow">Madera, bronce y barniz</p>
-      <h2 class="h-section">Hecha a mano, cuidada a mano</h2>
-      <p class="lede">
-        Cuadernas y forro de viraró; quilla, roda y codaste de lapacho. Adentro,
-        una cabina de madera barnizada que huele a otro tiempo, con herrajes de
-        bronce que el sol del Plata vuelve dorados.
-      </p>
-    </div>
+ wrapper to bring it back. #}
 
-    <div class="wood-grid">
-      <figure class="reveal span-2">
-        {{ resp_img('interior/galley-and-nav',
-            'Interior de la Juana María: camarote de madera barnizada con cocina y mesa de cartas',
-            '(min-width: 720px) 100vw, 100vw') }}
-      </figure>
-      <figure class="reveal" data-delay="1">
-        {{ resp_img('details/bronze-fitting',
-            'Herraje de bronce a bordo recortado contra el atardecer',
-            '(min-width: 720px) 50vw, 100vw') }}
-      </figure>
-      <figure class="reveal" data-delay="2">
-        {{ resp_img('on-deck/foredeck-detail',
-            'Detalle de la cubierta de proa de madera',
-            '(min-width: 720px) 50vw, 100vw') }}
-      </figure>
-    </div>
-
-    <!-- Builder's plaque: first-party evidence of who drew and built her -->
-    <div class="plaque reveal">
-      <div class="plaque__photo">
-        {{ resp_img('details/plaque-closeup',
-            'Placa de bronce del constructor, con el nombre Juana María grabado',
-            '(min-width: 760px) 50vw, 100vw') }}
-      </div>
-      <div class="plaque__engrave">
-        <p class="eyebrow" style="justify-content:center">La placa de bronce</p>
-        <p class="pl-name">Juana María</p>
-        <p class="pl-line">Manuel M. Campos &mdash; dibujante</p>
-        <hr />
-        <p class="pl-builder">Agustín Cadenazzi</p>
-        <p class="pl-line">Constructor &mdash; Tigre</p>
-      </div>
-    </div>
-  </div>
-</section>
-#}
-
-<!-- ========================================================= GALERÍA -->
 <section class="section surface-dark" id="galeria">
   <div class="wrap">
     <div class="section-head reveal">
       <p class="eyebrow">Galería</p>
-      <h2 class="h-section">Ochenta y cinco años de luz</h2>
+      <h2 class="h-section">{{ years_sailing }} años de luz</h2>
     </div>
     {% set shots = [
       ('hero/under-full-sail', 'A vela llena, atardecer en el Plata'),
@@ -303,10 +213,6 @@
       ('moored/night-profile', 'Perfil nocturno'),
       ('aerial/sailing-away', 'Rumbo abierto'),
     ] %}
-    {# Auto-rotating photo carousel (one shot at a time). main.js drives the
-       autoplay, prev/next, dots and swipe, and opens the lightbox when a slide
-       is tapped. Autoplay pauses on hover/focus/swipe and when the tab is
-       hidden, and is disabled under prefers-reduced-motion. #}
     <div class="carousel reveal" id="gallery"
          aria-roledescription="carrusel"
          aria-label="Galería de fotos de la Juana María">
@@ -319,7 +225,6 @@
             data-full="{{ url_for('static', filename='img/' ~ key ~ '-1280.webp') }}"
             data-caption="{{ caption }}"
             aria-label="Ampliar: {{ caption }}">
-            {# alt="" — the aria-label and the caption already name it #}
             {{ resp_img(key, '', '(min-width: 980px) 80vw, 100vw') }}
             <span class="carousel__cap">{{ caption }}</span>
           </button>
@@ -333,11 +238,6 @@
   </div>
 </section>
 
-<!-- ==================================== A BORDO · PROGRAMA DE TRIPULANTES -->
-{# "A bordo" zone — the page's hub, AFTER the story. The crew-program is the
-   business goal, so it keeps its own full-bleed CTA band (art-directed crop,
-   markup unchanged); shown only while the topic is published (it drops out of
-   nav_topics when toggled off in the admin). #}
 {% set crew = nav_topics | selectattr('slug', 'equalto', 'crew-program') | list | first %}
 {% if crew %}
 <section class="crew-cta" id="tripulantes">
@@ -359,12 +259,6 @@
 </section>
 {% endif %}
 
-<!-- ===================================================== A BORDO · HUB GRID -->
-{# Every published topic OTHER than the home + crew-program, as a compact card
-   grid — one tidy "contents" block, replacing the old full-bleed per-topic
-   bands that used to be intercut through the story. Driven entirely by
-   nav_topics: disabled topics drop out automatically and the whole section
-   disappears when none are published. #}
 {% set hub_topics = nav_topics
      | rejectattr('is_home')
      | rejectattr('slug', 'equalto', 'crew-program')
@@ -376,8 +270,6 @@
       <p class="eyebrow">A bordo</p>
       <h2 class="h-section">Más de la Juana María</h2>
     </div>
-    {# data-topics (not data-count) on purpose: main.js animates every
-       [data-count] node as a number counter, which would wipe these cards. #}
     <ul class="hub-grid" role="list" data-topics="{{ hub_topics | length }}">
       {% for t in hub_topics %}
         {{ topic_card(t, loop.index0 % 3) }}
@@ -387,14 +279,9 @@
 </section>
 {% endif %}
 
-{# Seminarios moved to its own topic page — app/templates/topics/seminars.html.
-   The Los Pericos audiovisual section was removed; it'll be reworked under the
-   "apariciones audiovisuales" scheme inside the "Sobre la Juana María" topic. #}
-
 {% endblock %}
 
 {% block overlays %}
-<!-- ========================================================= LIGHTBOX -->
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Imagen ampliada" aria-describedby="lbCaption">
   <button class="lb-close" id="lbClose" type="button" aria-label="Cerrar">&times;</button>
   <button class="lb-btn lb-prev" id="lbPrev" type="button" aria-label="Anterior">&lsaquo;</button>

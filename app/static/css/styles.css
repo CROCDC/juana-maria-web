@@ -1,33 +1,22 @@
-/* ==========================================================================
-   Juana María — heritage design system
-   Wood · history · antiquity. Warm varnished darks, aged-canvas creams,
-   bronze accents, a classic high-contrast serif over a literary book serif.
-   ========================================================================== */
-
-/* ------------------------------------------------------------------ Tokens */
 :root {
-  /* Warm wood darks */
+
   --abyss: #150e08;
   --walnut: #241710;
   --teak: #3c2715;
   --teak-light: #5e3d20;
 
-  /* Bronze / brass accents */
   --bronze: #b3873d;
   --brass: #cda35c;
   --gilt: #e6cb8e;
 
-  /* Aged canvas / paper */
   --canvas: #f0e6d1;
   --canvas-deep: #e6d6b8;
   --sail: #f9f4e9;
 
-  /* Ink + river */
   --ink: #221a10;
   --ink-soft: #4b3c2a;
   --river: #16242a;
 
-  /* Functional */
   --bg: var(--abyss);
   --hairline: rgba(205, 163, 92, 0.32);
   --hairline-soft: rgba(120, 92, 50, 0.22);
@@ -42,7 +31,6 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ------------------------------------------------------------------- Reset */
 *,
 *::before,
 *::after {
@@ -109,7 +97,6 @@ p {
   outline-offset: 3px;
 }
 
-/* ----------------------------------------------------------- Layout shells */
 .wrap {
   width: 100%;
   max-width: var(--maxw);
@@ -126,13 +113,11 @@ p {
   padding-block: clamp(4.5rem, 10vw, 9rem);
 }
 
-/* Keep anchored sections clear of the fixed nav when jumped to. */
 section[id],
 [id="top"] {
   scroll-margin-top: 76px;
 }
 
-/* Section surfaces ------------------------------------------------------- */
 .surface-dark {
   background:
     radial-gradient(120% 80% at 50% -10%, rgba(179, 135, 61, 0.10), transparent 60%),
@@ -147,8 +132,7 @@ section[id],
 }
 
 .surface-canvas {
-  /* A faint "light from above" warmth so the cream reads with the same depth as
-     the gradient dark/wood surfaces instead of as a flat fill. */
+
   background:
     radial-gradient(125% 75% at 50% -8%, rgba(249, 244, 233, 0.75), transparent 52%),
     var(--canvas);
@@ -162,8 +146,6 @@ section[id],
   color: var(--ink);
 }
 
-/* Faint wood vignette on the dark surfaces (the cream ::before is used for the
-   wave divider below). */
 .surface-dark::after,
 .surface-wood::after {
   content: "";
@@ -178,7 +160,6 @@ section[id],
   z-index: 1;
 }
 
-/* --------------------------------------------------------------- Typography */
 .eyebrow {
   font-family: var(--font-body);
   font-weight: 500;
@@ -214,8 +195,7 @@ section[id],
 .h-section {
   font-size: clamp(2.1rem, 1.4rem + 3vw, 3.6rem);
   line-height: 1.06;
-  /* Match the display headings' refined negative tracking (the h1-h4 base sets
-     +0.005em, which reads loose on big Cormorant Garamond). */
+
   letter-spacing: -0.01em;
   max-width: 18ch;
 }
@@ -254,7 +234,6 @@ section[id],
   font-size: 0.92em;
 }
 
-/* Decorative thin double-rule ornament */
 .ornament {
   display: flex;
   align-items: center;
@@ -276,7 +255,6 @@ section[id],
   letter-spacing: 0.3em;
 }
 
-/* ----------------------------------------------------------------- Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -334,7 +312,6 @@ section[id],
   border-color: var(--brass);
 }
 
-/* ======================================================================= NAV */
 .nav {
   position: fixed;
   inset: 0 0 auto 0;
@@ -354,12 +331,6 @@ section[id],
   padding-block: 0.85rem;
 }
 
-/* A backdrop-filtered element becomes the containing block for its fixed-position
-   descendants, which would clip the off-canvas menu overlay (.nav-links, fixed
-   inset:0) to the bar's height — so the open menu bleeds over the page when
-   opened mid-scroll or on the solid-nav topic pages. Drop the filter while the
-   menu is open (it's hidden behind the full-screen overlay anyway). JS toggles
-   .menu-open; see main.js. Listed after .is-scrolled to win the specificity tie. */
 .nav.menu-open {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
@@ -374,7 +345,7 @@ section[id],
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--sail);
-  white-space: nowrap; /* never let "Juana María" break onto two lines */
+  white-space: nowrap;
 }
 
 .brand small {
@@ -436,8 +407,7 @@ section[id],
   height: 44px;
   background: transparent;
   border: 0;
-  /* position is required for z-index to apply: without it the open full-screen
-     menu (position:fixed) paints over the toggle and the close (✕) vanishes. */
+
   position: relative;
   z-index: 60;
 }
@@ -460,7 +430,6 @@ section[id],
   transform: translateY(-6.5px) rotate(-45deg);
 }
 
-/* ======================================================================= HERO */
 .hero {
   position: relative;
   min-height: 100svh;
@@ -579,12 +548,10 @@ section[id],
   100% { transform: scaleY(1); transform-origin: bottom; opacity: 0; }
 }
 
-/* On phones the years block already sits at the bottom; drop the cue. */
 @media (max-width: 600px) {
   .scroll-cue { display: none; }
 }
 
-/* ============================================================ Intro / prólogo */
 .intro__grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -616,7 +583,6 @@ section[id],
   }
 }
 
-/* ================================================================= Timeline */
 .section-head {
   margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
   max-width: 40rem;
@@ -718,7 +684,6 @@ section[id],
   }
 }
 
-/* ============================================================== Double-ender */
 .feature {
   display: grid;
   gap: clamp(2rem, 5vw, 4rem);
@@ -762,6 +727,19 @@ section[id],
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7));
 }
 
+.aerial {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.aerial__source {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: rgba(240, 230, 209, 0.7);
+}
+
 .feature__list {
   list-style: none;
   margin: 2rem 0 0;
@@ -772,8 +750,7 @@ section[id],
 
 .feature__list li {
   display: grid;
-  /* Fixed number column so every description aligns to one left edge
-     (each li is its own grid, so 'auto' would size per-row). */
+
   grid-template-columns: 3.2rem 1fr;
   gap: 1rem;
   align-items: baseline;
@@ -798,7 +775,6 @@ section[id],
   color: var(--ink-soft);
 }
 
-/* ============================================================ Wood / plaque */
 .wood-grid {
   display: grid;
   gap: clamp(1rem, 2vw, 1.5rem);
@@ -883,10 +859,6 @@ section[id],
   letter-spacing: 0.06em;
 }
 
-/* ================================================================ Gallery carousel */
-/* Auto-rotating one-photo-at-a-time slider. The viewport clips a flex track
-   that JS shifts by translateX; each slide is a full-width button that opens
-   the lightbox. */
 .carousel {
   position: relative;
   margin-top: clamp(2rem, 5vw, 3rem);
@@ -900,9 +872,9 @@ section[id],
 
 .carousel__track {
   display: flex;
-  /* JS translates this; the transition animates the slide-to-slide move. */
+
   transition: transform 0.6s var(--ease);
-  /* Let vertical scrolling through the carousel work; JS owns horizontal. */
+
   touch-action: pan-y;
 }
 
@@ -945,7 +917,6 @@ section[id],
   pointer-events: none;
 }
 
-/* Prev / next controls -------------------------------------------------- */
 .carousel__btn {
   position: absolute;
   top: 50%;
@@ -954,7 +925,7 @@ section[id],
   place-items: center;
   width: 48px;
   height: 48px;
-  padding-bottom: 0.18em; /* optically centre the chevron glyph */
+  padding-bottom: 0.18em;
   font-size: 2rem;
   line-height: 1;
   color: var(--sail);
@@ -974,7 +945,6 @@ section[id],
 .carousel__prev { left: clamp(0.6rem, 2vw, 1.4rem); }
 .carousel__next { right: clamp(0.6rem, 2vw, 1.4rem); }
 
-/* Dots ------------------------------------------------------------------ */
 .carousel__dots {
   display: flex;
   flex-wrap: wrap;
@@ -999,7 +969,6 @@ section[id],
   transform: scale(1.3);
 }
 
-/* ================================================================ Lightbox */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -1012,8 +981,7 @@ section[id],
   backdrop-filter: blur(6px);
   opacity: 0;
   visibility: hidden;
-  /* On close, delay hiding until the fade finishes; on open (.is-open) it
-     turns visible instantly so focus() can land on a control synchronously. */
+
   transition: opacity 0.4s, visibility 0s 0.4s;
 }
 
@@ -1092,7 +1060,6 @@ section[id],
   .lb-prev, .lb-next { display: none; }
 }
 
-/* ============================================================ Ficha técnica */
 .spec {
   display: grid;
   gap: clamp(2rem, 5vw, 4rem);
@@ -1148,7 +1115,6 @@ section[id],
   .spec__list div { grid-template-columns: 1fr; gap: 0.3rem; }
 }
 
-/* =================================================================== Pericos */
 .videos {
   display: grid;
   gap: clamp(1.4rem, 3vw, 2.4rem);
@@ -1248,7 +1214,6 @@ section[id],
   display: block;
 }
 
-/* ==================================================================== Footer */
 .footer {
   background: var(--abyss);
   border-top: 1px solid var(--hairline-soft);
@@ -1312,7 +1277,6 @@ section[id],
   color: rgba(240, 230, 209, 0.5);
 }
 
-/* ============================================================ Scroll reveal */
 .reveal {
   opacity: 0;
   transform: translateY(28px);
@@ -1329,7 +1293,6 @@ section[id],
 .reveal[data-delay="2"] { transition-delay: 0.2s; }
 .reveal[data-delay="3"] { transition-delay: 0.3s; }
 
-/* ============================================================= Mobile nav */
 @media (max-width: 1080px) {
   .nav-toggle { display: flex; }
 
@@ -1355,10 +1318,6 @@ section[id],
   }
 }
 
-/* Many published topics: the labels never fit an inline bar, so use the
-   off-canvas hamburger menu at every width (toggled by .nav--menu on the
-   header, set from base.html when nav_topics > 4). Mirrors the mobile-nav
-   block above so the two behave identically. */
 .nav--menu .nav-toggle {
   display: flex;
 }
@@ -1384,7 +1343,6 @@ section[id],
   letter-spacing: 0.22em;
 }
 
-/* ============================================================== Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1398,18 +1356,11 @@ section[id],
   .hero__media img { animation: none; }
 }
 
-/* ==========================================================================
-   Enhancements — softer shapes, background forms, light (cheap) motion.
-   All animation is transform/opacity/background-position only, and disabled
-   under prefers-reduced-motion (handled by the global rule above).
-   ========================================================================== */
-
 :root {
   --r-card: clamp(14px, 2vw, 22px);
   --r-lg: clamp(22px, 4vw, 40px);
 }
 
-/* -------- Less boxy: rounder cards, figures, media ---------------------- */
 .feature__media,
 .video-card {
   border-radius: var(--r-lg);
@@ -1432,11 +1383,6 @@ section[id],
   border-bottom-right-radius: var(--r-lg);
 }
 
-/* -------- Wave dividers — sections flow into one another ---------------- */
-/* Each coloured section "rises" into the section above it through a soft wave
-   of its own colour: a colour block masked to a wave shape, sitting just above
-   the section's top edge. No straight seams, no boxes — the sections fuse
-   along a curve (like the reference). */
 .surface-canvas::before,
 .surface-canvas-deep::before,
 .surface-dark::before,
@@ -1459,24 +1405,17 @@ section[id],
 .surface-dark::before { background: var(--walnut); }
 .surface-wood::before { background: var(--teak); }
 
-/* Mirror the wave on the wood / deep-cream sections for a natural rhythm. */
 .surface-wood::before,
 .surface-canvas-deep::before {
   transform: translateY(-99%) scaleX(-1);
 }
 
-/* -------- Reveal: media scales in slightly for life --------------------- */
 .reveal .feature__media,
 .wood-grid .reveal,
 .reveal .plaque__photo {
   transition: transform 1s var(--ease);
 }
 
-/* ==========================================================================
-   Review fixes — contrast, focus, rhythm, layout balance, tap targets.
-   ========================================================================== */
-
-/* Link + focus contrast on the cream surfaces (brass on canvas was ~1.9:1). */
 .surface-canvas .link-underline,
 .surface-canvas-deep .link-underline {
   color: var(--teak-light);
@@ -1492,19 +1431,15 @@ section[id],
   outline-color: var(--teak);
 }
 
-/* Consistent title -> lede rhythm everywhere (kills the diseño collision). */
 .h-section + .lede {
   margin-top: 1.2rem;
 }
 
-/* La madera: keep the wide cabin shot from dominating vertically. */
 .wood-grid .span-2 img {
   aspect-ratio: 3 / 2;
   object-fit: cover;
 }
 
-/* Ficha: give the left image real height and let the column ride the scroll
-   so it doesn't leave a tall void beside the 10-row spec list. */
 #ficha .feature__media img {
   aspect-ratio: 4 / 5;
 }
@@ -1516,7 +1451,6 @@ section[id],
   }
 }
 
-/* Tap targets >= 44px on mobile. */
 .brand {
   min-height: 44px;
   align-items: center;
@@ -1527,10 +1461,6 @@ section[id],
   }
 }
 
-/* ==========================================================================
-   No bordered boxes — per design direction, lean on shadow, shape and the
-   sail silhouettes instead of hard 1px frames.
-   ========================================================================== */
 .feature__media,
 .video-card,
 .plaque,
@@ -1538,7 +1468,6 @@ section[id],
   border: 0;
 }
 
-/* ============================================================== Seminarios */
 .seminars {
   display: grid;
   grid-template-columns: 1fr;
@@ -1565,14 +1494,11 @@ section[id],
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  /* Unify the mixed sources (colour photo, B&W, brass on white, parchment)
-     into one warm, antique-plate family. */
+
   filter: sepia(0.24) saturate(0.85) contrast(1.02);
   transition: transform 0.7s var(--ease), filter 0.7s var(--ease);
 }
 
-/* Warm multiply wash so bright backgrounds (the astrolabe) settle into the
-   cream surface instead of glaring. */
 .seminar__img::after {
   content: "";
   position: absolute;
@@ -1600,8 +1526,6 @@ section[id],
   margin-bottom: 0.5rem;
 }
 
-/* In the 4-column row, reserve two title lines so single-line titles
-   (e.g. "Historia náutica") don't lift their description above the others. */
 @media (min-width: 980px) {
   .seminar h3 {
     min-height: 2.2em;
@@ -1616,13 +1540,36 @@ section[id],
   max-width: 42ch;
 }
 
-/* Pull the pale sources (astrolabe on white, parchment) down toward the photo
-   cards' tone so the row reads as one antique-plate family. */
 .seminar__img--pale img {
   filter: sepia(0.26) saturate(0.82) contrast(1.03) brightness(0.82);
 }
 
-/* Scroll-spy: the nav link for the section in view stays lit. */
+.seminar-group + .seminar-group {
+  margin-top: clamp(2.6rem, 5vw, 4.2rem);
+}
+
+.seminar-group__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 1.1rem + 1vw, 2.1rem);
+  color: var(--teak);
+  margin: 0 0 1.4rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--hairline-soft);
+}
+
+.seminar-group__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+@media (min-width: 720px) {
+  .seminar-group__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .nav-links a.is-active {
   color: var(--gilt);
 }
@@ -1630,9 +1577,6 @@ section[id],
   transform: scaleX(1);
 }
 
-/* ===================================================== Typographic wrapping */
-/* Balanced multi-line headings; orphan-free body text (progressive: ignored
-   by browsers without text-wrap). */
 .h-display,
 .h-section,
 .hero h1,
@@ -1652,7 +1596,6 @@ section[id],
   text-wrap: pretty;
 }
 
-/* ============================================================ Social link */
 .social {
   display: inline-flex;
   align-items: center;
@@ -1676,7 +1619,6 @@ section[id],
   transform: scale(1.08) rotate(-3deg);
 }
 
-/* Lightbox image counter (n / total). */
 .lightbox figcaption {
   display: flex;
   flex-direction: column;
@@ -1686,13 +1628,11 @@ section[id],
 .lb-count {
   font-size: 0.7rem;
   letter-spacing: 0.25em;
-  /* --brass (not dimmed) keeps the small counter above 4.5:1 on the dark
-     overlay; the smaller size + letter-spacing give it hierarchy vs the caption. */
+
   color: var(--brass);
   font-variant-numeric: tabular-nums;
 }
 
-/* ================================================================ 404 page */
 .error-page {
   min-height: 78vh;
   display: grid;
@@ -1722,7 +1662,6 @@ section[id],
   max-width: 36ch;
 }
 
-/* ====================================================== Skip-to-content link */
 .skip-link {
   position: fixed;
   top: 0;
@@ -1741,23 +1680,12 @@ section[id],
   transform: translateY(0);
 }
 
-/* ==========================================================================
-   Topic hub + topic pages (multi-topic structure)
-   ========================================================================== */
-
-/* Off the home page the fixed nav has no dark hero behind it, so it ships
-   solid from the first paint (same look the home nav gets once scrolled). */
 .nav--solid {
   background: rgba(21, 14, 8, 0.92);
   backdrop-filter: blur(10px);
   box-shadow: 0 1px 0 var(--hairline-soft), 0 10px 30px -20px rgba(0, 0, 0, 0.9);
 }
 
-/* --------------------------------------------------------------- Topic pages */
-/* Extra top room so the first section clears the fixed nav (no hero here). */
-/* Topic hero: each topic page opens with its own image as a banner, mirroring
-   the home hero/crew-cta layering so the topic pages feel as finished as the
-   home (and visually echo the card the visitor clicked to get here). */
 .topic-hero {
   position: relative;
   isolation: isolate;
@@ -1790,9 +1718,7 @@ section[id],
   position: absolute;
   inset: 0;
   z-index: -1;
-  /* Darken the top (under the solid nav) and bottom (text + wave-divider join)
-     while keeping the middle light so the photo reads; a soft radial gives the
-     centred title a backing on bright images. */
+
   background:
     linear-gradient(
       180deg,
@@ -1803,7 +1729,6 @@ section[id],
     radial-gradient(120% 95% at 50% 52%, transparent 32%, rgba(21, 14, 8, 0.34));
 }
 
-/* Extra top room so the title clears the fixed (solid) nav. */
 .topic-hero__inner {
   padding-block: clamp(6rem, 11vw, 8.5rem) clamp(2.4rem, 6vw, 4rem);
   color: var(--sail);
@@ -1824,7 +1749,6 @@ section[id],
   text-shadow: 0 1px 18px rgba(0, 0, 0, 0.4);
 }
 
-/* The body section: the hero already clears the nav, so no big top padding. */
 .topic-page {
   min-height: 40vh;
 }
@@ -1838,12 +1762,10 @@ section[id],
   font-style: italic;
 }
 
-/* ------------------------------------------------------------- Los rumbos */
 .rumbos {
   max-width: 64ch;
 }
 
-/* A hairline divider separates each rumbo from the previous one. */
 .rumbo + .rumbo {
   margin-top: clamp(2.6rem, 6vw, 4.5rem);
   padding-top: clamp(2.6rem, 6vw, 4.5rem);
@@ -1878,7 +1800,6 @@ section[id],
   line-height: 1.7;
 }
 
-/* ----------------------------------------------------- Crew intake form */
 .form {
   max-width: 620px;
   margin-top: clamp(1.5rem, 4vw, 2.5rem);
@@ -1898,14 +1819,12 @@ section[id],
   margin-bottom: 0.45rem;
 }
 
-/* Helper text under a field caption (e.g. why we ask for WhatsApp). */
 .form-hint {
   margin: -0.1rem 0 0.5rem;
   font-size: 0.85rem;
   color: var(--ink-soft);
 }
 
-/* Inline Sí/No radio options, each a pill; the native radio sits inside. */
 .form-radio-group {
   display: flex;
   gap: 0.6rem;
@@ -1915,7 +1834,7 @@ section[id],
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  /* Undo the block/uppercase .form-row label styling for the inline options. */
+
   margin: 0;
   font-size: 1rem;
   letter-spacing: normal;
@@ -1933,7 +1852,6 @@ section[id],
   border-color: var(--bronze);
 }
 
-/* The radio control itself: reset the full-width .form-row input box styling. */
 .form-radio input[type="radio"] {
   width: auto;
   margin: 0;
@@ -2031,9 +1949,6 @@ section[id],
   margin-bottom: 0.8rem;
 }
 
-/* ----------------------------------------------- Crew CTA band (home) */
-/* High-prominence "join the crew" band: a hero-style image strip with a
-   scrim and centred copy + button. Mirrors the .hero layering pattern. */
 .crew-cta {
   position: relative;
   isolation: isolate;
@@ -2097,17 +2012,9 @@ section[id],
   font-size: 0.84rem;
 }
 
-/* =================================================================== HUB GRID */
-/* "A bordo" zone: ONE compact, equal-card system for the secondary topics,
-   replacing the five intercut full-bleed .topic-band sections. Lives on
-   surface-canvas (crisp paper-catalogue tiles); the crew-cta band above it is
-   the single full-bleed CTA. Mobile-first: 1 col -> 2 -> 3. Cards are equal
-   height via a fixed image aspect-ratio + flex bodies, so the grid reads as a
-   clean system at 1, 3 or 6 published topics. Uses existing tokens only. */
 .hub-grid {
   list-style: none;
-  /* No top margin: the .section-head above already owns the heading-to-content
-     rhythm, so the gap matches every other section on the page. */
+
   margin: 0;
   padding: 0;
   display: grid;
@@ -2120,16 +2027,14 @@ section[id],
 }
 
 @media (min-width: 980px) {
-  /* 3 and 6 land as clean rows of three; 5 fills two rows gracefully. */
+
   .hub-grid { grid-template-columns: repeat(3, 1fr); }
-  /* A lone card must not stretch a full third of the wrap and float; cap it so
-     it reads as a deliberate single feature, left-aligned under the heading. */
+
   .hub-grid[data-topics="1"] { grid-template-columns: minmax(280px, 420px); }
-  /* 2 and 4 stay 2-up so a card is never orphaned in a 3-col row. */
+
   .hub-grid[data-topics="2"],
   .hub-grid[data-topics="4"] { grid-template-columns: repeat(2, 1fr); }
-  /* 5 (the max real-world count) on a 6-col track: row 1 = 3 cards, row 2 = the
-     trailing 2 CENTERED under them, instead of a 3+2 with an empty third cell. */
+
   .hub-grid[data-topics="5"] { grid-template-columns: repeat(6, 1fr); }
   .hub-grid[data-topics="5"] > .hub-card { grid-column: span 2; }
   .hub-grid[data-topics="5"] > .hub-card:nth-child(4) { grid-column: 2 / span 2; }
@@ -2165,7 +2070,6 @@ section[id],
   outline-offset: 3px;
 }
 
-/* Fixed aspect ratio = consistent card rhythm across all topics. */
 .hub-card__media {
   display: block;
   aspect-ratio: 3 / 2;
@@ -2189,7 +2093,7 @@ section[id],
   flex-direction: column;
   gap: 0.5rem;
   padding: clamp(1.1rem, 2.4vw, 1.6rem);
-  flex: 1; /* equal-height bodies even with uneven blurb lengths */
+  flex: 1;
 }
 
 .hub-card__title {
@@ -2205,8 +2109,7 @@ section[id],
   line-height: 1.5;
   color: var(--ink-soft);
   flex: 1;
-  /* Reserve a uniform 2-line height so CTA baselines align across a row even
-     when the client's blurbs differ in length. */
+
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -2230,8 +2133,6 @@ section[id],
   transition: transform 0.3s var(--ease);
 }
 
-/* CTA keeps its --teak-light tone on hover (bronze on cream fails AA); the
-   affordance is carried by the card lift, border, image zoom and arrow slide. */
 .hub-card__link:hover .hub-card__cta i,
 .hub-card__link:focus-visible .hub-card__cta i { transform: translateX(0.25em); }
 
@@ -2242,12 +2143,6 @@ section[id],
   .hub-card__link:focus-visible .hub-card__media img { transform: none; }
 }
 
-/* -------- Surface seams: pair the cream story sections into one block ------ */
-/* #prologo and #historia share the SAME flat cream, so dropping the wave
-   divider + trimming the seam fuses them into one continuous reading block.
-   (The wood pair #diseno/#ficha is NOT fused this way: surface-wood is a
-   teak->abyss gradient, so a seamless join would show a hard dark/light step;
-   they keep the house wave divider, which masks the seam elegantly.) */
 #prologo { padding-bottom: clamp(2.4rem, 5vw, 3.8rem); }
 #historia { padding-top: clamp(2.4rem, 5vw, 3.8rem); }
 

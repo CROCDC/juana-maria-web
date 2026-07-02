@@ -9,8 +9,6 @@
 {% endblock %}
 
 {% block topic_body %}
-{# Rendered from the RUMBOS registry (app/content/rumbos.py) so the page and the
-   crew-program form's rumbo select always offer the same set. #}
 <div class="rumbos">
   {% for r in rumbos %}
   <article class="rumbo reveal" id="{{ r.key }}"{% if not loop.first %} data-delay="{{ loop.index0 }}"{% endif %}>

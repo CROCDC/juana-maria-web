@@ -1,73 +1,102 @@
 {% extends "topics/_base_topic.html" %}
-{% from "_macros.html" import resp_img with context %}
 
 {% block topic_eyebrow %}El oficio de navegar{% endblock %}
 
 {% block topic_lead %}
 <p class="lede">
-  (REVISION) Con la Juana María al cuidado de un historiador naval, su cubierta se vuelve
-  también un aula. Especialistas suben a bordo para compartir el arte de
-  navegar &mdash; el de antes y el de siempre. Cada seminario se anuncia aquí
-  cuando se programa. (REVISION)
+  Con especialistas invitados para impartir seminarios a bordo sobre aspectos
+  específicos de la navegación a vela, la cubierta de la Juana María se vuelve
+  también un aula.
 </p>
 {% endblock %}
 
 {% block topic_body %}
-<div class="seminars">
-  {# Each seminar has its own id so it can be linked individually
-     (e.g. /seminars#astronomica) as it gets scheduled. #}
-  <article class="seminar reveal" id="mesana">
-    <div class="seminar__img">
-      {{ resp_img('sailing/bsas-skyline',
-          'La Juana María navegando con su vela mesana izada',
-          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-    </div>
-    <h2>Navegación con mesana</h2>
-    <p>
-      Equilibrar y gobernar el barco con la vela de popa: cómo la mesana
-      ayuda a capear, fondear y mantener el rumbo cuando se navega a vela.
-    </p>
-  </article>
+<div class="seminar-group reveal">
+  <h2 class="seminar-group__title">Seminarios de posicionamiento a bordo</h2>
+  <div class="seminar-group__list">
+    <article class="seminar" id="estima">
+      <h3>Navegación costera por estima: pínulas y carta náutica</h3>
+      <p>
+        Fijar la posición sin electrónica: rumbo, velocidad y tiempo llevados
+        sobre la carta náutica, con instrumentos de pínulas para tomar demoras y
+        alturas. La navegación de estima, los ojos del navegante cerca de la
+        costa.
+      </p>
+    </article>
+    <article class="seminar" id="astronomica">
+      <h3>Navegación astronómica: sextante y carta náutica</h3>
+      <p>
+        Hallar la posición con el sol y las estrellas. Sextante, almanaque y
+        horizonte &mdash; la navegación de altura, como se hacía mucho antes del
+        GPS.
+      </p>
+    </article>
+    <article class="seminar" id="satelital">
+      <h3>Navegación satelital: sistemas de GPS</h3>
+      <p>
+        Cómo funciona el posicionamiento por satélite y cómo se integra a la
+        carta náutica a bordo: waypoints, rumbos y singladura en la navegación
+        de hoy.
+      </p>
+    </article>
+  </div>
+</div>
 
-  <article class="seminar reveal" id="astronomica" data-delay="1">
-    <div class="seminar__img">
-      {{ resp_img('seminars/astronomica',
-          'Marineros tomando la altura del sol con sextante a bordo de un velero',
-          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-    </div>
-    <h2>Navegación astronómica</h2>
-    <p>
-      Hallar la posición con el sol y las estrellas. Sextante, almanaque y
-      horizonte &mdash; la navegación de altura, como se hacía mucho antes
-      del GPS.
-    </p>
-  </article>
+<div class="seminar-group reveal">
+  <h2 class="seminar-group__title">Seminarios de trimado y maniobra a bordo</h2>
+  <div class="seminar-group__list">
+    <article class="seminar" id="mesana">
+      <h3>Navegación con mesana</h3>
+      <p>
+        Equilibrar y gobernar el barco con la vela de popa: cómo la mesana ayuda
+        a capear, fondear y mantener el rumbo cuando se navega a vela.
+      </p>
+    </article>
+    <article class="seminar" id="trinquetilla">
+      <h3>Navegación con trinquetilla</h3>
+      <p>
+        El aparejo de proa en acción: cómo se caza y se ajusta la trinquetilla
+        para ganar altura, equilibrar el barco y sostener el rumbo con viento
+        cambiante.
+      </p>
+    </article>
+    <article class="seminar" id="orza">
+      <h3>Navegación con orza rebatible</h3>
+      <p>
+        La orza que sube y baja según el fondo: cuándo arriarla para agarrar el
+        agua y ceñir, y cuándo rebatirla para cruzar los bajíos del Río de la
+        Plata.
+      </p>
+    </article>
+  </div>
+</div>
 
-  <article class="seminar reveal" id="pinula" data-delay="2">
-    <div class="seminar__img seminar__img--pale">
-      {{ resp_img('seminars/pinula',
-          'Astrolabio náutico de bronce de 1626, con su alidada de pínulas',
-          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-    </div>
-    <h2>Navegación con pínula</h2>
-    <p>
-      Medir alturas y rumbos con instrumentos de pínulas: el astrolabio
-      náutico y la ballestilla, los ojos del navegante antes de la
-      electrónica.
-    </p>
-  </article>
-
-  <article class="seminar reveal" id="historia" data-delay="3">
-    <div class="seminar__img seminar__img--pale">
-      {{ resp_img('seminars/historia',
-          'Carta portulana del siglo XVI con rosas de los vientos',
-          '(min-width: 980px) 25vw, (min-width: 560px) 50vw, 100vw') }}
-    </div>
-    <h2>Historia náutica</h2>
-    <p>
-      Del portulano al Río de la Plata: cartas, derroteros y la cultura
-      marinera que dio origen a barcos como la Juana María.
-    </p>
-  </article>
+<div class="seminar-group reveal">
+  <h2 class="seminar-group__title">Seminarios de historia náutica en amarra</h2>
+  <div class="seminar-group__list">
+    <article class="seminar" id="arquitectura">
+      <h3>Evolución de la arquitectura y la cultura naval</h3>
+      <p>
+        Del casco de madera a las líneas de la ballenera: cómo cambiaron el
+        diseño, los materiales y la cultura marinera que dieron origen a barcos
+        como la Juana María.
+      </p>
+    </article>
+    <article class="seminar" id="historia">
+      <h3>Historia de los sistemas y técnicas de navegación occidental</h3>
+      <p>
+        Del portulano a la carta náutica moderna: cartas, derroteros e
+        instrumentos con los que Occidente aprendió a orientarse en el mar.
+      </p>
+    </article>
+    <article class="seminar" id="preservacion">
+      <h3>Mantenimiento y preservación de embarcaciones de madera</h3>
+      <p>
+        Barniz, calafateo y herrajes de bronce: las técnicas clásicas y los
+        métodos rigurosos con los que se cuida y se preserva un casco de madera
+        en navegación.
+      </p>
+    </article>
+  </div>
 </div>
 {% endblock %}

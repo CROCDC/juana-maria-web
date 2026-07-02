@@ -1,6 +1,8 @@
 import hmac
+import json
 import re
 from collections.abc import Callable
+from datetime import date
 from functools import wraps
 from typing import Any
 
@@ -23,8 +25,6 @@ from app.factory import canonical_root
 from app.repositories.crew_application_repository import CrewApplicationRepository
 from app.repositories.topic_visibility_repository import TopicVisibilityRepository
 
-# The crew-program topic has a DB-backed intake form, so it gets a dedicated
-# GET/POST handler instead of the generic read-only topic view.
 CREW_SLUG = "crew-program"
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -46,11 +46,6 @@ def _validate_crew_form(data: dict[str, str]) -> dict[str, str]:
 
 
 def _make_topic_view(topic: Topic) -> Callable[[], str]:
-    """Build the view for a single topic page.
-
-    Visibility is checked per request (not at registration time) so toggling a
-    topic from the admin panel takes effect immediately: a disabled topic 404s.
-    """
 
     def view() -> str:
         if not TopicVisibilityRepository.is_enabled(topic.slug):
@@ -73,13 +68,8 @@ def _login_required(view: Callable[..., Any]) -> Callable[..., Any]:
 def register_routes(app: Flask) -> None:
     @app.route("/")
     def index() -> str:
-        # is_index lets base.html keep bare "#section" anchors here (smooth
-        # in-page scroll) while other pages get "/#section" that resolve home.
         return render_template("index.html", is_index=True)
 
-    # One page per toggleable topic, at /<slug>. Registered from the registry so
-    # adding a topic is a single entry in app/content/topics.py. crew-program is
-    # the exception: it has a form, so it's handled explicitly below.
     for topic in TOGGLEABLE_TOPICS:
         if topic.slug == CREW_SLUG:
             continue
@@ -88,7 +78,6 @@ def register_routes(app: Flask) -> None:
     @app.route("/crew-program", methods=["GET", "POST"], endpoint="topic_crew_program")
     def crew_program() -> Any:
         topic = get_topic(CREW_SLUG)
-        # Same visibility gate as every other topic: 404 while unpublished.
         if topic is None or not TopicVisibilityRepository.is_enabled(CREW_SLUG):
             abort(404)
 
@@ -106,8 +95,6 @@ def register_routes(app: Flask) -> None:
             }
             errors = _validate_crew_form(data)
             if not errors:
-                # Persist the rumbo only if it's a known key (enum from RUMBOS);
-                # ignore anything else so the column stays a clean enum value.
                 route = data["preferred_route"]
                 preferred_route = route if route in RUMBOS_BY_KEY else ""
                 CrewApplicationRepository.create(
@@ -120,7 +107,6 @@ def register_routes(app: Flask) -> None:
                     preferred_route=preferred_route,
                     message=data["message"],
                 )
-                # Post/Redirect/Get: ?sent=1 shows the thank-you state.
                 return redirect(url_for("topic_crew_program", sent=1))
 
         return render_template(
@@ -131,7 +117,6 @@ def register_routes(app: Flask) -> None:
             sent=request.args.get("sent"),
         )
 
-    # ----- Admin (topic visibility) ------------------------------------------
 
     @app.route("/admin/login", methods=["GET", "POST"])
     def admin_login() -> Any:
@@ -143,8 +128,6 @@ def register_routes(app: Flask) -> None:
         if request.method == "POST":
             password = request.form.get("password", "")
             expected = current_app.config.get("ADMIN_PASSWORD")
-            # compare_digest guards against timing attacks; an unset password
-            # (expected is None) can never match, disabling admin entirely.
             if expected and hmac.compare_digest(password, expected):
                 session["is_admin"] = True
                 return redirect(request.form.get("next") or target)
@@ -162,7 +145,6 @@ def register_routes(app: Flask) -> None:
     @_login_required
     def admin_topics() -> Any:
         if request.method == "POST":
-            # Checkboxes only submit when checked, so an absent slug means "off".
             checked = set(request.form.getlist("enabled"))
             for topic in TOGGLEABLE_TOPICS:
                 TopicVisibilityRepository.set_enabled(topic.slug, topic.slug in checked)
@@ -177,13 +159,39 @@ def register_routes(app: Flask) -> None:
     @app.route("/admin/crew", methods=["GET"])
     @_login_required
     def admin_crew() -> Any:
-        # Read-only list of crew-program applications, newest first (the repo
-        # already orders by created_at desc). Dates are shown in local time via
-        # the `localdt` template filter.
         applications = CrewApplicationRepository.get_all()
         return render_template("admin/crew.html", applications=applications)
 
-    # ----- SEO / infra --------------------------------------------------------
+
+    @app.route("/site.webmanifest")
+    def web_manifest() -> Response:
+        years = date.today().year - 1941
+        manifest = {
+            "name": "Juana María",
+            "short_name": "Juana María",
+            "description": (
+                f"Ballenera de doble proa de 1941. {years} años navegando "
+                "el Río de la Plata."
+            ),
+            "lang": "es",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#150e08",
+            "theme_color": "#150e08",
+            "icons": [
+                {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"},
+                {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png"},
+                {
+                    "src": "/static/apple-touch-icon.png",
+                    "sizes": "180x180",
+                    "type": "image/png",
+                },
+            ],
+        }
+        return Response(
+            json.dumps(manifest, ensure_ascii=False),
+            mimetype="application/manifest+json",
+        )
 
     @app.route("/robots.txt")
     def robots() -> Response:
@@ -192,7 +200,6 @@ def register_routes(app: Flask) -> None:
 
     @app.route("/sitemap.xml")
     def sitemap() -> Response:
-        # Home plus every currently published topic page, on the canonical origin.
         root = canonical_root()
         state = TopicVisibilityRepository.get_state_map()
         locs = [root]

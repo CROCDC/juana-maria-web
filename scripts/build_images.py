@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-"""Build responsive, web-optimized images for the Juana María site.
-
-Reads the curated masters in ``media-web/photos/`` and writes, per image, a
-ladder of WebP widths plus a single JPEG fallback into ``app/static/img/``.
-Broker (FINARA) shots carry a small corner watermark; those are cropped along
-the bottom edge before resizing. A JSON manifest with intrinsic dimensions is
-written so templates can set width/height and avoid layout shift.
-
-Shots that show identifiable people are private family photos, not stock: those
-get a crossed, tiled "JUANA MARÍA / FOTO FAMILIAR" watermark baked in (at master
-resolution, so it scales down cleanly into every responsive width) to discourage
-reuse. Only the master in ``media-web/photos/`` stays clean.
-"""
 
 from __future__ import annotations
 
@@ -25,14 +12,11 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "media-web" / "photos"
 OUT = ROOT / "app" / "static" / "img"
 
-# Responsive widths (px). Sources are capped at 2560 long edge already.
 WIDTHS = [1920, 1280, 960, 640, 420]
 WEBP_QUALITY = 80
 JPEG_QUALITY = 82
 JPEG_FALLBACK_WIDTH = 1280
 
-# Bottom strip (fraction of height) to crop off broker shots to drop the
-# small FINARA corner watermark.
 WATERMARK_CROP = 0.075
 WATERMARKED = {
     "moored/profile-with-name",
@@ -42,11 +26,6 @@ WATERMARKED = {
     "details/builders-plaque-closeup",
 }
 
-# Masters that show identifiable people (crew/guests). These are private family
-# photos, so they get a visible "FOTO FAMILIAR" watermark to discourage reuse.
-# Curated by hand: there are only ~20 masters, so a fixed set is more reliable
-# than a person detector and adds no extra dependency. Aerials/distant shots
-# with only a tiny helmsman are intentionally left out (person not identifiable).
 PEOPLE = {
     "hero/under-full-sail",
     "hero/sailing-returning-from-colonia",
@@ -57,23 +36,29 @@ PEOPLE = {
     "moored/two-boats-night",
 }
 
-# Crossed, tiled watermark applied to PEOPLE shots. Tuned to read on both bright
-# sky and dark areas: warm "sail" off-white fill over a faint dark stroke.
 WM_FONT = ROOT / "scripts" / "assets" / "CormorantGaramond-SemiBold.ttf"
 WM_LINES = ["JUANA MARÍA", "FOTO FAMILIAR"]
-WM_ANGLE = 30  # degrees; drawn at +/- this to form the "cruzada" weave
-WM_FONT_FRAC = 0.050  # font size as a fraction of image width
-WM_GAP_X = 1.9  # horizontal tile spacing, in multiples of the widest line
-WM_GAP_Y = 3.4  # vertical tile spacing, in multiples of line height
-WM_TRACKING = 0.16  # extra letter-spacing, in multiples of font size
-WM_FILL = (249, 244, 233)  # --sail
+WM_ANGLE = 30
+WM_FONT_FRAC = 0.050
+WM_GAP_X = 1.9
+WM_GAP_Y = 3.4
+WM_TRACKING = 0.16
+WM_FILL = (249, 244, 233)
 WM_ALPHA = 125
-WM_STROKE = (20, 14, 8)  # near --abyss
+WM_STROKE = (20, 14, 8)
 WM_STROKE_ALPHA = 95
+
+PLACEHOLDER = {"heritage/sister-boat-teseo"}
+PH_TEXT = "CAMBIAR"
+PH_ANGLE = 16
+PH_WIDTH_FRAC = 0.72
+PH_FILL = (249, 244, 233)
+PH_ALPHA = 205
+PH_STROKE = (20, 14, 8)
+PH_STROKE_ALPHA = 150
 
 
 def watermark(img: Image.Image) -> Image.Image:
-    """Bake a crossed, tiled "JUANA MARÍA / FOTO FAMILIAR" mark into ``img``."""
     w, h = img.size
     fs = max(16, int(w * WM_FONT_FRAC))
     font = ImageFont.truetype(str(WM_FONT), fs)
@@ -87,7 +72,6 @@ def watermark(img: Image.Image) -> Image.Image:
         return total
 
     def diagonal_layer(angle: float) -> Image.Image:
-        # Draw on an oversized square so rotation never exposes bare corners.
         side = int(math.hypot(w, h)) + fs * 5
         layer = Image.new("RGBA", (side, side), (0, 0, 0, 0))
         draw = ImageDraw.Draw(layer)
@@ -98,7 +82,6 @@ def watermark(img: Image.Image) -> Image.Image:
         y, row = 0, 0
         while y < side + step_y:
             text = WM_LINES[row % len(WM_LINES)]
-            # Brick-offset every other row and center shorter lines in the column.
             x = -step_x + (row % 2) * (step_x // 2) + (col_w - line_width(draw, text)) / 2
             while x < side + step_x:
                 cx = x
@@ -122,7 +105,31 @@ def watermark(img: Image.Image) -> Image.Image:
     base.alpha_composite(diagonal_layer(-WM_ANGLE))
     return base.convert("RGB")
 
-# Curated set -> output key. Output key becomes app/static/img/<key>.*
+
+def placeholder_watermark(img: Image.Image) -> Image.Image:
+    w, h = img.size
+    probe = ImageFont.truetype(str(WM_FONT), 100)
+    unit = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textlength(PH_TEXT, font=probe)
+    fs = max(24, int(100 * (w * PH_WIDTH_FRAC) / unit))
+    font = ImageFont.truetype(str(WM_FONT), fs)
+    stroke_w = max(2, int(fs * 0.02))
+
+    side = int(math.hypot(w, h)) + fs
+    layer = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+    draw.text(
+        (side // 2, side // 2), PH_TEXT, font=font, anchor="mm",
+        fill=PH_FILL + (PH_ALPHA,),
+        stroke_width=stroke_w, stroke_fill=PH_STROKE + (PH_STROKE_ALPHA,),
+    )
+    layer = layer.rotate(PH_ANGLE, resample=Image.BICUBIC, center=(side // 2, side // 2))
+    left, top = (side - w) // 2, (side - h) // 2
+    layer = layer.crop((left, top, left + w, top + h))
+
+    base = img.convert("RGBA")
+    base.alpha_composite(layer)
+    return base.convert("RGB")
+
 IMAGES = {
     "hero/under-full-sail": "hero/under-full-sail",
     "hero/sailing-returning-from-colonia": "hero/returning-from-colonia",
@@ -150,7 +157,7 @@ IMAGES = {
 def process(src_rel: str, out_key: str) -> dict[str, int]:
     src_path = SRC / f"{src_rel}.jpg"
     img = Image.open(src_path)
-    img = ImageOps.exif_transpose(img)  # honor camera orientation
+    img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
 
     if src_rel in WATERMARKED:
@@ -158,10 +165,11 @@ def process(src_rel: str, out_key: str) -> dict[str, int]:
         crop_h = int(h * (1 - WATERMARK_CROP))
         img = img.crop((0, 0, w, crop_h))
 
-    # Bake the family-photo watermark at master resolution so it downscales
-    # crisply into every responsive width below.
     if src_rel in PEOPLE:
         img = watermark(img)
+
+    if src_rel in PLACEHOLDER:
+        img = placeholder_watermark(img)
 
     out_dir = OUT / Path(out_key).parent
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -180,7 +188,6 @@ def process(src_rel: str, out_key: str) -> dict[str, int]:
             method=6,
         )
 
-    # One JPEG fallback for the rare non-WebP client.
     fb_w = min(JPEG_FALLBACK_WIDTH, full_w)
     fb = img.resize((fb_w, round(full_h * fb_w / full_w)), Image.LANCZOS)
     fb.save(out_dir / f"{name}-fallback.jpg", "JPEG", quality=JPEG_QUALITY, progressive=True, optimize=True)
