@@ -22,6 +22,9 @@
         <a href="{{ url_for('admin_crew') }}"
            class="admin__nav-link{% if request.endpoint == 'admin_crew' %} is-active{% endif %}"
            {% if request.endpoint == 'admin_crew' %}aria-current="page"{% endif %}>Tripulantes</a>
+        <a href="{{ url_for('sitecopy.editor') }}"
+           class="admin__nav-link{% if request.blueprint == 'sitecopy' %} is-active{% endif %}"
+           {% if request.blueprint == 'sitecopy' %}aria-current="page"{% endif %}>Textos del sitio</a>
       </nav>
       {% endif %}
       {% block body %}{% endblock %}

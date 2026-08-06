@@ -3,7 +3,6 @@ import json
 import re
 from collections.abc import Callable
 from datetime import date
-from functools import wraps
 from typing import Any
 
 from flask import (
@@ -19,6 +18,7 @@ from flask import (
 )
 from werkzeug.wrappers import Response as WerkzeugResponse
 
+from app.admin_auth import login_required as _login_required
 from app.content.rumbos import RUMBOS_BY_KEY
 from app.content.topics import TOGGLEABLE_TOPICS, Topic, get_topic
 from app.factory import canonical_root
@@ -53,16 +53,6 @@ def _make_topic_view(topic: Topic) -> Callable[[], str]:
         return render_template(topic.template, topic=topic)
 
     return view
-
-
-def _login_required(view: Callable[..., Any]) -> Callable[..., Any]:
-    @wraps(view)
-    def wrapped(*args: Any, **kwargs: Any) -> Any:
-        if not session.get("is_admin"):
-            return redirect(url_for("admin_login", next=request.path))
-        return view(*args, **kwargs)
-
-    return wrapped
 
 
 def register_routes(app: Flask) -> None:

@@ -1,18 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Página no encontrada — Juana María{% endblock %}
+{% block title %}Página no encontrada — {{ t('global.brand') }}{% endblock %}
 
 {% block content %}
 <section class="section surface-dark error-page">
   <div class="wrap error-page__inner">
-    <p class="eyebrow" style="justify-content: center">Error 404</p>
+    <p class="eyebrow" style="justify-content: center">{{ t('error404.eyebrow') }}</p>
     <p class="error-page__code" aria-hidden="true">404</p>
-    <h1 class="h-display">Esta página zarpó sin avisar</h1>
-    <p class="lede">
-      No encontramos lo que buscabas en estas aguas. Vuelve al puerto y sigue
-      navegando.
-    </p>
-    <a class="btn btn--solid" href="{{ url_for('index') }}">Volver al inicio</a>
+    <h1 class="h-display">{{ t('error404.title') }}</h1>
+    <p class="lede">{{ t('error404.lead') }}</p>
+    <a class="btn btn--solid" href="{{ url_for('index') }}">{{ t('error404.button') }}</a>
   </div>
 </section>
 {% endblock %}

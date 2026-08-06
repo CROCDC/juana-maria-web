@@ -1,4 +1,8 @@
 flask==3.0.3
+# In-place content editor for the site's copy. Private repo, pinned to a commit on
+# main (its v0.1.0 tag predates the CSRF/resolver work this integration relies on).
+# The Docker build injects a GITHUB_TOKEN build secret to fetch it — see Dockerfile.
+flask-sitecopy @ git+https://github.com/CROCDC/flask-sitecopy@994cd56fdb1b193a28cadd7bdc50a225048031a5
 flask-compress==1.15
 brotli==1.2.0
 gunicorn==22.0.0

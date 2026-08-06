@@ -8,6 +8,7 @@ from flask import Flask, Response, current_app, redirect, request, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sitecopy import SiteCopy
 from werkzeug.wrappers import Response as WerkzeugResponse
 
 load_dotenv()
@@ -37,6 +38,29 @@ def canonical_root() -> str:
 
 db = SQLAlchemy()
 migrate = Migrate()
+sitecopy = SiteCopy()
+
+
+def _editor_pages() -> list[dict[str, str]]:
+    """Pages the visual editor can open in its canvas: home plus every published topic.
+
+    Also the allow-list of pages the editor may START on, so a disabled topic (which
+    404s publicly) is never offered as an editing target.
+    """
+    from app.content.topics import TOGGLEABLE_TOPICS
+    from app.repositories.topic_visibility_repository import TopicVisibilityRepository
+
+    pages = [{"path": "/", "label": "Inicio"}]
+    try:
+        state = TopicVisibilityRepository.get_state_map()
+    except Exception:  # noqa: BLE001 — the picker must never 500 the panel
+        state = {}
+    pages += [
+        {"path": topic.path, "label": topic.nav_label}
+        for topic in TOGGLEABLE_TOPICS
+        if state.get(topic.slug, False)
+    ]
+    return pages
 
 
 def create_app() -> Flask:
@@ -157,5 +181,24 @@ def create_app() -> Flask:
         register_routes(app)
         if sa_inspect(db.engine).has_table("topic_visibility"):
             TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+
+    # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
+    # after_request hooks in reverse order, and the editor rewrites the ?edit=1 HTML —
+    # it must see the response before it is gzipped) and AFTER the routes so it reuses
+    # the site's own admin session. The site_texts table is created by a migration, so
+    # ensure_schema() is intentionally not called here.
+    from app.admin_auth import is_logged_in, login_required
+    from app.content.copy_registry import REGISTRY
+
+    sitecopy.init_app(
+        app,
+        registry=REGISTRY,
+        db=db,
+        login_required=login_required,
+        is_logged_in=is_logged_in,
+        pages=_editor_pages,
+        brand="Juana María",
+        site_url=app.config.get("CANONICAL_URL") or "",
+    )
 
     return app

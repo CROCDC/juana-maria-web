@@ -1,69 +1,32 @@
 {% extends "topics/_base_topic.html" %}
-{% block topic_eyebrow %}Súmate a la tripulación{% endblock %}
+{% block topic_eyebrow %}{{ t('crew.eyebrow') }}{% endblock %}
 
 {% block topic_lead %}
-<p class="lede">
-  Súmate a la tripulación por un día y comparte una navegación por el Río de la
-  Plata.
-</p>
+<p class="lede">{{ t('crew.lead') }}</p>
 {% endblock %}
 
 {% block topic_body %}
 {% if sent %}
 <div class="form-success reveal" role="status">
-  <h2>¡Gracias! Recibimos tu inscripción.</h2>
+  <h2>{{ t('crew.success.heading') }}</h2>
   <p>
-    Nos vamos a comunicar contigo por WhatsApp para coordinar la próxima
-    navegación con lugar para tripulantes. Mientras tanto, puedes seguirnos en
-    <a class="link-underline" href="https://www.instagram.com/velaclasica/"
-       target="_blank" rel="noopener">@velaclasica</a>.
+    {{ t('crew.success.body') }} {{ t('crew.success.follow') }}
+    <a class="link-underline" href="{{ t('global.social_url') }}"
+       target="_blank" rel="noopener">{{ t('global.social_handle') }}</a>.
   </p>
-  <p><a class="link-underline" href="{{ url_for('topic_crew_program') }}">Cargar otra inscripción</a></p>
+  <p><a class="link-underline" href="{{ url_for('topic_crew_program') }}">{{ t('crew.success.again') }}</a></p>
 </div>
 {% else %}
 <div class="prose reveal">
-  <p>
-    Un barco es una comunidad navegando. Navegar con tripulantes enriquece la
-    experiencia, facilita las maniobras y permite compartir conocimientos. La
-    Juana María es una comunidad con historia, y es posible sumarse.
-  </p>
-  <p>
-    Si quisieras incorporarte a la tripulación durante un día, por favor
-    completa este formulario para que podamos contactarte, ofrecerte
-    información y coordinar nuestra navegación por el Río de la Plata.
-  </p>
-
-  <p><strong>Es gratis: sólo compartimos los gastos operativos.</strong></p>
-  <p>
-    La navegación es gratuita. Sólo existen unos pocos gastos operativos de
-    poner en movimiento al barco (derecho de amarra, combustible, servicio de
-    marinería, etc.), que nos distribuimos equitativamente entre toda la
-    tripulación a bordo. Únicamente te pediremos que participes con tu parte en
-    dichos gastos mínimos compartidos.
-  </p>
-  <p>
-    Puesto que son montos pequeños pero cambiantes (últimamente rondaba, por
-    persona, el precio de una pizza en Buenos Aires), los calcularemos para
-    actualizarlos y te los comentaremos al contactarnos contigo para conocer tu
-    parecer.
-  </p>
-
-  <p><strong>No es necesario tener experiencia: podrás ganarla a bordo.</strong></p>
-  <p>
-    No es necesario contar con experiencia náutica para sumarse a una navegación
-    durante un día. Y si la tuvieras, ¡bienvenida!: la navegación es un
-    aprendizaje constante.
-  </p>
+  {{ t('crew.body') }}
 </div>
 
 {% if errors %}
-<p class="form-error-summary reveal" role="alert">
-  Revisa los campos marcados y vuelve a enviar.
-</p>
+<p class="form-error-summary reveal" role="alert">{{ t('crew.form.error_summary') }}</p>
 {% endif %}
 <form class="form reveal" method="post" action="{{ url_for('topic_crew_program') }}" novalidate>
   <div class="form-row">
-    <label for="email">¿Cuál es tu correo electrónico? <span aria-hidden="true">*</span></label>
+    <label for="email">{{ t('crew.form.email') }} <span aria-hidden="true">*</span></label>
     <input
       id="email"
       name="email"
@@ -76,7 +39,7 @@
   </div>
 
   <div class="form-row">
-    <label for="full_name">¿Cómo te llamas? <span aria-hidden="true">*</span></label>
+    <label for="full_name">{{ t('crew.form.full_name') }} <span aria-hidden="true">*</span></label>
     <input
       id="full_name"
       name="full_name"
@@ -89,8 +52,8 @@
   </div>
 
   <div class="form-row">
-    <label for="whatsapp">¿Cuál es tu contacto de WhatsApp? <span aria-hidden="true">*</span></label>
-    <p class="form-hint" id="hint-whatsapp">Nos comunicaremos contigo por este medio.</p>
+    <label for="whatsapp">{{ t('crew.form.whatsapp') }} <span aria-hidden="true">*</span></label>
+    <p class="form-hint" id="hint-whatsapp">{{ t('crew.form.whatsapp_hint') }}</p>
     <input
       id="whatsapp"
       name="whatsapp"
@@ -104,7 +67,7 @@
   </div>
 
   <div class="form-row">
-    <label for="instagram">¿Cuál es tu cuenta de Instagram?</label>
+    <label for="instagram">{{ t('crew.form.instagram') }}</label>
     <input
       id="instagram"
       name="instagram"
@@ -116,50 +79,50 @@
   </div>
 
   <div class="form-row">
-    <span class="form-label" id="label-is_adult">¿Eres mayor de 18 años de edad? <span aria-hidden="true">*</span></span>
+    <span class="form-label" id="label-is_adult">{{ t('crew.form.is_adult') }} <span aria-hidden="true">*</span></span>
     {% set adult = form.get('is_adult', '') %}
     <div class="form-radio-group" role="radiogroup" aria-labelledby="label-is_adult"
          {% if errors.get('is_adult') %}aria-describedby="err-is_adult"{% endif %}>
       <label class="form-radio">
         <input type="radio" name="is_adult" value="si" required {% if adult == 'si' %}checked{% endif %} />
-        <span>Sí</span>
+        <span>{{ t('crew.form.adult_yes') }}</span>
       </label>
       <label class="form-radio">
         <input type="radio" name="is_adult" value="no" {% if adult == 'no' %}checked{% endif %} />
-        <span>No</span>
+        <span>{{ t('crew.form.adult_no') }}</span>
       </label>
     </div>
     {% if errors.get('is_adult') %}<p class="form-error" id="err-is_adult">{{ errors['is_adult'] }}</p>{% endif %}
   </div>
 
   <div class="form-row">
-    <label for="preferred_date">¿Cuál es la fecha en la que quisieras salir a navegar en el Río de la Plata?</label>
+    <label for="preferred_date">{{ t('crew.form.date') }}</label>
     <input
       id="preferred_date"
       name="preferred_date"
       type="text"
-      placeholder="Ej.: un fin de semana de noviembre"
+      placeholder="{{ t('crew.form.date_placeholder') }}"
       value="{{ form.get('preferred_date', '') }}" />
   </div>
 
   <div class="form-row">
-    <label for="preferred_route">¿Tienes algún rumbo de preferencia?</label>
+    <label for="preferred_route">{{ t('crew.form.route') }}</label>
     {% set route = form.get('preferred_route', '') %}
     <select id="preferred_route" name="preferred_route">
-      <option value="">Sin preferencia</option>
+      <option value="">{{ t_plain('crew.form.route_none') }}</option>
       {% for r in rumbos %}
-      <option value="{{ r.key }}"{% if route == r.key %} selected{% endif %}>{{ r.name }} · {{ r.where }}</option>
+      <option value="{{ r.key }}"{% if route == r.key %} selected{% endif %}>{{ t_plain('rumbo.' ~ r.key ~ '.name') }} · {{ t_plain('rumbo.' ~ r.key ~ '.where') }}</option>
       {% endfor %}
     </select>
   </div>
 
   <div class="form-row">
-    <label for="message">¿Algún comentario, consulta o inquietud que nos quieras comunicar antes de que nos contactemos contigo?</label>
+    <label for="message">{{ t('crew.form.message') }}</label>
     <textarea id="message" name="message" rows="4">{{ form.get('message', '') }}</textarea>
   </div>
 
   <div class="form-actions">
-    <button type="submit">Enviar inscripción</button>
+    <button type="submit">{{ t('crew.form.submit') }}</button>
   </div>
 </form>
 {% endif %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_macros.html" import resp_img with context %}
 
-{% block title %}{{ topic.title }} — Juana María{% endblock %}
+{% block title %}{{ t('topic.' ~ topic.slug ~ '.title') }} — {{ t('global.brand') }}{% endblock %}
 
 {% block content %}
 <section class="topic-hero">
@@ -11,7 +11,7 @@
   <div class="topic-hero__scrim"></div>
   <div class="wrap topic-hero__inner reveal is-in">
     <p class="eyebrow" style="justify-content:center">{% block topic_eyebrow %}A bordo{% endblock %}</p>
-    <h1 class="topic-hero__title">{{ topic.title }}</h1>
+    <h1 class="topic-hero__title">{{ t('topic.' ~ topic.slug ~ '.title') }}</h1>
     {% block topic_lead %}{% endblock %}
   </div>
 </section>

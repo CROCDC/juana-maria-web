@@ -3,6 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Credential to pip-install the private flask-sitecopy repo at build time. Sourced
+      # from the GITHUB_TOKEN env var (see Jenkinsfile / .env.example); mounted as a
+      # BuildKit secret so it never persists in an image layer.
+      secrets:
+        - github_token
     container_name: juana-maria-web-app
     environment:
       # DB is addressed by its UNIQUE container name (juana-maria-web-db), never
@@ -102,3 +107,10 @@ networks:
 
 volumes:
   pgdata:
+
+secrets:
+  # Read from the GITHUB_TOKEN environment variable at build time (a fine-grained PAT or
+  # classic token with read access to CROCDC/flask-sitecopy). Only consumed by the app
+  # image build; never mounted into the running containers.
+  github_token:
+    environment: GITHUB_TOKEN

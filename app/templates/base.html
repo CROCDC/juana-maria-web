@@ -3,20 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}Juana María — Ballenera de 1941 · {{ years_sailing }} años navegando el Río de la Plata{% endblock %}</title>
+    <title>{% block title %}{{ t('seo.title') }}{% endblock %}</title>
     <meta
       name="description"
-      content="La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. {{ years_sailing }} años navegando el Río de la Plata." />
+      content="{{ t('seo.description') }}" />
     <meta name="theme-color" content="#150e08" />
     <link rel="canonical" href="{{ canonical_base }}" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_AR" />
-    <meta property="og:site_name" content="Juana María" />
-    <meta property="og:title" content="Juana María — ballenera de 1941" />
+    <meta property="og:site_name" content="{{ t('global.brand') }}" />
+    <meta property="og:title" content="{{ t('seo.og_title') }}" />
     <meta
       property="og:description"
-      content="Doble proa de madera dibujada por Manuel M. Campos. {{ years_sailing }} años navegando el Río de la Plata." />
+      content="{{ t('seo.og_description') }}" />
     <meta property="og:url" content="{{ canonical_base }}" />
     <meta
       property="og:image"
@@ -29,12 +29,12 @@
     <meta property="og:image:height" content="720" />
     <meta
       property="og:image:alt"
-      content="La Juana María navegando a toda vela en el Río de la Plata." />
+      content="{{ t('seo.og_image_alt') }}" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Juana María — ballenera de 1941" />
+    <meta name="twitter:title" content="{{ t('seo.og_title') }}" />
     <meta
       name="twitter:description"
-      content="Doble proa de madera dibujada por Manuel M. Campos. {{ years_sailing }} años navegando el Río de la Plata." />
+      content="{{ t('seo.og_description') }}" />
     <meta
       name="twitter:image"
       content="{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}" />
@@ -73,11 +73,11 @@
   </head>
   <body>
     {% set nav_base = "" if is_index | default(false) else url_for("index") %}
-    <a class="skip-link" href="#top">Saltar al contenido</a>
+    <a class="skip-link" href="#top">{{ t('global.skip_link') }}</a>
     {% set nav_count = nav_topics | length %}
     <header class="nav{% if not is_index | default(false) %} nav--solid{% endif %}{% if nav_count > 4 %} nav--menu{% endif %}" id="nav">
-      <a class="brand" href="{{ nav_base }}#top" aria-label="Juana María, inicio">
-        Juana María <small>1941</small>
+      <a class="brand" href="{{ nav_base }}#top" aria-label="{{ t('global.nav_brand_aria') }}">
+        {{ t('global.brand') }} <small>{{ t('global.brand_year') }}</small>
       </a>
       <nav aria-label="Principal">
         <button
@@ -85,12 +85,12 @@
           id="navToggle"
           aria-expanded="false"
           aria-controls="navLinks"
-          aria-label="Abrir menú">
+          aria-label="{{ t('global.nav_toggle') }}">
           <span></span><span></span><span></span>
         </button>
         <ul class="nav-links" id="navLinks">
-          {% for t in nav_topics %}
-          <li><a href="{{ url_for(t.endpoint) }}">{{ t.nav_label }}</a></li>
+          {% for nt in nav_topics %}
+          <li><a href="{{ url_for(nt.endpoint) }}">{{ t('topic.' ~ nt.slug ~ '.nav') }}</a></li>
           {% endfor %}
         </ul>
       </nav>
@@ -102,49 +102,46 @@
       <div class="wrap">
         <div class="footer__grid">
           <div>
-            <div class="footer__brand">Juana María</div>
-            <p>
-              Ballenera de doble proa, dibujo de Manuel M. Campos, botada en 1941
-              en el Tigre. Sigue navegando el Río de la Plata.
-            </p>
+            <div class="footer__brand">{{ t('global.brand') }}</div>
+            <p>{{ t('global.tagline') }}</p>
             <a
               class="social"
-              href="https://www.instagram.com/velaclasica/"
+              href="{{ t('global.social_url') }}"
               target="_blank"
               rel="noopener"
-              aria-label="Seguir en Instagram: @velaclasica">
+              aria-label="Seguir en Instagram: {{ t('global.social_handle') }}">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
                    stroke="currentColor" stroke-width="1.6" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="5.2" />
                 <circle cx="12" cy="12" r="4" />
                 <circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none" />
               </svg>
-              <span>@velaclasica</span>
+              <span>{{ t('global.social_handle') }}</span>
             </a>
           </div>
           <div>
-            <h2>Aguas</h2>
+            <h2>{{ t('global.footer_waters_heading') }}</h2>
             <ul>
-              <li>San Isidro, Buenos Aires</li>
-              <li>Yacht Club San Isidro</li>
-              <li>Río de la Plata</li>
+              {% for item in t_lines('global.footer_waters') %}
+              <li>{{ item }}</li>
+              {% endfor %}
             </ul>
           </div>
           <div>
-            <h2>Navegar</h2>
+            <h2>{{ t('global.footer_nav_heading') }}</h2>
             <ul>
-              <li><a class="link-underline" href="{{ nav_base }}#historia">Historia</a></li>
-              <li><a class="link-underline" href="{{ nav_base }}#galeria">Galería</a></li>
-              <li><a class="link-underline" href="{{ nav_base }}#ficha">Ficha técnica</a></li>
-              {% for t in nav_topics if not t.is_home %}
-              <li><a class="link-underline" href="{{ url_for(t.endpoint) }}">{{ t.nav_label }}</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#historia">{{ t('global.footer_link_history') }}</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#galeria">{{ t('global.footer_link_gallery') }}</a></li>
+              <li><a class="link-underline" href="{{ nav_base }}#ficha">{{ t('global.footer_link_specs') }}</a></li>
+              {% for nt in nav_topics if not nt.is_home %}
+              <li><a class="link-underline" href="{{ url_for(nt.endpoint) }}">{{ t('topic.' ~ nt.slug ~ '.nav') }}</a></li>
               {% endfor %}
             </ul>
           </div>
         </div>
         <div class="footer__bar">
-          <span>&copy; {{ current_year }} Juana María — Argentina</span>
-          <span>Ballenera Campos · 1941 — {{ current_year }}</span>
+          <span>{{ t('global.footer_copyright') }}</span>
+          <span>{{ t('global.footer_credit') }}</span>
         </div>
       </div>
 
