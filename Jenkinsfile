@@ -3,10 +3,6 @@ pipeline {
 
   environment {
     COMPOSE_FILE = 'docker-compose.yml'
-    // BuildKit is required for the `--mount=type=secret` in the Dockerfile that injects
-    // the token for the private flask-sitecopy pip install.
-    DOCKER_BUILDKIT = '1'
-    COMPOSE_DOCKER_CLI_BUILD = '1'
   }
 
   stages {
@@ -42,12 +38,7 @@ pipeline {
           if (env.FORCE_REBUILD == "true") {
             buildCmd += " --no-cache"
           }
-          // GITHUB_TOKEN feeds the compose build secret (github_token) so pip can clone
-          // the private flask-sitecopy repo. Store it as a Jenkins "Secret text"
-          // credential with id 'github-token' (a PAT with read access to the repo).
-          withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-            sh buildCmd
-          }
+          sh buildCmd
         }
         script {
           def projectId = params.INFISICAL_PROJECT_ID?.trim()
