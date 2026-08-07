@@ -1,7 +1,4 @@
 <div class="prose reveal topic-pending">
-  <p class="lede">{{ topic.blurb }}</p>
-  <p class="topic-pending__note">
-    Estamos preparando esta sección. Muy pronto vas a encontrar aquí todo el
-    detalle.
-  </p>
+  <p class="lede">{{ t('topic.' ~ topic.slug ~ '.blurb') }}</p>
+  <p class="topic-pending__note">{{ t('misc.pending_note') }}</p>
 </div>

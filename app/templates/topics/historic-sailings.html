@@ -1,33 +1,13 @@
 {% extends "topics/_base_topic.html" %}
 
-{% block topic_eyebrow %}Efemérides a bordo{% endblock %}
+{% block topic_eyebrow %}{{ t('historic.eyebrow') }}{% endblock %}
 
 {% block topic_lead %}
-<p class="lede">
-  Todos los meses, la Juana María navega rumbos marcados por efemérides con
-  historiadores e historiadoras a bordo.
-</p>
+<p class="lede">{{ t('historic.lead') }}</p>
 {% endblock %}
 
 {% block topic_body %}
 <div class="prose reveal">
-  <p>
-    La épica llegada de Juan de Garay en 1580, las arribadas holandesas durante
-    1678, el desembarco de Cevallos en Colonia hacia 1762, las hazañas
-    rioplatenses durante la invasión inglesa de 1806, las gloriosas batallas
-    navales comandadas por Guillermo Brown entre 1814 y 1827, o el regreso
-    triunfal de Vito Dumas en 1943, son sólo algunos de los diversos motivos que
-    nos empujan a navegar a lugares precisos y en fechas precisas todos los
-    meses.
-  </p>
-  <p>
-    Conjugando la navegación clásica con la exploración histórica, el Río de la
-    Plata se nos presenta como un vasto campo de agua del que emergen, vivas,
-    escenas claves de nuestra historia y de nuestra cultura.
-  </p>
-  <p>
-    Las navegaciones históricas se anuncian por las redes con anticipación, para
-    que quienes quieran sumarse a la tripulación puedan hacerlo.
-  </p>
+  {{ t('historic.body') }}
 </div>
 {% endblock %}

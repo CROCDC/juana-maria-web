@@ -10,14 +10,17 @@
       imagesizes="100vw"
       fetchpriority="high" />
 
+    {# Serialized into JSON, so t_plain() (marker-free) — a click-to-edit marker inside
+       json.dumps output would survive as literal text. The keys are still recorded for
+       the editor's side panel. #}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "Juana María",
+      "name": "{{ t_plain('global.brand') }}",
       "url": "{{ request.url_root }}",
       "inLanguage": "es-AR",
-      "description": "La Juana María es una ballenera de doble proa dibujada por Manuel M. Campos y construida en madera en el Tigre en 1941. {{ years_sailing }} años navegando el Río de la Plata.",
+      "description": "{{ t_plain('seo.description') }}",
       "image": "{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}"
     }
     </script>
@@ -28,21 +31,21 @@
 <section class="hero">
   <div class="hero__media">
     {{ resp_img('hero/under-full-sail',
-        'La Juana María navegando a vela llena sobre el Río de la Plata al atardecer',
+        t('home.hero.image_alt'),
         '100vw', priority=true, position='50% 42%') }}
   </div>
   <div class="hero__scrim"></div>
   <div class="hero__inner reveal is-in">
-    <p class="eyebrow hero__eyebrow">Ballenera</p>
-    <h1>Juana María</h1>
-    <p class="hero__sub">1941 · Buenos Aires</p>
+    <p class="eyebrow hero__eyebrow">{{ t('home.hero.eyebrow') }}</p>
+    <h1>{{ t('home.hero.title') }}</h1>
+    <p class="hero__sub">{{ t('home.hero.location') }}</p>
     <div class="hero__years" aria-hidden="true">
       <b data-count="{{ years_sailing }}">{{ years_sailing }}</b>
-      <span>años navegando</span>
+      <span>{{ t('home.hero.years_label') }}</span>
     </div>
   </div>
-  <a class="scroll-cue" href="#prologo" aria-label="Bajar">
-    <span>Bajar</span>
+  <a class="scroll-cue" href="#prologo" aria-label="{{ t('home.hero.scroll_cue') }}">
+    <span>{{ t('home.hero.scroll_cue') }}</span>
     <i></i>
   </a>
 </section>
@@ -50,6 +53,9 @@
 <section class="section surface-canvas" id="prologo">
   <div class="wrap">
     <div class="intro__grid">
+      {# The intro lead keeps its drop-cap (.drop) and script (.script) styling in the
+         template: those class-based flourishes are not expressible in the rich editor's
+         allow-list, so this one paragraph stays out of the editor to preserve the look. #}
       <p class="intro__lead reveal">
         <span class="drop">D</span>esde 1941, la misma quilla abre las aguas
         pardas del Plata. Una ballenera surgida del <em class="script">tablero de
@@ -57,14 +63,8 @@
         de navegar.
       </p>
       <div class="prose reveal" data-delay="1">
-        <p>
-          La <strong>Juana María</strong> es una <em>ballenera</em>: un tipo de
-          embarcación que el arquitecto naval Manuel M. Campos diseñó para un río
-          ancho, poco profundo y caprichoso. Casco de viraró, popa en punta como
-          su proa, orza rebatible: un velero noble, pensado para cruzar el Plata
-          con seguridad y aplomo.
-        </p>
-        <p><a class="link-underline" href="#historia">Conoce su historia &rarr;</a></p>
+        {{ t('home.prologo.body') }}
+        <p><a class="link-underline" href="#historia">{{ t('home.prologo.more_link') }} &rarr;</a></p>
       </div>
     </div>
   </div>
@@ -73,69 +73,39 @@
 <section class="section surface-canvas" id="historia">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow">La bitácora</p>
-      <h2 class="h-section">Una larga línea de agua</h2>
+      <p class="eyebrow">{{ t('home.historia.eyebrow') }}</p>
+      <h2 class="h-section">{{ t('home.historia.heading') }}</h2>
     </div>
     <div class="timeline">
       <article class="t-item is-mark reveal">
-        <p class="t-year">1939</p>
-        <h3>Nacen las balleneras rioplatenses</h3>
-        <p>
-          Manuel M. Campos (1894&ndash;1987) dibuja la <em class="script">Nutria</em>,
-          primera ballenera en la región: una doble proa pensada para el Río de
-          la Plata, inspirada en los veleros noruegos de doble proa diseñados
-          durante el siglo XIX por Colin Archer (1832&ndash;1921) para la
-          actividad ballenera y la expedición científica.
-        </p>
+        <p class="t-year">{{ t('home.historia.t1.year') }}</p>
+        <h3>{{ t('home.historia.t1.title') }}</h3>
+        {{ t('home.historia.t1.body') }}
       </article>
       <article class="t-item is-mark reveal">
-        <p class="t-year">1941</p>
-        <h3>Se construye la Juana María</h3>
-        <p>
-          Construida en madera de viraró por el astillero de Agustín Cadenazzi
-          en el Tigre, corazón histórico de la construcción náutica regional.
-          Hoy, la Juana María es la más antigua de las balleneras navegando el
-          Río de la Plata.
-        </p>
+        <p class="t-year">{{ t('home.historia.t2.year') }}</p>
+        <h3>{{ t('home.historia.t2.title') }}</h3>
+        {{ t('home.historia.t2.body') }}
       </article>
       <article class="t-item reveal">
-        <p class="t-year">1942&ndash;43</p>
-        <h3>El mismo tablero de dibujo</h3>
-        <p>
-          De la mano de Campos sale el <em class="script">LEHG II</em>, con el
-          que Vito Dumas da la vuelta al mundo de manera solitaria, conectando
-          los tres grandes cabos. La Juana María pertenece a esa estirpe.
-        </p>
+        <p class="t-year">{{ t('home.historia.t3.year') }}</p>
+        <h3>{{ t('home.historia.t3.title') }}</h3>
+        {{ t('home.historia.t3.body') }}
       </article>
       <article class="t-item reveal">
-        <p class="t-year">Segunda mitad del siglo XX</p>
-        <h3>Orzando las aguas</h3>
-        <p>
-          La Juana María emprende travesías hacia las profundidades
-          septentrionales del Río Paraná, extensas singladuras marítimas,
-          embarcaderos orientales y puertos del litoral atlántico. De la mano de
-          sus capitanes, la Juana María construyó historias, anécdotas y
-          amistades que perviven en el tiempo.
-        </p>
+        <p class="t-year">{{ t('home.historia.t4.year') }}</p>
+        <h3>{{ t('home.historia.t4.title') }}</h3>
+        {{ t('home.historia.t4.body') }}
       </article>
       <article class="t-item reveal">
-        <p class="t-year">El siglo XXI</p>
-        <h3>Un símbolo del Río</h3>
-        <p>
-          Parte constitutiva de la cultura náutica, la Juana María encontró
-          capitanes que continuaron honrando su historia, garantizando su
-          cuidado junto a los más prestigiosos carpinteros de ribera y
-          respetando las tradiciones de su mantenimiento con técnicas clásicas y
-          métodos rigurosos.
-        </p>
+        <p class="t-year">{{ t('home.historia.t5.year') }}</p>
+        <h3>{{ t('home.historia.t5.title') }}</h3>
+        {{ t('home.historia.t5.body') }}
       </article>
       <article class="t-item is-mark reveal">
-        <p class="t-year">Hoy</p>
-        <h3>{{ years_sailing }} años navegando</h3>
-        <p>
-          A más de ocho décadas de su botadura, la Juana María sigue saliendo al
-          Río de la Plata: cuidada, estudiada y bien navegada.
-        </p>
+        <p class="t-year">{{ t('home.historia.t6.year') }}</p>
+        <h3>{{ t('home.historia.t6.title') }}</h3>
+        {{ t('home.historia.t6.body') }}
       </article>
     </div>
   </div>
@@ -150,10 +120,10 @@
           data-lazy-video
           data-src="{{ url_for('static', filename='video/double-ender-aerial.mp4') }}"
           poster="{{ url_for('static', filename='video/double-ender-aerial-poster.webp') }}"></video>
-        <p class="feature__caption">Vista cenital &mdash; proa y proa</p>
+        <p class="feature__caption">{{ t('home.diseno.caption') }}</p>
       </div>
       <figcaption class="aerial__source">
-        Fuente: cortesía de Diego Blanco (@chapadiego) &amp; Marcelo Blanco (@marcelobohemio)
+        {{ t('home.diseno.source') }}
       </figcaption>
     </figure>
   </div>
@@ -163,55 +133,49 @@
   <div class="wrap">
     <div class="spec">
       <div class="reveal">
-        <p class="eyebrow">Ficha técnica</p>
-        <h2 class="h-section">Registro de a bordo</h2>
-        <p class="lede">
-          Más de ocho décadas en el mismo tramo del Río de la Plata para el que
-          fue dibujada. Pocas embarcaciones de madera en la Argentina pueden
-          contar una vida tan larga &mdash; y todavía en navegación.
-        </p>
+        <p class="eyebrow">{{ t('home.ficha.eyebrow') }}</p>
+        <h2 class="h-section">{{ t('home.ficha.heading') }}</h2>
+        <p class="lede">{{ t('home.ficha.lede') }}</p>
         <div class="feature__media" style="margin-top:2rem">
           {{ resp_img('moored/profile-with-name',
-              'La Juana María amarrada, de perfil, con su nombre en el casco',
+              t('home.ficha.image_alt'),
               '(min-width: 900px) 40vw, 100vw') }}
         </div>
       </div>
       <dl class="spec__list reveal" data-delay="1">
-        <div><dt>Tipo</dt><dd>Ballenera de doble proa<small>Diseño de Manuel M. Campos</small></dd></div>
-        <div><dt>Botadura</dt><dd>1941<small>Astillero Agustín Cadenazzi, Tigre</small></dd></div>
-        <div><dt>Eslora</dt><dd>10,65 m</dd></div>
-        <div><dt>Manga</dt><dd>2,47 m</dd></div>
-        <div><dt>Calado</dt><dd>0,60 m<small>Con orza rebatible</small></dd></div>
-        <div><dt>Casco</dt><dd>Madera de viraró<small>Quilla, roda y codaste de lapacho</small></dd></div>
-        <div><dt>Aparejo</dt><dd>Ketch Cutter</dd></div>
-        <div><dt>Bandera</dt><dd>Argentina<small>Prefectura Naval Argentina</small></dd></div>
-        <div><dt>Aguas</dt><dd>Río de la Plata<small>Base en el Yacht Club San Isidro (YCSI), Buenos Aires</small></dd></div>
+        <div><dt>{{ t('home.spec.type.label') }}</dt><dd>{{ t('home.spec.type.value') }}<small>{{ t('home.spec.type.note') }}</small></dd></div>
+        <div><dt>{{ t('home.spec.launch.label') }}</dt><dd>{{ t('home.spec.launch.value') }}<small>{{ t('home.spec.launch.note') }}</small></dd></div>
+        <div><dt>{{ t('home.spec.length.label') }}</dt><dd>{{ t('home.spec.length.value') }}</dd></div>
+        <div><dt>{{ t('home.spec.beam.label') }}</dt><dd>{{ t('home.spec.beam.value') }}</dd></div>
+        <div><dt>{{ t('home.spec.draft.label') }}</dt><dd>{{ t('home.spec.draft.value') }}<small>{{ t('home.spec.draft.note') }}</small></dd></div>
+        <div><dt>{{ t('home.spec.hull.label') }}</dt><dd>{{ t('home.spec.hull.value') }}<small>{{ t('home.spec.hull.note') }}</small></dd></div>
+        <div><dt>{{ t('home.spec.rig.label') }}</dt><dd>{{ t('home.spec.rig.value') }}</dd></div>
+        <div><dt>{{ t('home.spec.flag.label') }}</dt><dd>{{ t('home.spec.flag.value') }}<small>{{ t('home.spec.flag.note') }}</small></dd></div>
+        <div><dt>{{ t('home.spec.waters.label') }}</dt><dd>{{ t('home.spec.waters.value') }}<small>{{ t('home.spec.waters.note') }}</small></dd></div>
       </dl>
     </div>
   </div>
 </section>
 
- wrapper to bring it back. #}
-
 <section class="section surface-dark" id="galeria">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow">Galería</p>
-      <h2 class="h-section">{{ years_sailing }} años de luz</h2>
+      <p class="eyebrow">{{ t('home.galeria.eyebrow') }}</p>
+      <h2 class="h-section">{{ t('home.galeria.heading') }}</h2>
     </div>
     {% set shots = [
-      ('hero/under-full-sail', 'A vela llena, atardecer en el Plata'),
-      ('moored/profile-with-name', '«Juana María» en el casco'),
-      ('sailing/golden-hour', 'Hora dorada en el Plata'),
-      ('on-deck/deck-sunrise', 'Cubierta al amanecer'),
-      ('aerial/overhead-01', 'Doble proa, desde el aire'),
-      ('on-deck/foredeck-stormy', 'Proa y cielo de tormenta'),
-      ('moored/two-boats-night', 'Noche en el Delta'),
-      ('sailing/bsas-skyline', 'Frente a la silueta de Buenos Aires'),
-      ('hero/heeling-blue', 'A toda vela, cielo abierto'),
-      ('aerial/wing-on-wing', 'A vuelo de pájaro'),
-      ('moored/night-profile', 'Perfil nocturno'),
-      ('aerial/sailing-away', 'Rumbo abierto'),
+      ('hero/under-full-sail', t('home.galeria.cap01')),
+      ('moored/profile-with-name', t('home.galeria.cap02')),
+      ('sailing/golden-hour', t('home.galeria.cap03')),
+      ('on-deck/deck-sunrise', t('home.galeria.cap04')),
+      ('aerial/overhead-01', t('home.galeria.cap05')),
+      ('on-deck/foredeck-stormy', t('home.galeria.cap06')),
+      ('moored/two-boats-night', t('home.galeria.cap07')),
+      ('sailing/bsas-skyline', t('home.galeria.cap08')),
+      ('hero/heeling-blue', t('home.galeria.cap09')),
+      ('aerial/wing-on-wing', t('home.galeria.cap10')),
+      ('moored/night-profile', t('home.galeria.cap11')),
+      ('aerial/sailing-away', t('home.galeria.cap12')),
     ] %}
     <div class="carousel reveal" id="gallery"
          aria-roledescription="carrusel"
@@ -246,14 +210,11 @@
   </div>
   <div class="crew-cta__scrim"></div>
   <div class="wrap crew-cta__inner reveal is-in">
-    <p class="eyebrow" style="justify-content:center">Súmate a bordo</p>
-    <h2 class="crew-cta__title">{{ crew.title }}</h2>
-    <p class="crew-cta__lede">
-      La Juana María recibe tripulantes a bordo. Anótate y navega una ballenera
-      de madera de 1941 por el mismo Río de la Plata para el que fue dibujada.
-    </p>
+    <p class="eyebrow" style="justify-content:center">{{ t('home.crew_cta.eyebrow') }}</p>
+    <h2 class="crew-cta__title">{{ t('topic.crew-program.title') }}</h2>
+    <p class="crew-cta__lede">{{ t('home.crew_cta.lede') }}</p>
     <a class="btn btn--solid crew-cta__btn" href="{{ url_for(crew.endpoint) }}">
-      {{ crew.cta_label }}
+      {{ t('topic.crew-program.cta') }}
     </a>
   </div>
 </section>
@@ -267,12 +228,12 @@
 <section class="section surface-canvas hub" id="a-bordo">
   <div class="wrap">
     <div class="section-head reveal">
-      <p class="eyebrow">A bordo</p>
-      <h2 class="h-section">Más de la Juana María</h2>
+      <p class="eyebrow">{{ t('home.hub.eyebrow') }}</p>
+      <h2 class="h-section">{{ t('home.hub.heading') }}</h2>
     </div>
     <ul class="hub-grid" role="list" data-topics="{{ hub_topics | length }}">
-      {% for t in hub_topics %}
-        {{ topic_card(t, loop.index0 % 3) }}
+      {% for nt in hub_topics %}
+        {{ topic_card(nt, loop.index0 % 3) }}
       {% endfor %}
     </ul>
   </div>

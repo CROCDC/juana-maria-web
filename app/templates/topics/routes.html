@@ -1,11 +1,8 @@
 {% extends "topics/_base_topic.html" %}
-{% block topic_eyebrow %}Adónde apunta la proa{% endblock %}
+{% block topic_eyebrow %}{{ t('routes.eyebrow') }}{% endblock %}
 
 {% block topic_lead %}
-<p class="lede">
-  Cada salida elige su rumbo. Estos son los de la Juana María sobre el Río de la
-  Plata: del atardecer frente a Buenos Aires al cruce a la Banda Oriental.
-</p>
+<p class="lede">{{ t('routes.lead') }}</p>
 {% endblock %}
 
 {% block topic_body %}
@@ -13,9 +10,9 @@
   {% for r in rumbos %}
   <article class="rumbo reveal" id="{{ r.key }}"{% if not loop.first %} data-delay="{{ loop.index0 }}"{% endif %}>
     <p class="rumbo__index" aria-hidden="true">{{ '%02d' % loop.index }}</p>
-    <h2 class="rumbo__name">{{ r.name }}</h2>
-    <p class="rumbo__where">{{ r.where }}</p>
-    <p class="rumbo__text">{{ r.body }}</p>
+    <h2 class="rumbo__name">{{ t('rumbo.' ~ r.key ~ '.name') }}</h2>
+    <p class="rumbo__where">{{ t('rumbo.' ~ r.key ~ '.where') }}</p>
+    <p class="rumbo__text">{{ t('rumbo.' ~ r.key ~ '.body') }}</p>
   </article>
   {% endfor %}
 </div>
