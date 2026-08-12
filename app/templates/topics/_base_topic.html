@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% from "_macros.html" import resp_img with context %}
+{% from "_macros.html" import editable_img with context %}
 
 {% block title %}{{ t('topic.' ~ topic.slug ~ '.title') }} — {{ t('global.brand') }}{% endblock %}
 
 {% block content %}
 <section class="topic-hero">
   <div class="topic-hero__media" aria-hidden="true">
-    {{ resp_img(topic.image, '', '100vw', position='50% 45%') }}
+    {{ editable_img('topic.' ~ topic.slug ~ '.image', '', '100vw', position='50% 45%') }}
   </div>
   <div class="topic-hero__scrim"></div>
   <div class="wrap topic-hero__inner reveal is-in">

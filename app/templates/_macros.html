@@ -15,11 +15,26 @@
   </picture>
 {% endmacro %}
 
+{# Editable image. `copy_key` is an `image` field whose default is a bundled
+   `/static/img/<base>-fallback.jpg`: that renders as the responsive <picture> above,
+   exactly as before. Once the admin pastes a different URL — or while the visual editor
+   is on, where t() adds click-to-edit markers — it renders as a plain, clickable <img>. #}
+{% macro editable_img(copy_key, alt, sizes, klass='', priority=false, position='') %}
+  {%- set info = img_src(t(copy_key)) -%}
+  {%- if info.responsive -%}
+    {{ resp_img(info.base, alt, sizes, klass, priority, position) }}
+  {%- else -%}
+    <img src="{{ info.src }}" alt="{{ alt }}"{% if klass %} class="{{ klass }}"{% endif %}
+         {%- if position %} style="object-position: {{ position }};"{% endif %}
+         {%- if priority %} fetchpriority="high" decoding="async"{% else %} loading="lazy" decoding="async"{% endif %}>
+  {%- endif -%}
+{% endmacro %}
+
 {% macro topic_card(topic, delay=0) %}
   <li class="hub-card reveal"{% if delay %} data-delay="{{ delay }}"{% endif %}>
     <a class="hub-card__link" href="{{ url_for(topic.endpoint) }}">
       <span class="hub-card__media" aria-hidden="true">
-        {{ resp_img(topic.image, '', '(min-width: 980px) 33vw, (min-width: 620px) 50vw, 100vw') }}
+        {{ editable_img('topic.' ~ topic.slug ~ '.image', '', '(min-width: 980px) 33vw, (min-width: 620px) 50vw, 100vw') }}
       </span>
       <span class="hub-card__body">
         <span class="hub-card__title">{{ t('topic.' ~ topic.slug ~ '.title') }}</span>
