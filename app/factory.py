@@ -151,6 +151,56 @@ def create_app() -> Flask:
         }
 
     @app.context_processor
+    def inject_image_helpers() -> dict[str, object]:
+        """Template helpers for the editable `image` fields (flask-sitecopy 0.3).
+
+        The site ships its photos as responsive `<picture>` sets built from the image
+        manifest, but the admin can now paste a different image URL/path per slot. These
+        two helpers bridge the two worlds without touching the fast path for the bundled
+        photos.
+        """
+        static_prefix = "/static/img/"
+        fallback_suffix = "-fallback.jpg"
+
+        def img_src(value: object) -> dict[str, object]:
+            """Decide how a resolved image-field value should render.
+
+            A value that still points at a bundled asset
+            (``/static/img/<base>-fallback.jpg``) renders as the full responsive
+            ``<picture>`` with its webp srcset; anything an admin pasted (an absolute
+            URL, or any other path) renders as a plain ``<img>``. In edit mode ``t()``
+            wraps the value in click-to-edit markers, so it stops matching the asset
+            pattern and falls to the plain ``<img>`` — which is exactly what the visual
+            editor needs to make the picture clickable and open it in the side panel.
+            """
+            if (
+                isinstance(value, str)
+                and value.startswith(static_prefix)
+                and value.endswith(fallback_suffix)
+            ):
+                base = value[len(static_prefix) : -len(fallback_suffix)]
+                if base:
+                    return {"responsive": True, "base": base, "src": value}
+            return {"responsive": False, "base": None, "src": value}
+
+        def share_image_url(value: object) -> str:
+            """An absolute URL for a share/JSON-LD image, from an image-field value.
+
+            A bundled ``/static`` path goes through the cache-busting static URL (so the
+            default output is byte-for-byte what the site emitted before); an already
+            absolute ``http(s)`` URL is used as-is.
+            """
+            text = value if isinstance(value, str) else ""
+            if text.startswith(("http://", "https://")):
+                return text
+            prefix = "/static/"
+            if text.startswith(prefix):
+                return static_url("static", filename=text[len(prefix) :], _external=True)
+            return canonical_root().rstrip("/") + "/" + text.lstrip("/")
+
+        return {"img_src": img_src, "share_image_url": share_image_url}
+
+    @app.context_processor
     def inject_topics() -> dict[str, object]:
         from app.content.topics import HOME_TOPIC, TOGGLEABLE_TOPICS
 

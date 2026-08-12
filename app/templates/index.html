@@ -1,14 +1,21 @@
 {% extends "base.html" %}
-{% from "_macros.html" import resp_img, topic_card with context %}
+{% from "_macros.html" import editable_img, topic_card with context %}
 
 {% block head_extra %}
+    {# Preload the hero. While it is the bundled photo we hint its webp srcset; once the
+       admin points it at a custom image we just preload that URL. #}
+    {% set hero_img = img_src(t_plain('home.hero.image')) %}
+    {% if hero_img.responsive %}
     <link
       rel="preload"
       as="image"
       type="image/webp"
-      imagesrcset="{{ url_for('static', filename='img/hero/under-full-sail-1280.webp') }} 1280w, {{ url_for('static', filename='img/hero/under-full-sail-1920.webp') }} 1920w"
+      imagesrcset="{{ url_for('static', filename='img/' ~ hero_img.base ~ '-1280.webp') }} 1280w, {{ url_for('static', filename='img/' ~ hero_img.base ~ '-1920.webp') }} 1920w"
       imagesizes="100vw"
       fetchpriority="high" />
+    {% else %}
+    <link rel="preload" as="image" href="{{ hero_img.src }}" fetchpriority="high" />
+    {% endif %}
 
     {# Serialized into JSON, so t_plain() (marker-free) — a click-to-edit marker inside
        json.dumps output would survive as literal text. The keys are still recorded for
@@ -21,7 +28,7 @@
       "url": "{{ request.url_root }}",
       "inLanguage": "es-AR",
       "description": "{{ t_plain('seo.description') }}",
-      "image": "{{ url_for('static', filename='img/hero/under-full-sail-fallback.jpg', _external=True) }}"
+      "image": "{{ share_image_url(t_plain('home.hero.image')) }}"
     }
     </script>
 {% endblock %}
@@ -30,7 +37,7 @@
 
 <section class="hero">
   <div class="hero__media">
-    {{ resp_img('hero/under-full-sail',
+    {{ editable_img('home.hero.image',
         t('home.hero.image_alt'),
         '100vw', priority=true, position='50% 42%') }}
   </div>
@@ -137,7 +144,7 @@
         <h2 class="h-section">{{ t('home.ficha.heading') }}</h2>
         <p class="lede">{{ t('home.ficha.lede') }}</p>
         <div class="feature__media" style="margin-top:2rem">
-          {{ resp_img('moored/profile-with-name',
+          {{ editable_img('home.ficha.image',
               t('home.ficha.image_alt'),
               '(min-width: 900px) 40vw, 100vw') }}
         </div>
@@ -164,32 +171,33 @@
       <h2 class="h-section">{{ t('home.galeria.heading') }}</h2>
     </div>
     {% set shots = [
-      ('hero/under-full-sail', t('home.galeria.cap01')),
-      ('moored/profile-with-name', t('home.galeria.cap02')),
-      ('sailing/golden-hour', t('home.galeria.cap03')),
-      ('on-deck/deck-sunrise', t('home.galeria.cap04')),
-      ('aerial/overhead-01', t('home.galeria.cap05')),
-      ('on-deck/foredeck-stormy', t('home.galeria.cap06')),
-      ('moored/two-boats-night', t('home.galeria.cap07')),
-      ('sailing/bsas-skyline', t('home.galeria.cap08')),
-      ('hero/heeling-blue', t('home.galeria.cap09')),
-      ('aerial/wing-on-wing', t('home.galeria.cap10')),
-      ('moored/night-profile', t('home.galeria.cap11')),
-      ('aerial/sailing-away', t('home.galeria.cap12')),
+      ('home.galeria.img01', t('home.galeria.cap01')),
+      ('home.galeria.img02', t('home.galeria.cap02')),
+      ('home.galeria.img03', t('home.galeria.cap03')),
+      ('home.galeria.img04', t('home.galeria.cap04')),
+      ('home.galeria.img05', t('home.galeria.cap05')),
+      ('home.galeria.img06', t('home.galeria.cap06')),
+      ('home.galeria.img07', t('home.galeria.cap07')),
+      ('home.galeria.img08', t('home.galeria.cap08')),
+      ('home.galeria.img09', t('home.galeria.cap09')),
+      ('home.galeria.img10', t('home.galeria.cap10')),
+      ('home.galeria.img11', t('home.galeria.cap11')),
+      ('home.galeria.img12', t('home.galeria.cap12')),
     ] %}
     <div class="carousel reveal" id="gallery"
          aria-roledescription="carrusel"
          aria-label="Galería de fotos de la Juana María">
       <div class="carousel__viewport">
         <div class="carousel__track" id="carouselTrack">
-          {% for key, caption in shots %}
+          {% for img_key, caption in shots %}
+          {% set shot = img_src(t_plain(img_key)) %}
           <button
             class="carousel__slide"
             type="button"
-            data-full="{{ url_for('static', filename='img/' ~ key ~ '-1280.webp') }}"
+            data-full="{% if shot.responsive %}{{ url_for('static', filename='img/' ~ shot.base ~ '-1280.webp') }}{% else %}{{ shot.src }}{% endif %}"
             data-caption="{{ caption }}"
             aria-label="Ampliar: {{ caption }}">
-            {{ resp_img(key, '', '(min-width: 980px) 80vw, 100vw') }}
+            {{ editable_img(img_key, '', '(min-width: 980px) 80vw, 100vw') }}
             <span class="carousel__cap">{{ caption }}</span>
           </button>
           {% endfor %}
@@ -206,7 +214,7 @@
 {% if crew %}
 <section class="crew-cta" id="tripulantes">
   <div class="crew-cta__media" aria-hidden="true">
-    {{ resp_img(crew.image, '', '100vw', position='50% 45%') }}
+    {{ editable_img('topic.' ~ crew.slug ~ '.image', '', '100vw', position='50% 45%') }}
   </div>
   <div class="crew-cta__scrim"></div>
   <div class="wrap crew-cta__inner reveal is-in">

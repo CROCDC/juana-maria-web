@@ -37,6 +37,57 @@ def _years_sailing() -> str:
     return str(date.today().year - 1941)
 
 
+def _asset(base: str) -> str:
+    """The site path of a bundled photo, used as an image field's default.
+
+    Points at the responsive set's fallback JPG. The templates recognise this
+    `/static/img/<base>-fallback.jpg` shape and render the full `<picture>` with its
+    webp srcset; once an admin pastes a different URL the picture becomes a plain
+    `<img>` pointing wherever they said. See ``img_src`` in ``app.factory``.
+    """
+    return f"/static/img/{base}-fallback.jpg"
+
+
+# Hint shown under every image field in the admin.
+_IMAGE_HINT = (
+    "Pegá el link de una imagen (https://…) o una ruta del sitio como "
+    "/static/img/foto.jpg. La foto que viene por defecto se muestra optimizada en "
+    "varios tamaños; una que pegues se muestra tal cual."
+)
+
+# The gallery photos, in order. Defaults for the `home.galeria.imgNN` image fields.
+_GALLERY_BASES: tuple[str, ...] = (
+    "hero/under-full-sail",
+    "moored/profile-with-name",
+    "sailing/golden-hour",
+    "on-deck/deck-sunrise",
+    "aerial/overhead-01",
+    "on-deck/foredeck-stormy",
+    "moored/two-boats-night",
+    "sailing/bsas-skyline",
+    "hero/heeling-blue",
+    "aerial/wing-on-wing",
+    "moored/night-profile",
+    "aerial/sailing-away",
+)
+
+# The gallery captions, in the same order as ``_GALLERY_BASES``.
+_GALLERY_CAPTIONS: tuple[str, ...] = (
+    "A vela llena, atardecer en el Plata",
+    "«Juana María» en el casco",
+    "Hora dorada en el Plata",
+    "Cubierta al amanecer",
+    "Doble proa, desde el aire",
+    "Proa y cielo de tormenta",
+    "Noche en el Delta",
+    "Frente a la silueta de Buenos Aires",
+    "A toda vela, cielo abierto",
+    "A vuelo de pájaro",
+    "Perfil nocturno",
+    "Rumbo abierto",
+)
+
+
 # --- Global (marca, navegación, redes, pie) -----------------------------------------
 
 GLOBAL = Group(
@@ -170,6 +221,13 @@ HOME = Group(
                 TextField("home.hero.location", "Lugar y año", "1941 · Buenos Aires"),
                 TextField("home.hero.years_label", "Texto bajo el contador de años", "años navegando"),
                 TextField(
+                    "home.hero.image",
+                    "Foto de portada",
+                    _asset("hero/under-full-sail"),
+                    type="image",
+                    hint=_IMAGE_HINT,
+                ),
+                TextField(
                     "home.hero.image_alt",
                     "Texto de la foto de portada",
                     "La Juana María navegando a vela llena sobre el Río de la Plata al atardecer",
@@ -296,6 +354,13 @@ HOME = Group(
                     type="text",
                 ),
                 TextField(
+                    "home.ficha.image",
+                    "Foto de perfil",
+                    _asset("moored/profile-with-name"),
+                    type="image",
+                    hint=_IMAGE_HINT,
+                ),
+                TextField(
                     "home.ficha.image_alt",
                     "Texto de la foto de perfil",
                     "La Juana María amarrada, de perfil, con su nombre en el casco",
@@ -340,22 +405,24 @@ HOME = Group(
         Section(
             key="galeria",
             title="Galería",
-            note="Los epígrafes de cada foto.",
+            note="Cada foto de la galería: la imagen y su epígrafe.",
             fields=(
                 TextField("home.galeria.eyebrow", "Antetítulo", "Galería"),
                 TextField("home.galeria.heading", "Título de la sección", "{years} años de luz"),
-                TextField("home.galeria.cap01", "Foto 1", "A vela llena, atardecer en el Plata"),
-                TextField("home.galeria.cap02", "Foto 2", "«Juana María» en el casco"),
-                TextField("home.galeria.cap03", "Foto 3", "Hora dorada en el Plata"),
-                TextField("home.galeria.cap04", "Foto 4", "Cubierta al amanecer"),
-                TextField("home.galeria.cap05", "Foto 5", "Doble proa, desde el aire"),
-                TextField("home.galeria.cap06", "Foto 6", "Proa y cielo de tormenta"),
-                TextField("home.galeria.cap07", "Foto 7", "Noche en el Delta"),
-                TextField("home.galeria.cap08", "Foto 8", "Frente a la silueta de Buenos Aires"),
-                TextField("home.galeria.cap09", "Foto 9", "A toda vela, cielo abierto"),
-                TextField("home.galeria.cap10", "Foto 10", "A vuelo de pájaro"),
-                TextField("home.galeria.cap11", "Foto 11", "Perfil nocturno"),
-                TextField("home.galeria.cap12", "Foto 12", "Rumbo abierto"),
+                *(
+                    field
+                    for n, base in enumerate(_GALLERY_BASES, start=1)
+                    for field in (
+                        TextField(
+                            f"home.galeria.img{n:02d}",
+                            f"Foto {n} · imagen",
+                            _asset(base),
+                            type="image",
+                            hint=_IMAGE_HINT,
+                        ),
+                        TextField(f"home.galeria.cap{n:02d}", f"Foto {n} · epígrafe", _GALLERY_CAPTIONS[n - 1]),
+                    )
+                ),
             ),
         ),
         Section(
@@ -775,6 +842,18 @@ def _build_topic_section() -> Section:
                     getattr(topic, attr),
                 )
             )
+        # The photo behind the section: its home-page card, its page header, and (for
+        # the crew program) the home call-to-action all read this one image field.
+        if topic.image:
+            fields.append(
+                TextField(
+                    f"topic.{topic.slug}.image",
+                    f"{topic.nav_label} · Imagen",
+                    _asset(topic.image),
+                    type="image",
+                    hint=_IMAGE_HINT,
+                )
+            )
     return Section(key="topics", title="Secciones", fields=tuple(fields))
 
 
@@ -795,11 +874,14 @@ REGISTRY = Registry(
 )
 
 
-# Keys rendered through run-time-built `t('…')` calls (topic cards/nav and the rumbos),
-# which the literal template scan in `check_templates` cannot see. Passed as its
-# `dynamic` allow-list so those declared fields are not flagged as unrendered.
+# Keys rendered through run-time-built `t('…')` calls, which the literal template scan
+# in `check_templates` cannot see, so they are passed as its `dynamic` allow-list to
+# keep them from being flagged as unrendered:
+#   * the topic cards/nav and the rumbos, built from a slug in a loop, and
+#   * every `image` field — those are rendered by the `editable_img` macro, which calls
+#     `t(copy_key)` on the key it is handed rather than a literal.
 DYNAMIC_COPY_KEYS: tuple[str, ...] = tuple(
     key
-    for key in REGISTRY.fields
-    if key.startswith("topic.") or key.startswith("rumbo.")
+    for key, field in REGISTRY.fields.items()
+    if key.startswith("topic.") or key.startswith("rumbo.") or field.type == "image"
 )
