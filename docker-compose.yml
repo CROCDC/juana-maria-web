@@ -29,6 +29,12 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+      # Media uploaded from the content editor (flask-sitecopy 0.4) lands here, under the
+      # served static folder. A named volume keeps it across redeploys — the code is
+      # rebuilt into a fresh image each deploy, so without this the files would vanish
+      # while the DB still points at their URLs. WORKDIR is /app and static is app/static.
+      - uploads:/app/app/static/sitecopy-uploads
     networks:
       - proxy
       - internal
@@ -102,3 +108,4 @@ networks:
 
 volumes:
   pgdata:
+  uploads:
