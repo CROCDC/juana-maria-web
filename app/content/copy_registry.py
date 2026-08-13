@@ -50,9 +50,15 @@ def _asset(base: str) -> str:
 
 # Hint shown under every image field in the admin.
 _IMAGE_HINT = (
-    "Pegá el link de una imagen (https://…) o una ruta del sitio como "
+    "Subí una imagen o pegá un link (https://…) o una ruta del sitio como "
     "/static/img/foto.jpg. La foto que viene por defecto se muestra optimizada en "
-    "varios tamaños; una que pegues se muestra tal cual."
+    "varios tamaños; una que subas o pegues se muestra tal cual."
+)
+
+# Hint shown under every video field in the admin.
+_VIDEO_HINT = (
+    "Subí un video (mp4 o webm) o pegá un link (https://…) o una ruta del sitio "
+    "como /static/video/clip.mp4."
 )
 
 # The gallery photos, in order. Defaults for the `home.galeria.imgNN` image fields.
@@ -331,6 +337,20 @@ HOME = Group(
             key="diseno",
             title="Diseño (vista aérea)",
             fields=(
+                TextField(
+                    "home.diseno.video",
+                    "Video aéreo",
+                    "/static/video/double-ender-aerial.mp4",
+                    type="video",
+                    hint=_VIDEO_HINT,
+                ),
+                TextField(
+                    "home.diseno.poster",
+                    "Imagen de portada del video",
+                    "/static/video/double-ender-aerial-poster.webp",
+                    type="image",
+                    hint=_IMAGE_HINT,
+                ),
                 TextField("home.diseno.caption", "Epígrafe del video", "Vista cenital — proa y proa"),
                 TextField(
                     "home.diseno.source",
@@ -878,10 +898,12 @@ REGISTRY = Registry(
 # in `check_templates` cannot see, so they are passed as its `dynamic` allow-list to
 # keep them from being flagged as unrendered:
 #   * the topic cards/nav and the rumbos, built from a slug in a loop, and
-#   * every `image` field — those are rendered by the `editable_img` macro, which calls
-#     `t(copy_key)` on the key it is handed rather than a literal.
+#   * every media (`image`/`video`) field — the images are rendered by the
+#     `editable_img` macro, which calls `t(copy_key)` on the key it is handed rather than
+#     a literal; listing the media fields keeps them off the "declared but unrendered"
+#     report regardless of how each one reaches the page.
 DYNAMIC_COPY_KEYS: tuple[str, ...] = tuple(
     key
     for key, field in REGISTRY.fields.items()
-    if key.startswith("topic.") or key.startswith("rumbo.") or field.type == "image"
+    if key.startswith("topic.") or key.startswith("rumbo.") or field.type in ("image", "video")
 )

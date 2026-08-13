@@ -8,7 +8,7 @@ from flask import Flask, Response, current_app, redirect, request, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sitecopy import SiteCopy
+from sitecopy import LocalFileStore, SiteCopy
 from werkzeug.wrappers import Response as WerkzeugResponse
 
 load_dotenv()
@@ -235,10 +235,22 @@ def create_app() -> Flask:
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the ?edit=1 HTML —
     # it must see the response before it is gzipped) and AFTER the routes so it reuses
-    # the site's own admin session. The site_texts table is created by a migration, so
-    # ensure_schema() is intentionally not called here.
+    # the site's own admin session. The site_texts and site_media_versions tables are
+    # created by migrations, so ensure_schema() is intentionally not called here.
     from app.admin_auth import is_logged_in, login_required
     from app.content.copy_registry import REGISTRY
+
+    # Uploads for the image/video fields (flask-sitecopy 0.4): the editor can upload a
+    # file straight from the panel instead of only pasting a URL. Files are written under
+    # the served static folder (mounted on a persistent volume in docker-compose, so they
+    # survive a redeploy) and addressed by content hash. The version history that lets the
+    # editor roll a picture/clip back rides the same `db` (table from migration 0004).
+    uploads_store: LocalFileStore | bool = False
+    if app.static_folder:
+        uploads_store = LocalFileStore(
+            os.path.join(app.static_folder, "sitecopy-uploads"),
+            "/static/sitecopy-uploads",
+        )
 
     sitecopy.init_app(
         app,
@@ -249,6 +261,7 @@ def create_app() -> Flask:
         pages=_editor_pages,
         brand="Juana María",
         site_url=app.config.get("CANONICAL_URL") or "",
+        files=uploads_store,
     )
 
     return app
