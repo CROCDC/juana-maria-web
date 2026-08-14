@@ -1,6 +1,8 @@
 {% macro resp_img(key, alt, sizes, klass='', priority=false, position='') %}
   {%- set dims = IMG.get(key, {'w': 1600, 'h': 1067}) -%}
-  {%- set widths = IMG_WIDTHS | select('le', dims.w) | list -%}
+  {# The manifest lists the variants the build actually wrote; the width filter is the
+     fallback for a photo that predates it. #}
+  {%- set widths = dims.get('widths') or IMG_WIDTHS | select('le', dims.w) | list -%}
   {%- if not widths -%}{%- set widths = [dims.w] -%}{%- endif -%}
   <picture>
     <source type="image/webp"
@@ -13,6 +15,15 @@
          {% if position %}style="object-position: {{ position }};"{% endif %}
          {% if priority %}fetchpriority="high" decoding="async"{% else %}loading="lazy" decoding="async"{% endif %}>
   </picture>
+{% endmacro %}
+
+{# The variant the lightbox opens for a bundled photo: the widest one the build wrote,
+   capped at 1280px so a full-screen view never pulls the 1920 master. Photos the owner
+   sends from a phone are narrower than that cap, so the width cannot be assumed. #}
+{% macro full_variant(base) %}
+  {%- set widths = IMG.get(base, {}).get('widths') or IMG_WIDTHS -%}
+  {%- set target = widths | select('le', 1280) | list | first | default(widths | last) -%}
+  {{- url_for('static', filename='img/' ~ base ~ '-' ~ target ~ '.webp') -}}
 {% endmacro %}
 
 {# Editable image. `copy_key` is an `image` field whose default is a bundled
@@ -34,7 +45,9 @@
   <li class="hub-card reveal"{% if delay %} data-delay="{{ delay }}"{% endif %}>
     <a class="hub-card__link" href="{{ url_for(topic.endpoint) }}">
       <span class="hub-card__media" aria-hidden="true">
-        {{ editable_img('topic.' ~ topic.slug ~ '.image', '', '(min-width: 980px) 33vw, (min-width: 620px) 50vw, 100vw') }}
+        {{ editable_img('topic.' ~ topic.slug ~ '.image', '',
+            '(min-width: 980px) 33vw, (min-width: 620px) 50vw, 100vw',
+            position=topic.image_position) }}
       </span>
       <span class="hub-card__body">
         <span class="hub-card__title">{{ t('topic.' ~ topic.slug ~ '.title') }}</span>

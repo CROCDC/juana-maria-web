@@ -100,14 +100,19 @@ def test_gallery_lightbox_opens_navigates_and_closes(
         caption = page.locator("#lbCaption")
         expect(lightbox).to_be_hidden()
 
+        # Read the captions off the carousel instead of hard-coding them: the owner
+        # re-curates the gallery, and that must not turn into a red test.
+        slide_captions = page.locator(".carousel__cap").all_inner_texts()
+        assert len(slide_captions) >= 2
+
         page.locator(".carousel__slide").first.click()
 
         expect(lightbox).to_be_visible()
-        expect(caption).to_have_text("A vela llena, atardecer en el Plata")
+        expect(caption).to_have_text(slide_captions[0])
         expect(page.locator("#lbImg")).not_to_have_attribute("src", "")
 
         page.keyboard.press("ArrowRight")
-        expect(caption).to_have_text("«Juana María» en el casco")
+        expect(caption).to_have_text(slide_captions[1])
 
         page.keyboard.press("Escape")
         expect(lightbox).to_be_hidden()

@@ -6,7 +6,7 @@
 {% block content %}
 <section class="topic-hero">
   <div class="topic-hero__media" aria-hidden="true">
-    {{ editable_img('topic.' ~ topic.slug ~ '.image', '', '100vw', position='50% 45%') }}
+    {{ editable_img('topic.' ~ topic.slug ~ '.image', '', '100vw', position=topic.image_position) }}
   </div>
   <div class="topic-hero__scrim"></div>
   <div class="wrap topic-hero__inner reveal is-in">

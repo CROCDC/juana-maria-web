@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import editable_img, topic_card with context %}
+{% from "_macros.html" import editable_img, full_variant, topic_card with context %}
 
 {% block head_extra %}
     {# Preload the hero. While it is the bundled photo we hint its webp srcset; once the
@@ -176,13 +176,6 @@
       ('home.galeria.img03', t('home.galeria.cap03')),
       ('home.galeria.img04', t('home.galeria.cap04')),
       ('home.galeria.img05', t('home.galeria.cap05')),
-      ('home.galeria.img06', t('home.galeria.cap06')),
-      ('home.galeria.img07', t('home.galeria.cap07')),
-      ('home.galeria.img08', t('home.galeria.cap08')),
-      ('home.galeria.img09', t('home.galeria.cap09')),
-      ('home.galeria.img10', t('home.galeria.cap10')),
-      ('home.galeria.img11', t('home.galeria.cap11')),
-      ('home.galeria.img12', t('home.galeria.cap12')),
     ] %}
     <div class="carousel reveal" id="gallery"
          aria-roledescription="carrusel"
@@ -194,7 +187,7 @@
           <button
             class="carousel__slide"
             type="button"
-            data-full="{% if shot.responsive %}{{ url_for('static', filename='img/' ~ shot.base ~ '-1280.webp') }}{% else %}{{ shot.src }}{% endif %}"
+            data-full="{% if shot.responsive %}{{ full_variant(shot.base) }}{% else %}{{ shot.src }}{% endif %}"
             data-caption="{{ caption }}"
             aria-label="Ampliar: {{ caption }}">
             {{ editable_img(img_key, '', '(min-width: 980px) 80vw, 100vw') }}
@@ -207,6 +200,20 @@
       <button class="carousel__btn carousel__next" type="button" aria-label="Foto siguiente">&rsaquo;</button>
       <div class="carousel__dots" id="carouselDots" aria-label="Ir a una foto"></div>
     </div>
+
+    <figure class="aerial aerial--after-carousel reveal">
+      <div class="feature__media">
+        <video
+          muted loop playsinline preload="none"
+          data-lazy-video
+          data-src="{{ t('home.galeria.video') }}"
+          poster="{{ t('home.galeria.video_poster') }}"></video>
+        <p class="feature__caption">{{ t('home.galeria.video_caption') }}</p>
+      </div>
+      <figcaption class="aerial__source">
+        {{ t('home.galeria.video_source') }}
+      </figcaption>
+    </figure>
   </div>
 </section>
 
@@ -214,7 +221,7 @@
 {% if crew %}
 <section class="crew-cta" id="tripulantes">
   <div class="crew-cta__media" aria-hidden="true">
-    {{ editable_img('topic.' ~ crew.slug ~ '.image', '', '100vw', position='50% 45%') }}
+    {{ editable_img('topic.' ~ crew.slug ~ '.image', '', '100vw', position=crew.image_position) }}
   </div>
   <div class="crew-cta__scrim"></div>
   <div class="wrap crew-cta__inner reveal is-in">

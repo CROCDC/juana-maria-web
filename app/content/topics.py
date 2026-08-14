@@ -12,6 +12,10 @@ class Topic:
     template: str
     is_home: bool = False
     image: str = ""
+    # Where the subject sits in `image`, as a CSS object-position. Both places the photo
+    # appears (the page header and the home card) crop it to a wide band, so a portrait
+    # shot with its subject off-centre is lost at the default 50% 45%.
+    image_position: str = "50% 45%"
     cta_label: str = "Ver más"
 
     @property
@@ -56,7 +60,8 @@ TOPICS: list[Topic] = [
         title="Navegación histórica",
         blurb="Réplicas de derroteros históricos, con historiadores a bordo.",
         template="topics/historic-sailings.html",
-        image="heritage/teseo",
+        image="heritage/sail-plan-campos",
+        image_position="50% 72%",
         cta_label="Ver más",
     ),
     Topic(
@@ -65,7 +70,8 @@ TOPICS: list[Topic] = [
         title="Seminarios a bordo",
         blurb="Seminarios de náutica a cargo de especialistas, sobre cubierta.",
         template="topics/seminars.html",
-        image="sailing/bsas-skyline",
+        image="details/lamp-and-barometer",
+        image_position="62% 24%",
         cta_label="Ver los seminarios",
     ),
     Topic(
@@ -74,7 +80,8 @@ TOPICS: list[Topic] = [
         title="Ciclo de lectura",
         blurb="Un ciclo de lectura a bordo de la Juana María.",
         template="topics/reading-circle.html",
-        image="interior/galley-and-nav",
+        image="interior/books-aboard",
+        image_position="50% 68%",
         cta_label="Ver el ciclo",
     ),
     Topic(
@@ -83,7 +90,8 @@ TOPICS: list[Topic] = [
         title="Otras actividades a bordo",
         blurb="Otras propuestas y actividades que ocurren sobre cubierta.",
         template="topics/other-activities.html",
-        image="on-deck/foredeck-detail",
+        image="details/bronze-vent",
+        image_position="38% 22%",
         cta_label="Ver más",
     ),
 ]

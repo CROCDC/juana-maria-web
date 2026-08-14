@@ -732,6 +732,10 @@ section[id],
   margin: 0 auto;
 }
 
+.aerial--after-carousel {
+  margin-top: clamp(2.4rem, 5vw, 3.6rem);
+}
+
 .aerial__source {
   margin-top: 1rem;
   text-align: center;
@@ -1732,6 +1736,14 @@ section[id],
 .topic-hero__inner {
   padding-block: clamp(6rem, 11vw, 8.5rem) clamp(2.4rem, 6vw, 4rem);
   color: var(--sail);
+}
+
+/* Same treatment the home hero gives its eyebrow: bronze on a bright photo (the sepia
+   1941 sail plan, say) falls below readable contrast. */
+.topic-hero__inner .eyebrow,
+.crew-cta__inner .eyebrow {
+  color: var(--gilt);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
 }
 
 .topic-hero__title {

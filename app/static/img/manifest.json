@@ -1,82 +1,271 @@
 {
   "hero/under-full-sail": {
     "w": 2560,
-    "h": 1440
+    "h": 1440,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
-  "hero/returning-from-colonia": {
+  "hero/heeling-blue": {
     "w": 2083,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "sailing/golden-hour": {
     "w": 2560,
-    "h": 1434
+    "h": 1434,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "sailing/bsas-skyline": {
     "w": 2560,
-    "h": 1440
+    "h": 1440,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "aerial/overhead-01": {
     "w": 2560,
-    "h": 1440
+    "h": 1440,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "aerial/overhead-02": {
     "w": 2560,
-    "h": 1440
+    "h": 1440,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "aerial/wing-on-wing": {
     "w": 2560,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "aerial/sailing-away": {
     "w": 2560,
-    "h": 1440
+    "h": 1440,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "moored/profile-with-name": {
     "w": 1920,
-    "h": 2368
+    "h": 2368,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "moored/at-club-with-sister": {
     "w": 1920,
-    "h": 2368
+    "h": 2368,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "moored/night-profile": {
     "w": 2048,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "moored/two-boats-night": {
     "w": 2048,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "on-deck/deck-sunrise": {
     "w": 2048,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "on-deck/foredeck-stormy": {
     "w": 2048,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "on-deck/foredeck-detail": {
     "w": 2048,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
+  },
+  "on-deck/cockpit": {
+    "w": 1196,
+    "h": 1600,
+    "widths": [
+      1196,
+      960,
+      640,
+      420
+    ]
   },
   "interior/galley-and-nav": {
     "w": 1920,
-    "h": 2368
+    "h": 2368,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
+  },
+  "interior/cabin": {
+    "w": 1196,
+    "h": 1600,
+    "widths": [
+      1196,
+      960,
+      640,
+      420
+    ]
+  },
+  "interior/books-aboard": {
+    "w": 1066,
+    "h": 1600,
+    "widths": [
+      1066,
+      960,
+      640,
+      420
+    ]
   },
   "details/plaque-full": {
     "w": 1920,
-    "h": 2368
+    "h": 2368,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "details/plaque-closeup": {
     "w": 1420,
-    "h": 869
+    "h": 869,
+    "widths": [
+      1420,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
   "details/bronze-fitting": {
     "w": 2049,
-    "h": 2560
+    "h": 2560,
+    "widths": [
+      1920,
+      1280,
+      960,
+      640,
+      420
+    ]
   },
-  "heritage/teseo": {
-    "w": 2560,
-    "h": 1920
+  "details/lamp-and-barometer": {
+    "w": 1066,
+    "h": 1600,
+    "widths": [
+      1066,
+      960,
+      640,
+      420
+    ]
+  },
+  "details/bronze-vent": {
+    "w": 1066,
+    "h": 1600,
+    "widths": [
+      1066,
+      960,
+      640,
+      420
+    ]
+  },
+  "heritage/sail-plan-campos": {
+    "w": 1103,
+    "h": 1451,
+    "widths": [
+      1103,
+      960,
+      640,
+      420
+    ]
   }
 }

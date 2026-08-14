@@ -62,35 +62,23 @@ _VIDEO_HINT = (
 )
 
 # The gallery photos, in order. Defaults for the `home.galeria.imgNN` image fields.
+# The owner picked this selection by hand (13/08/2026): the three shots under sail he
+# kept from the original twelve, then the two of life aboard he sent to replace the rest.
 _GALLERY_BASES: tuple[str, ...] = (
     "hero/under-full-sail",
-    "moored/profile-with-name",
-    "sailing/golden-hour",
-    "on-deck/deck-sunrise",
-    "aerial/overhead-01",
-    "on-deck/foredeck-stormy",
-    "moored/two-boats-night",
-    "sailing/bsas-skyline",
     "hero/heeling-blue",
     "aerial/wing-on-wing",
-    "moored/night-profile",
-    "aerial/sailing-away",
+    "on-deck/cockpit",
+    "interior/cabin",
 )
 
 # The gallery captions, in the same order as ``_GALLERY_BASES``.
 _GALLERY_CAPTIONS: tuple[str, ...] = (
     "A vela llena, atardecer en el Plata",
-    "«Juana María» en el casco",
-    "Hora dorada en el Plata",
-    "Cubierta al amanecer",
-    "Doble proa, desde el aire",
-    "Proa y cielo de tormenta",
-    "Noche en el Delta",
-    "Frente a la silueta de Buenos Aires",
     "A toda vela, cielo abierto",
     "A vuelo de pájaro",
-    "Perfil nocturno",
-    "Rumbo abierto",
+    "El cockpit de la Juana María: un espacio para la sociabilidad a bordo",
+    "La cabina de la Juana María: un lugar para el encuentro en el Río de la Plata",
 )
 
 
@@ -442,6 +430,33 @@ HOME = Group(
                         ),
                         TextField(f"home.galeria.cap{n:02d}", f"Foto {n} · epígrafe", _GALLERY_CAPTIONS[n - 1]),
                     )
+                ),
+            ),
+        ),
+        Section(
+            key="galeria_video",
+            title="Galería · video",
+            note="El video que cierra la galería, debajo de las fotos.",
+            fields=(
+                TextField(
+                    "home.galeria.video",
+                    "Video",
+                    "/static/video/under-sail-aerial.mp4",
+                    type="video",
+                    hint=_VIDEO_HINT,
+                ),
+                TextField(
+                    "home.galeria.video_poster",
+                    "Imagen de portada del video",
+                    "/static/video/under-sail-aerial-poster.webp",
+                    type="image",
+                    hint=_IMAGE_HINT,
+                ),
+                TextField("home.galeria.video_caption", "Epígrafe del video", "En navegación por el Río de la Plata"),
+                TextField(
+                    "home.galeria.video_source",
+                    "Crédito del video",
+                    "Fuente: cortesía de Diego Blanco (@chapadiego) & Marcelo Blanco (@marcelobohemio)",
                 ),
             ),
         ),
