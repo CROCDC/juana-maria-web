@@ -892,9 +892,27 @@ section[id],
   background: var(--walnut);
   cursor: zoom-in;
   display: block;
+  overflow: hidden;
+}
+
+/* The gallery mixes landscape, square and portrait photos, so every one is shown whole
+   (`contain`) on a stage of fixed height — a stage that resized per photo would shift
+   the page under the reader. What `contain` leaves empty is filled with the same photo,
+   blurred, so the frame reaches the edge without dead bars and without cropping. */
+.carousel__slide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--shot-backdrop);
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) brightness(0.5) saturate(1.15);
+  transform: scale(1.12);
+  pointer-events: none;
 }
 
 .carousel__slide picture {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
@@ -903,8 +921,8 @@ section[id],
 .carousel__slide img {
   display: block;
   width: 100%;
-  height: clamp(340px, 58vh, 660px);
-  object-fit: cover;
+  height: clamp(360px, 66vh, 720px);
+  object-fit: contain;
 }
 
 .carousel__cap {

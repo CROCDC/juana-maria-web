@@ -17,12 +17,14 @@
   </picture>
 {% endmacro %}
 
-{# The variant the lightbox opens for a bundled photo: the widest one the build wrote,
-   capped at 1280px so a full-screen view never pulls the 1920 master. Photos the owner
-   sends from a phone are narrower than that cap, so the width cannot be assumed. #}
-{% macro full_variant(base) %}
+{# The widest variant of a bundled photo that stays within `cap`. Photos the owner sends
+   from a phone are narrower than the standard steps, so the width cannot be assumed —
+   the manifest is asked which variants the build actually wrote.
+   Callers: the lightbox (cap 1280, so a full-screen view never pulls the 1920 master)
+   and the carousel's blurred backdrop (cap 420 — it is blurred, so the smallest wins). #}
+{% macro variant_src(base, cap) %}
   {%- set widths = IMG.get(base, {}).get('widths') or IMG_WIDTHS -%}
-  {%- set target = widths | select('le', 1280) | list | first | default(widths | last) -%}
+  {%- set target = widths | select('le', cap) | list | first | default(widths | last) -%}
   {{- url_for('static', filename='img/' ~ base ~ '-' ~ target ~ '.webp') -}}
 {% endmacro %}
 

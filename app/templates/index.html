@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import editable_img, full_variant, topic_card with context %}
+{% from "_macros.html" import editable_img, variant_src, topic_card with context %}
 
 {% block head_extra %}
     {# Preload the hero. While it is the bundled photo we hint its webp srcset; once the
@@ -184,10 +184,14 @@
         <div class="carousel__track" id="carouselTrack">
           {% for img_key, caption in shots %}
           {% set shot = img_src(t_plain(img_key)) %}
+          {# The photos are shown whole, so the slide is wider than most of them. The
+             leftover is filled with the same photo, blurred, instead of dead bars. #}
+          {% set backdrop = variant_src(shot.base, 420) if shot.responsive else shot.src %}
           <button
             class="carousel__slide"
             type="button"
-            data-full="{% if shot.responsive %}{{ full_variant(shot.base) }}{% else %}{{ shot.src }}{% endif %}"
+            style="--shot-backdrop: url('{{ backdrop }}')"
+            data-full="{% if shot.responsive %}{{ variant_src(shot.base, 1280) }}{% else %}{{ shot.src }}{% endif %}"
             data-caption="{{ caption }}"
             aria-label="Ampliar: {{ caption }}">
             {{ editable_img(img_key, '', '(min-width: 980px) 80vw, 100vw') }}
