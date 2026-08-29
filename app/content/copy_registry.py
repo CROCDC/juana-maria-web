@@ -7,7 +7,7 @@ and "restore the original" is a row delete.
 
 Structure: Registry → Group (one admin screen + one preview page) → Section → TextField.
 
-Two conventions worth knowing:
+Three conventions worth knowing:
 
 * **Defaults for the topic cards and the rumbos are pulled from the existing content
   modules** (:mod:`app.content.topics`, :mod:`app.content.rumbos`) so there is a single
@@ -17,6 +17,13 @@ Two conventions worth knowing:
 * **A few decorated home-page fragments stay hard-coded in the templates** — the intro
   lead (its drop-cap ``.drop`` and script ``.script`` styling cannot be expressed in the
   rich allow-list ``p h2 h3 ul ol li strong b em i a br``). Everything else is editable.
+* **A field that never renders as visible text carries ``resizable=False``.** The site
+  runs flask-sitecopy with ``text_sizes=True``, and a size reaches the page as a
+  ``<span class="sc-s …">`` around the value — which the library only emits in text
+  position. A string that lands in an attribute (``aria-label``, ``placeholder``,
+  ``og:*``), inside ``<title>`` or inside the JSON-LD block therefore has nowhere to put
+  one, so those fields opt out and the admin never sees a *Tamaño* control that would do
+  nothing. ``url``/``image``/``video`` fields are excluded by the library itself.
 """
 
 from __future__ import annotations
@@ -111,9 +118,19 @@ GLOBAL = Group(
             key="nav",
             title="Navegación",
             fields=(
-                TextField("global.nav_brand_aria", "Etiqueta accesible de la marca", "Juana María, inicio"),
+                TextField(
+                    "global.nav_brand_aria",
+                    "Etiqueta accesible de la marca",
+                    "Juana María, inicio",
+                    resizable=False,
+                ),
                 TextField("global.skip_link", "Enlace para saltar al contenido", "Saltar al contenido"),
-                TextField("global.nav_toggle", "Etiqueta del botón de menú", "Abrir menú"),
+                TextField(
+                    "global.nav_toggle",
+                    "Etiqueta del botón de menú",
+                    "Abrir menú",
+                    resizable=False,
+                ),
             ),
         ),
         Section(
@@ -169,6 +186,7 @@ SEO = Group(
                     "seo.title",
                     "Título en Google",
                     "Juana María — Ballenera de 1941 · {years} años navegando el Río de la Plata",
+                    resizable=False,
                 ),
                 TextField(
                     "seo.description",
@@ -177,19 +195,27 @@ SEO = Group(
                     "Campos y construida en madera en el Tigre en 1941. {years} años "
                     "navegando el Río de la Plata.",
                     type="text",
+                    resizable=False,
                 ),
-                TextField("seo.og_title", "Título al compartir", "Juana María — ballenera de 1941"),
+                TextField(
+                    "seo.og_title",
+                    "Título al compartir",
+                    "Juana María — ballenera de 1941",
+                    resizable=False,
+                ),
                 TextField(
                     "seo.og_description",
                     "Descripción al compartir",
                     "Doble proa de madera dibujada por Manuel M. Campos. {years} años "
                     "navegando el Río de la Plata.",
                     type="text",
+                    resizable=False,
                 ),
                 TextField(
                     "seo.og_image_alt",
                     "Texto de la imagen al compartir",
                     "La Juana María navegando a toda vela en el Río de la Plata.",
+                    resizable=False,
                 ),
             ),
         ),
@@ -769,7 +795,12 @@ CREW = Group(
                 TextField("crew.form.adult_yes", "Opción · Sí", "Sí"),
                 TextField("crew.form.adult_no", "Opción · No", "No"),
                 TextField("crew.form.date", "Etiqueta · fecha", "¿Cuál es la fecha en la que quisieras salir a navegar en el Río de la Plata?"),
-                TextField("crew.form.date_placeholder", "Placeholder · fecha", "Ej.: un fin de semana de noviembre"),
+                TextField(
+                    "crew.form.date_placeholder",
+                    "Placeholder · fecha",
+                    "Ej.: un fin de semana de noviembre",
+                    resizable=False,
+                ),
                 TextField("crew.form.route", "Etiqueta · rumbo", "¿Tienes algún rumbo de preferencia?"),
                 TextField("crew.form.route_none", "Opción · sin preferencia", "Sin preferencia"),
                 TextField("crew.form.message", "Etiqueta · comentario", "¿Algún comentario, consulta o inquietud que nos quieras comunicar antes de que nos contactemos contigo?"),

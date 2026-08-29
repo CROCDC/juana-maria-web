@@ -1,3 +1,20 @@
+/* Editable text sizes (flask-sitecopy).
+ *
+ * Where the admin has given a string a size, the value arrives wrapped in an element
+ * this file never wrote: `<span class="sc-s sc-s-lg">` around an inline value, or
+ * `<div class="sc-s-block sc-s-lg">` around a `rich` one, whose block children a span
+ * could not hold. The library ships their rules itself (`display` plus a relative
+ * `font-size` in `em`), injected in the <head> only on pages that carry a size — a page
+ * with none is byte-for-byte the page below.
+ *
+ * What that costs us: a selector that reaches a string through its structure can stop
+ * matching. Descendant selectors (`.prose p + p`, `.t-item p`) see straight through the
+ * wrapper and are safe; a child combinator or an `:nth-child()` aimed at the inside of
+ * an editable value is not. The four `>` selectors in this file all sit above the copy,
+ * not inside it. Keep it that way, or the site changes shape the first time someone
+ * makes a heading bigger. `tests/test_sitecopy_pipeline.py` pins the `.prose` case.
+ */
+
 :root {
 
   --abyss: #150e08;
