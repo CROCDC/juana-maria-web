@@ -171,7 +171,8 @@ def create_app() -> Flask:
             URL, or any other path) renders as a plain ``<img>``. In edit mode ``t()``
             wraps the value in click-to-edit markers, so it stops matching the asset
             pattern and falls to the plain ``<img>`` — which is exactly what the visual
-            editor needs to make the picture clickable and open it in the side panel.
+            editor needs to make the picture clickable and open its controls (preview,
+            upload, version gallery and alt text) right there on the canvas.
             """
             if (
                 isinstance(value, str)
@@ -233,10 +234,15 @@ def create_app() -> Flask:
             TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
-    # after_request hooks in reverse order, and the editor rewrites the ?edit=1 HTML —
-    # it must see the response before it is gzipped) and AFTER the routes so it reuses
-    # the site's own admin session. The site_texts and site_media_versions tables are
+    # after_request hooks in reverse order, and the editor rewrites the HTML — it must
+    # see the response before it is gzipped) and AFTER the routes so it reuses the
+    # site's own admin session. The site_texts and site_media_versions tables are
     # created by migrations, so ensure_schema() is intentionally not called here.
+    #
+    # That ordering used to matter only to an admin in `?edit=1`; since text sizes were
+    # turned on (below) the rewrite runs on public pages too, so getting it backwards
+    # would ship the editor's private-use markers to every visitor as empty boxes.
+    # `tests/test_sitecopy_pipeline.py` fails if these two lines ever swap.
     from app.admin_auth import is_logged_in, login_required
     from app.content.copy_registry import REGISTRY
 
@@ -245,6 +251,9 @@ def create_app() -> Flask:
     # the served static folder (mounted on a persistent volume in docker-compose, so they
     # survive a redeploy) and addressed by content hash. The version history that lets the
     # editor roll a picture/clip back rides the same `db` (table from migration 0004).
+    # Since 0.6 all of that — preview, upload, the version gallery and the picture's own
+    # alt text — opens on the canvas when the picture is clicked, so nothing about the
+    # wiring changes but the owner never has to find the side panel to change a photo.
     uploads_store: LocalFileStore | bool = False
     if app.static_folder:
         uploads_store = LocalFileStore(
@@ -262,6 +271,16 @@ def create_app() -> Flask:
         brand="Juana María",
         site_url=app.config.get("CANONICAL_URL") or "",
         files=uploads_store,
+        # Editable text sizes (flask-sitecopy 0.5): every text field grows an A−/A+ pair
+        # on the block itself and a "Tamaño" dropdown in the panel. The whole scale is
+        # offered — the steps are relative (`em`), so the site's own clamp()-based type
+        # scale keeps deciding the absolute size at every breakpoint, and "Normal" is the
+        # absence of an override rather than a value. Fields that never reach the page as
+        # visible text (a `<title>`, an aria-label, the JSON-LD description) are marked
+        # `resizable=False` in the registry so the panel does not offer a size that
+        # nothing would render. The CSS goes inline in the `<head>`; the site sends no
+        # Content-Security-Policy, so `text_sizes_css="link"` is not needed.
+        text_sizes=True,
     )
 
     return app

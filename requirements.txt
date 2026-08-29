@@ -1,6 +1,6 @@
 flask==3.0.3
 # In-place content editor for the site's copy (the /admin/content panel).
-flask-sitecopy==0.4.0
+flask-sitecopy==0.7.0
 flask-compress==1.15
 brotli==1.2.0
 gunicorn==22.0.0

@@ -24,7 +24,11 @@
            {% if request.endpoint == 'admin_crew' %}aria-current="page"{% endif %}>Tripulantes</a>
         <a href="{{ url_for('sitecopy.editor') }}"
            class="admin__nav-link{% if request.blueprint == 'sitecopy' %} is-active{% endif %}"
-           {% if request.blueprint == 'sitecopy' %}aria-current="page"{% endif %}>Textos del sitio</a>
+           {# The link opens flask-sitecopy's visual editor: the site on a canvas, with
+              the controls sitting on each block (0.7). The list of texts is one button
+              inside it, for copy there is nothing to click — so the label names the
+              editor, not the list. #}
+           {% if request.blueprint == 'sitecopy' %}aria-current="page"{% endif %}>Editar el sitio</a>
       </nav>
       {% endif %}
       {% block body %}{% endblock %}
