@@ -31,3 +31,9 @@ app/static/sitecopy-uploads/
 # Keep these out of the repo; use git-lfs or external storage if you need them tracked.
 media/
 media-web/
+
+# Vercel: `public/static` is a build-time copy of app/static (see vercel.json's
+# buildCommand) so the CDN serves the assets instead of the function; .vercel holds
+# the local project link.
+public/
+.vercel/

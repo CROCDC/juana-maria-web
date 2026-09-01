@@ -8,7 +8,7 @@ from flask import Flask, Response, current_app, redirect, request, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sitecopy import LocalFileStore, SiteCopy
+from sitecopy import FileStore, LocalFileStore, SiteCopy
 from werkzeug.wrappers import Response as WerkzeugResponse
 
 load_dotenv()
@@ -72,6 +72,13 @@ def create_app() -> Flask:
         "DATABASE_URL", "sqlite:///local.db"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    # Serverless (Vercel) reuses a warm instance whose pooled connections outlive
+    # the managed Postgres' idle timeout — a scale-to-zero provider hands back a
+    # dead socket otherwise. Harmless on the long-lived gunicorn process.
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
 
     app.config["UMAMI_WEBSITE_ID"] = os.environ.get("UMAMI_WEBSITE_ID")
 
@@ -230,8 +237,14 @@ def create_app() -> Flask:
         from app.routes import register_routes
 
         register_routes(app)
-        if sa_inspect(db.engine).has_table("topic_visibility"):
-            TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+        try:
+            if sa_inspect(db.engine).has_table("topic_visibility"):
+                TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+        except Exception:  # noqa: BLE001 — seeding is best-effort
+            # Serverless runs this on every cold start, so letting it raise would turn
+            # a transient database error into a 500 for the whole site, not just for
+            # the DB-backed nav (which already degrades on its own).
+            pass
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the HTML — it must
@@ -254,8 +267,14 @@ def create_app() -> Flask:
     # Since 0.6 all of that — preview, upload, the version gallery and the picture's own
     # alt text — opens on the canvas when the picture is clicked, so nothing about the
     # wiring changes but the owner never has to find the side panel to change a photo.
-    uploads_store: LocalFileStore | bool = False
-    if app.static_folder:
+    uploads_store: FileStore | bool = False
+    if os.environ.get("BLOB_READ_WRITE_TOKEN"):
+        # Vercel: the function's filesystem is read-only and per-deploy, so the
+        # bytes go to Vercel Blob and the field stores its CDN URL.
+        from app.media_store import VercelBlobFileStore
+
+        uploads_store = VercelBlobFileStore()
+    elif app.static_folder:
         uploads_store = LocalFileStore(
             os.path.join(app.static_folder, "sitecopy-uploads"),
             "/static/sitecopy-uploads",

@@ -1,0 +1,26 @@
+# Source media library and working assets: gitignored, hundreds of MB, and never
+# served by the app (it serves app/static). A CLI deploy uploads the working
+# directory, not the git tree, so they have to be excluded here too.
+media/
+media-web/
+
+# Test suite and tooling: not reachable at runtime, and Vercel bundles every
+# file it can reach.
+tests/
+research/
+docs/
+scripts/
+migrations/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+instance/
+.venv/
+
+# Local-server deploy, which stays alive alongside Vercel.
+Dockerfile
+Dockerfile.promtail
+docker-compose.yml
+docker-entrypoint.sh
+Jenkinsfile
+promtail.yml
