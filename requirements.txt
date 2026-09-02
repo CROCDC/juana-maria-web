@@ -3,11 +3,8 @@ flask==3.0.3
 flask-sitecopy==0.7.0
 flask-compress==1.15
 brotli==1.2.0
-gunicorn==22.0.0
 python-dotenv==1.0.1
 tzdata==2024.1
 flask-sqlalchemy==3.1.1
 flask-migrate==4.0.7
 psycopg2-binary==2.9.9
-prometheus_flask_exporter==0.23.1
-psutil==5.9.8
