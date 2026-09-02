@@ -161,8 +161,11 @@ vercel certs issue velaclasica.ar                    # cert exists before any tr
 ```
 
 `juana-maria.nexttech.com.ar` — the internal alias the site answered on before it had
-its own domain — is also served by Vercel, purely so the 301 to the canonical host keeps
-working for old links. It is in `REDIRECT_HOSTS`.
+its own domain — was **not** moved. It has no record of its own: it resolves through the
+shared `*.nexttech.com.ar` wildcard that points at the Cloudflare Tunnel, so with the Pi's
+containers gone it now falls through to nginx-proxy's default like any other subdomain
+that does not exist. It stays listed in `REDIRECT_HOSTS`, which is inert while nothing
+routes it here; giving it an explicit CNAME to Vercel would make that 301 work again.
 
 **Rollback is no longer one DNS change.** While the Pi still ran, pointing both records
 back at `cfargotunnel.com` (proxied) restored the old site instantly. That stack is gone,
