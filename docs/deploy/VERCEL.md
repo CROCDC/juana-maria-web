@@ -4,8 +4,10 @@ The site runs as a single Vercel Function (Python/WSGI) fronted by Vercel's CDN,
 deployed from GitHub Actions — the same shape as `mg-nautica-wix`. This document
 covers the pieces that are specific to a Flask app.
 
-Until the DNS cutover the local-server deploy (`Jenkinsfile`, `docker-compose.yml`,
-`.github/workflows/deploy.yml`) stays alive and keeps serving `velaclasica.ar`.
+`velaclasica.ar` has been cut over to Vercel (2026-09-02). The local-server deploy
+(`Jenkinsfile`, `docker-compose.yml`, `.github/workflows/deploy.yml`) is still wired and
+still redeploys on every push to `main` — kept as a rollback target until Vercel has run
+production long enough to trust. See [After the cutover](#after-the-cutover).
 
 ## What runs where
 
@@ -133,24 +135,46 @@ variable unset — dev, Docker — the local store is used and nothing changes.
 
 ## DNS cutover
 
-`velaclasica.ar` is on Cloudflare, currently proxied to the Cloudflare Tunnel that
-reaches the Pi. To move it:
+`velaclasica.ar` is on Cloudflare. Before the cutover both the apex and `www` were
+proxied CNAMEs to the Cloudflare Tunnel that reaches the Pi:
 
-1. Add the domain in the Vercel project (Settings → Domains) — both apex and `www`.
-2. In Cloudflare DNS replace the tunnel records with what Vercel asks for
-   (`A 76.76.21.21` on the apex, `CNAME cname.vercel-dns.com` on `www`) and set them
-   to **DNS only** (grey cloud). Vercel terminates TLS itself; keeping the orange
-   cloud puts a second proxy in front of it and breaks certificate issuance.
-3. Wait for Vercel to report the certificate as issued, then check both hosts.
+```
+CNAME velaclasica.ar      392770c8-a3e4-4b8e-8899-5b76b552b737.cfargotunnel.com  (proxied)
+CNAME www.velaclasica.ar  392770c8-a3e4-4b8e-8899-5b76b552b737.cfargotunnel.com  (proxied)
+```
 
-**Rollback** is the same edit in reverse: point the records back at the tunnel. The
-Docker stack on the Pi keeps running throughout, so the old site is always one DNS
-change away.
+They now point at Vercel, **DNS only** (grey cloud) — Vercel terminates TLS, and leaving
+Cloudflare's proxy in front puts a second terminator in the path and breaks certificate
+issuance:
+
+```
+CNAME velaclasica.ar      52170ddcd5d22574.vercel-dns-017.com   (DNS only, TTL 60)
+CNAME www.velaclasica.ar  52170ddcd5d22574.vercel-dns-017.com   (DNS only, TTL 60)
+```
+
+A CNAME at the apex works because Cloudflare flattens it; it is also the target Vercel
+itself recommends (`GET /v6/domains/<domain>/config` → `recommendedCNAME`). The TTL is
+deliberately low so a rollback takes effect quickly.
+
+**Issue the certificate before repointing the apex.** Vercel does not pre-issue for a
+domain whose DNS still points elsewhere, so a naive flip leaves the site without HTTPS
+until issuance completes. The DNS-01 challenge avoids that entirely:
+
+```bash
+vercel certs issue velaclasica.ar --challenge-only   # prints the _acme-challenge TXT
+# add that TXT record in Cloudflare, wait for it to resolve
+vercel certs issue velaclasica.ar                    # cert exists before any traffic moves
+# now repoint the record, and delete the TXT afterwards
+```
+
+**Rollback** is the same edit in reverse: both records back to the `cfargotunnel.com`
+target above, proxied. The Docker stack on the Pi keeps running and keeps redeploying
+from `main`, so the old site stays one DNS change away.
 
 ## After the cutover
 
-Once Vercel has served production for long enough to trust it, remove the local-server
-deploy: `Jenkinsfile`, `Dockerfile*`, `docker-compose.yml`, `docker-entrypoint.sh`,
+**Still pending.** Once Vercel has served production for long enough to trust it, remove
+the local-server deploy: `Jenkinsfile`, `Dockerfile*`, `docker-compose.yml`, `docker-entrypoint.sh`,
 `promtail.yml`, `.github/workflows/deploy.yml`, and the `prometheus_flask_exporter` /
 `psutil` / `gunicorn` requirements with `run.py`. Then `docker compose down -v` on the
 Pi and delete the Jenkins job.
