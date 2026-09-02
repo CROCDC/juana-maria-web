@@ -12,7 +12,7 @@ Until the DNS cutover the local-server deploy (`Jenkinsfile`, `docker-compose.ym
 | Concern | Local server (today) | Vercel |
 |---|---|---|
 | App | gunicorn in Docker | one Vercel Function (`wsgi.py`) |
-| Static assets | Flask, from `app/static` | CDN, from `public/static` |
+| Static assets | Flask, from `public/static` | CDN, from `public/static` |
 | Database | Postgres container | Neon (Vercel Marketplace) |
 | Editor uploads | `LocalFileStore` on a volume | Vercel Blob (`app/media_store.py`) |
 | Migrations | `docker-entrypoint.sh` at boot | GitHub Actions, before the prod deploy |
@@ -26,14 +26,26 @@ psutil instrumentation only makes sense for a long-lived process.
 
 ### Static assets
 
-`vercel.json`'s `buildCommand` copies `app/static` into `public/static` at build
-time. Vercel serves `public/**` from the CDN and only falls through to the function
-for paths that do not exist there, so `/static/...` URLs are unchanged and never
-touch Python. `app/static` also stays in the function bundle: `app/factory.py` reads
-`img/manifest.json` from it to build the responsive `<picture>` sets, and stats each
-file for the `?v=` cache-buster.
+The assets live in `public/static/` — not `app/static/`, which is where the rest of
+the house style puts them. Vercel serves `public/**` from its CDN and falls through
+to the function only for paths that are not there, so `/static/...` URLs are unchanged
+and never reach Python. Flask's `static_folder` points at the same directory, so Docker
+and local dev serve the identical tree.
 
-`public/` is generated, not committed.
+Two things follow from `public/` being served by the CDN but **left out of the function
+bundle**, both verified against a real deployment:
+
+- `app/content/image_manifest.json` holds the intrinsic sizes and variant widths of the
+  photos. It lives inside the package, not next to the images it describes, because a
+  manifest the function cannot read degrades every `<picture>` to the macro's guessed
+  dimensions — wrong `width`/`height` (layout shift) and a missing 1920w candidate.
+- The `?v=` cache-buster cannot use file mtimes there. On Vercel it falls back to the
+  deployment id (`_static_version` in `app/factory.py`); everywhere else the per-file
+  mtime is used exactly as before. Without it, `immutable` would pin a returning
+  visitor to the previous deploy's CSS for a year.
+
+A build command that generates `public/` does **not** work: Vercel collects the static
+files from the uploaded source, before the build runs.
 
 ### Uploads
 

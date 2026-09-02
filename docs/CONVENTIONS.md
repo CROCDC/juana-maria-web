@@ -134,7 +134,10 @@ Static files like `robots.txt` and `sitemap.xml` can be served with `send_from_d
 ## 7. Static Files and Templates
 
 - **Templates:** `app/templates/`. One template per main page (e.g. `index.html`, `projects.html`, `work_with_us.html`). Use Jinja2; global variables (e.g. `current_year`) come from context processors in the factory.
-- **Static:** `app/static/`. Organize as:
+- **Static:** `app/static/`. **This project deviates:** the assets live in `public/static/`
+  at the repo root, because Vercel only serves files from `public/**` through its CDN —
+  see [deploy/VERCEL.md](deploy/VERCEL.md). The layout below is otherwise unchanged.
+  Organize as:
   - `static/css/` — stylesheets.
   - `static/js/` — scripts.
   - `static/assets/` — images, favicons, OG images.

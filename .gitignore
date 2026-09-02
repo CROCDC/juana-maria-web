@@ -24,7 +24,7 @@ tests/screenshots/
 
 # Media uploaded from the content editor (flask-sitecopy). Written at runtime under
 # the served static folder; user content, kept on a volume, never committed.
-app/static/sitecopy-uploads/
+public/static/sitecopy-uploads/
 
 # Source media library (raw/working assets). NOT served by the app (it uses
 # app/static/), and too large for GitHub (a single file exceeds the 100MB limit).
@@ -32,8 +32,8 @@ app/static/sitecopy-uploads/
 media/
 media-web/
 
-# Vercel: `public/static` is a build-time copy of app/static (see vercel.json's
-# buildCommand) so the CDN serves the assets instead of the function; .vercel holds
-# the local project link.
-public/
+# Vercel project link.
 .vercel/
+
+# VERCEL_OIDC_TOKEN, written by `vercel link`.
+.env.local

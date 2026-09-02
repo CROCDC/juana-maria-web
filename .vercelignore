@@ -8,7 +8,7 @@
 .env.local
 
 # Source media library and working assets: gitignored, hundreds of MB, and never
-# served by the app (it serves app/static). A CLI deploy uploads the working
+# served by the app (it serves public/static). A CLI deploy uploads the working
 # directory, not the git tree, so they have to be excluded here too.
 media/
 media-web/
@@ -38,7 +38,7 @@ promtail.yml
 __pycache__/
 *.py[cod]
 *.db
-app/static/sitecopy-uploads/
+public/static/sitecopy-uploads/
 tests/screenshots/
 .claude/
 .DS_Store
