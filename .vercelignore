@@ -26,14 +26,6 @@ migrations/
 instance/
 .venv/
 
-# Local-server deploy, which stays alive alongside Vercel.
-Dockerfile
-Dockerfile.promtail
-docker-compose.yml
-docker-entrypoint.sh
-Jenkinsfile
-promtail.yml
-
 # Runtime and editor leftovers.
 __pycache__/
 *.py[cod]

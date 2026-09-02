@@ -4,14 +4,13 @@ The site runs as a single Vercel Function (Python/WSGI) fronted by Vercel's CDN,
 deployed from GitHub Actions — the same shape as `mg-nautica-wix`. This document
 covers the pieces that are specific to a Flask app.
 
-`velaclasica.ar` has been cut over to Vercel (2026-09-02). The local-server deploy
-(`Jenkinsfile`, `docker-compose.yml`, `.github/workflows/deploy.yml`) is still wired and
-still redeploys on every push to `main` — kept as a rollback target until Vercel has run
-production long enough to trust. See [After the cutover](#after-the-cutover).
+`velaclasica.ar` was cut over to Vercel on 2026-09-02, and the local-server deploy
+(Jenkins + docker-compose on the Pi) was removed the same day. Vercel is now the only
+place this site runs. See [What was removed](#what-was-removed) for what went with it.
 
 ## What runs where
 
-| Concern | Local server (today) | Vercel |
+| Concern | Before (local server, removed) | Now |
 |---|---|---|
 | App | gunicorn in Docker | one Vercel Function (`wsgi.py`) |
 | Static assets | Flask, from `public/static` | CDN, from `public/static` |
@@ -23,16 +22,16 @@ production long enough to trust. See [After the cutover](#after-the-cutover).
 ### Entrypoint
 
 Vercel's Flask preset loads a top-level `app` from a fixed set of filenames;
-`wsgi.py` is the one this repo uses. `run.py` stays for Docker — its Prometheus and
-psutil instrumentation only makes sense for a long-lived process.
+`wsgi.py` is the one this repo uses. `run.py` is only the local dev server
+(`python run.py` on :7017).
 
 ### Static assets
 
 The assets live in `public/static/` — not `app/static/`, which is where the rest of
 the house style puts them. Vercel serves `public/**` from its CDN and falls through
 to the function only for paths that are not there, so `/static/...` URLs are unchanged
-and never reach Python. Flask's `static_folder` points at the same directory, so Docker
-and local dev serve the identical tree.
+and never reach Python. Flask's `static_folder` points at the same directory, so local
+dev serves the identical tree.
 
 Two things follow from `public/` being served by the CDN but **left out of the function
 bundle**, both verified against a real deployment:
@@ -99,19 +98,13 @@ variable unset — dev, Docker — the local store is used and nothing changes.
    vercel env add FLASK_DEBUG production           # 0
    ```
 
-   `SECRET_KEY` and `ADMIN_PASSWORD` must match the values Infisical serves to the
-   Docker deploy, or admin sessions break at the cutover.
+   At the cutover these had to match the values the Docker deploy was serving, or every
+   admin session would have been invalidated.
 
-5. **Migrate the data** from the local server (small: a handful of rows):
-
-   ```bash
-   ssh ssh.nexttech.com.ar \
-     'docker exec juana-maria-web-db pg_dump -U juana_maria_web -d juana_maria_web \
-        --data-only --no-owner --no-privileges' > juana-maria-data.sql
-   psql "$NEON_DATABASE_URL" -f juana-maria-data.sql
-   ```
-
-   Run the migrations first (`FLASK_APP=wsgi.py flask db upgrade`) so the schema exists.
+5. **Migrate the data** — done at the cutover, kept here as the recipe. Run the
+   migrations first (`FLASK_APP=wsgi.py flask db upgrade`) so the schema exists, then
+   load a `pg_dump --data-only --no-owner --no-privileges --exclude-table=alembic_version`
+   of the old database (`alembic_version` is excluded because the migrations set it).
 
 6. **Wire GitHub Actions.** Turn **off** Vercel's own Git integration for the project
    so deploys happen only from Actions, then:
@@ -167,14 +160,31 @@ vercel certs issue velaclasica.ar                    # cert exists before any tr
 # now repoint the record, and delete the TXT afterwards
 ```
 
-**Rollback** is the same edit in reverse: both records back to the `cfargotunnel.com`
-target above, proxied. The Docker stack on the Pi keeps running and keeps redeploying
-from `main`, so the old site stays one DNS change away.
+`juana-maria.nexttech.com.ar` — the internal alias the site answered on before it had
+its own domain — was **not** moved. It has no record of its own: it resolves through the
+shared `*.nexttech.com.ar` wildcard that points at the Cloudflare Tunnel, so with the Pi's
+containers gone it now falls through to nginx-proxy's default like any other subdomain
+that does not exist. It stays listed in `REDIRECT_HOSTS`, which is inert while nothing
+routes it here; giving it an explicit CNAME to Vercel would make that 301 work again.
 
-## After the cutover
+**Rollback is no longer one DNS change.** While the Pi still ran, pointing both records
+back at `cfargotunnel.com` (proxied) restored the old site instantly. That stack is gone,
+so recovering it now means rebuilding it from this repo's history.
 
-**Still pending.** Once Vercel has served production for long enough to trust it, remove
-the local-server deploy: `Jenkinsfile`, `Dockerfile*`, `docker-compose.yml`, `docker-entrypoint.sh`,
-`promtail.yml`, `.github/workflows/deploy.yml`, and the `prometheus_flask_exporter` /
-`psutil` / `gunicorn` requirements with `run.py`. Then `docker compose down -v` on the
-Pi and delete the Jenkins job.
+## What was removed
+
+The local-server deploy was torn down on 2026-09-02: `Jenkinsfile`, `Dockerfile`,
+`Dockerfile.promtail`, `docker-compose.yml`, `docker-entrypoint.sh`, `promtail.yml`,
+`.dockerignore`, `.github/workflows/deploy.yml` and `scripts/local-docker-debug.sh`, plus
+the `gunicorn` / `prometheus_flask_exporter` / `psutil` requirements that only served the
+long-lived process. On the Pi: the four containers, both volumes, the images and the
+Jenkins job.
+
+What went with it, and has no replacement here:
+
+- **Prometheus metrics** (`/metrics`, the app gauges, the postgres exporter) and the
+  Grafana dashboard that read them.
+- **Loki logs** via promtail. Vercel's own runtime logs are the only logs now, and they
+  are short-lived — anything worth keeping has to be shipped somewhere.
+- **The nightly-ish safety of a second copy of the database.** Neon is now the only copy;
+  its own backups are the whole story.
