@@ -1,7 +1,7 @@
 # Vercel deploy: PR -> Preview, main -> Production.
 #
 # Inert until enabled: set the repo variable DEPLOY_ENABLED=true and the secrets
-# VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID / DATABASE_URL. Turn OFF Vercel's
+# VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID / MIGRATIONS_DATABASE_URL. Turn OFF Vercel's
 # own Git integration for the project so deploys happen only from here.
 name: Vercel
 
@@ -32,10 +32,14 @@ jobs:
       # to hang `flask db upgrade` on the way docker-entrypoint.sh does. Production
       # only — a preview build shares the production database, so migrating from a
       # PR would move the live schema ahead of the live code.
+      #
+      # MIGRATIONS_DATABASE_URL is Neon's UNPOOLED endpoint: DDL wants a real session,
+      # which the pooler (PgBouncer, transaction mode) does not guarantee. The app
+      # itself keeps using the pooled DATABASE_URL from the project's environment.
       - name: Apply database migrations
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
           FLASK_APP: wsgi.py
         run: |
           pip install -r requirements.txt

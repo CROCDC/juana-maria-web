@@ -64,8 +64,24 @@ variable unset — dev, Docker — the local store is used and nothing changes.
    vercel link            # creates .vercel/project.json (gitignored)
    ```
 
-2. **Provision Postgres.** Vercel dashboard → Storage → Neon. Attaching it to the
-   project injects `DATABASE_URL` automatically. Use the **pooled** connection string.
+2. **Provision Postgres** with `vercel integration add neon` (accepting the marketplace
+   terms in the browser is a one-time manual step). Attaching it injects `DATABASE_URL`
+   (Neon's pooled endpoint) and `DATABASE_URL_UNPOOLED` (the direct one).
+
+   Then give the database a `search_path`, **once**, over the unpooled endpoint:
+
+   ```sql
+   ALTER DATABASE neondb SET search_path = "$user", public;
+   ALTER ROLE neondb_owner SET search_path = "$user", public;
+   ```
+
+   A fresh Neon database hands the pooler an **empty** `search_path`, so every
+   unqualified query (`select … from site_texts`) fails with `relation does not exist`
+   while the direct endpoint works fine — migrations succeed and the app then 500s.
+   Neon's pooler rejects `options=-c search_path=…` at connection startup, so this
+   cannot be fixed from `SQLALCHEMY_ENGINE_OPTIONS`; the database-level default is the
+   fix, and PgBouncer's backends pick it up when they start. **Re-apply it if the
+   database is ever re-provisioned** — nothing in this repo can.
 
 3. **Provision Blob.** Vercel dashboard → Storage → Blob. Attaching it injects
    `BLOB_READ_WRITE_TOKEN`.
@@ -103,7 +119,7 @@ variable unset — dev, Docker — the local store is used and nothing changes.
    gh secret set VERCEL_TOKEN        # vercel.com/account/tokens
    gh secret set VERCEL_ORG_ID       # from .vercel/project.json
    gh secret set VERCEL_PROJECT_ID   # from .vercel/project.json
-   gh secret set DATABASE_URL        # the Neon connection string
+   gh secret set MIGRATIONS_DATABASE_URL   # DATABASE_URL_UNPOOLED, for `flask db upgrade`
    ```
 
 ## How a deploy works
@@ -111,8 +127,9 @@ variable unset — dev, Docker — the local store is used and nothing changes.
 - **`ci.yml`** — mypy plus the pytest suite (testcontainers Postgres + Playwright) on
   every push and PR. Set it as a required check on `main`.
 - **`vercel.yml`** — PR → Preview, `main` → Production. The production path runs
-  `flask db upgrade` against `DATABASE_URL` before deploying; previews do not, because
-  they share the production database and would move the schema ahead of the live code.
+  `flask db upgrade` against `MIGRATIONS_DATABASE_URL` before deploying; previews do not,
+  because they share the production database and would move the schema ahead of the live
+  code.
 
 ## DNS cutover
 
