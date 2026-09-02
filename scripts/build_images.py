@@ -10,7 +10,10 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "media-web" / "photos"
-OUT = ROOT / "app" / "static" / "img"
+OUT = ROOT / "public" / "static" / "img"
+# The app reads this from inside the package, not from the served asset tree
+# (see app/factory.py:_load_image_manifest).
+MANIFEST = ROOT / "app" / "content" / "image_manifest.json"
 
 WIDTHS = [1920, 1280, 960, 640, 420]
 WEBP_QUALITY = 80
@@ -183,7 +186,7 @@ def main() -> None:
         dims = process(src_rel, out_key)
         manifest[out_key] = dims
         print(f"  {out_key:32s} {dims['w']}x{dims['h']}")
-    (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    MANIFEST.write_text(json.dumps(manifest, indent=2))
     print(f"\nWrote {len(manifest)} images -> {OUT}")
 
 

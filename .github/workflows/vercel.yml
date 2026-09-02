@@ -1,0 +1,63 @@
+# Vercel deploy: PR -> Preview, main -> Production.
+#
+# Inert until enabled: set the repo variable DEPLOY_ENABLED=true and the secrets
+# VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID / MIGRATIONS_DATABASE_URL. Turn OFF Vercel's
+# own Git integration for the project so deploys happen only from here.
+name: Vercel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # Migrations run here, not in the app: a Vercel Function has no startup hook
+      # to hang `flask db upgrade` on the way docker-entrypoint.sh does. Production
+      # only — a preview build shares the production database, so migrating from a
+      # PR would move the live schema ahead of the live code.
+      #
+      # MIGRATIONS_DATABASE_URL is Neon's UNPOOLED endpoint: DDL wants a real session,
+      # which the pooler (PgBouncer, transaction mode) does not guarantee. The app
+      # itself keeps using the pooled DATABASE_URL from the project's environment.
+      - name: Apply database migrations
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
+          FLASK_APP: wsgi.py
+        run: |
+          pip install -r requirements.txt
+          python -m flask db upgrade
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      # Vercel builds server-side (not --prebuilt) so the project's own environment
+      # variables are present at build time.
+      - name: Deploy production
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          url=$(vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Deployed to production: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy preview
+        if: github.event_name == 'pull_request'
+        run: |
+          url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"

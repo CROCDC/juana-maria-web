@@ -1,0 +1,44 @@
+# Vercel reads THIS file instead of .gitignore once it exists, so everything the
+# repo keeps out of git has to be repeated here — a CLI deploy uploads the working
+# directory as it stands.
+
+# Secrets. Production values come from the project's environment variables; a local
+# .env must never reach the bundle.
+.env
+.env.local
+
+# Source media library and working assets: gitignored, hundreds of MB, and never
+# served by the app (it serves public/static). A CLI deploy uploads the working
+# directory, not the git tree, so they have to be excluded here too.
+media/
+media-web/
+
+# Test suite and tooling: not reachable at runtime, and Vercel bundles every
+# file it can reach.
+tests/
+research/
+docs/
+scripts/
+migrations/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+instance/
+.venv/
+
+# Local-server deploy, which stays alive alongside Vercel.
+Dockerfile
+Dockerfile.promtail
+docker-compose.yml
+docker-entrypoint.sh
+Jenkinsfile
+promtail.yml
+
+# Runtime and editor leftovers.
+__pycache__/
+*.py[cod]
+*.db
+public/static/sitecopy-uploads/
+tests/screenshots/
+.claude/
+.DS_Store

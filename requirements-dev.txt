@@ -1,0 +1,9 @@
+# Test and type-checking tooling. Kept out of requirements.txt because Vercel
+# installs that file into the function bundle — playwright and testcontainers
+# alone would add tens of MB of code the site never runs.
+-r requirements.txt
+
+pytest==8.2.2
+playwright==1.62.0
+testcontainers[postgres]==4.14.2
+mypy==1.11.2

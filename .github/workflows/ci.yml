@@ -1,0 +1,25 @@
+# Quality gate — must pass before merging to main (set as a required check in the
+# repo's branch protection settings).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      # The suite drives a real browser against a live server (tests/conftest.py).
+      - run: python -m playwright install --with-deps chromium
+      - run: python -m mypy
+      # `python -m` so the repo root lands on sys.path and `app` imports.
+      - run: python -m pytest
