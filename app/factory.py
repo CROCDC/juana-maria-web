@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from flask import Flask, Response, current_app, redirect, request, session, url_for
+from flask import Flask, Response, current_app, g, redirect, request, session, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -172,6 +172,10 @@ def create_app() -> Flask:
         if request.path.startswith("/admin") or session.get("is_admin"):
             return response
         if "Cache-Control" in response.headers or "Set-Cookie" in response.headers:
+            return response
+        # Rendered while Postgres was unreachable, so its nav and its very existence
+        # are a guess. Caching it would keep the outage on screen after it ended.
+        if g.get("visibility_degraded"):
             return response
         response.headers["Cache-Control"] = (
             f"public, max-age=0, s-maxage={cdn_seconds}, "

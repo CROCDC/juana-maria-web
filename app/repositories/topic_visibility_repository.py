@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple
 
+from flask import g, has_app_context
+
 from app.content.topics import DEFAULT_ENABLED
 from app.factory import db
 from app.models import TopicVisibility
@@ -50,6 +52,10 @@ class TopicVisibilityRepository:
         try:
             return Visibility(TopicVisibilityRepository.get_state_map(), True)
         except Exception as exc:  # noqa: BLE001 — staying up is the whole point
+            # Flagged so the response never reaches the CDN: a degraded page cached for
+            # an hour would outlive the outage that produced it.
+            if has_app_context():
+                g.visibility_degraded = True
             if _last_known is not None:
                 log.warning("topic visibility from cache (%s)", exc)
                 return Visibility(_last_known, False)

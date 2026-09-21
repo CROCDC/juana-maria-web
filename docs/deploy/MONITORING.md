@@ -95,6 +95,9 @@ Vary: Cookie
 - `stale-while-revalidate` (`CDN_STALE_SECONDS`) — nobody ever waits for a refresh.
 - `Vary: Cookie`, and the header is skipped entirely for `/admin` and for a logged-in
   admin, so an editor's page is never handed to a visitor.
+- Skipped too for a page rendered while Postgres was unreachable: its nav — and
+  whether it should exist at all — is a guess, and caching it for an hour would keep
+  the outage on screen long after it ended.
 
 **The trade-off:** after a content edit, visitors can see the old page for up to
 `CDN_CACHE_SECONDS`. The admin, being logged in, always sees their own change

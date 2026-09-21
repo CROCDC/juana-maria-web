@@ -248,3 +248,10 @@ def test_admin_still_fails_loudly_during_the_outage(
     client.post("/admin/login", data={"password": ADMIN_PW})
     with pytest.raises(RuntimeError):
         client.get("/admin/topics")
+
+
+def test_a_degraded_page_is_not_handed_to_the_cdn(client: Any, db_down: None) -> None:
+    """Caching an outage's output would keep it on screen long after it ended."""
+    resp = client.get("/crew-program")
+    assert resp.status_code == 200
+    assert "s-maxage" not in resp.headers.get("Cache-Control", "")
