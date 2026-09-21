@@ -12,8 +12,10 @@ on:
         required: true
         type: string
     secrets:
+      # Not required: an unset key must make this a no-op, not a job that refuses to
+      # start. An alerting path that fails closed is the failure it exists to report.
       RESEND_API_KEY:
-        required: true
+        required: false
 
 jobs:
   mail:
@@ -30,8 +32,8 @@ jobs:
         # interpolated into a shell string, where a quote in a branch name would
         # silently produce an invalid request.
         run: |
-          if [ -z "$RESEND_API_KEY" ] || [ -z "$ALERT_EMAIL_TO" ]; then
-            echo "RESEND_API_KEY or ALERT_EMAIL_TO unset — nothing sent" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$ALERT_EMAIL_TO" ] || [ -z "$ALERT_EMAIL_FROM" ]; then
+            echo "RESEND_API_KEY / ALERT_EMAIL_* unset — nothing sent" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           python - <<'PY'
