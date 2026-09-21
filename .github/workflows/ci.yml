@@ -23,3 +23,18 @@ jobs:
       - run: python -m mypy
       # `python -m` so the repo root lands on sys.path and `app` imports.
       - run: python -m pytest
+
+  # Only on main: a red PR is part of the workflow, a red main is an incident.
+  alert:
+    needs: test
+    if: failure() && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/alert.yml
+    with:
+      subject: "🔴 juana-maria-web: CI falló en main"
+      body: |
+        El quality gate falló en main, así que lo que está por deployarse no pasó los tests.
+
+        Commit: ${{ github.sha }}
+        Run:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

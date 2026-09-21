@@ -61,3 +61,20 @@ jobs:
         run: |
           url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  # A failed production deploy leaves the previous one serving, so the site stays up
+  # and nothing about it is visible from outside — hence the mail.
+  alert:
+    needs: deploy
+    if: failure() && github.event_name != 'pull_request'
+    uses: ./.github/workflows/alert.yml
+    with:
+      subject: "🔴 juana-maria-web: el deploy a producción falló"
+      body: |
+        Falló el deploy a producción (migraciones o el deploy en sí). Producción sigue
+        sirviendo el deployment anterior.
+
+        Commit: ${{ github.sha }}
+        Run:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

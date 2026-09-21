@@ -1,0 +1,57 @@
+# Watchdog for the live site: mails ALERT_EMAIL_TO when velaclasica.ar stops working.
+#
+# It runs here rather than on Vercel because a check that lives inside the deploy
+# cannot report that the deploy is down. See docs/deploy/MONITORING.md.
+name: Monitor
+
+on:
+  schedule:
+    # Shallow: is the function serving at all? Cheap — the pages it fetches are
+    # served by the CDN and never reach Postgres.
+    - cron: "*/15 * * * *"
+    # Deep: a real database round-trip plus Neon's quota. Hourly on purpose. A Neon
+    # compute stays awake for five minutes after each query, so polling the database
+    # every 15 minutes would burn roughly 60 of the free plan's 100 CU-hours a month
+    # — the watchdog would be causing the outage it is there to catch.
+    - cron: "37 * * * *"
+  workflow_dispatch:
+    inputs:
+      deep:
+        description: "Include the database round-trip and the Neon quota"
+        type: boolean
+        default: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Carries the up/down flag between runs, so an outage mails once instead of
+      # every 15 minutes. A fresh key per run with a prefix restore-key is how you
+      # get a writable cache entry out of actions/cache.
+      - uses: actions/cache@v4
+        with:
+          path: .monitor-state
+          key: monitor-state-${{ github.run_id }}
+          restore-keys: monitor-state-
+
+      - name: Run checks
+        env:
+          MONITOR_BASE_URL: https://velaclasica.ar
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL_TO: ${{ vars.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ vars.ALERT_EMAIL_FROM }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -o pipefail
+          deep=""
+          if [ "${{ github.event.schedule }}" = "37 * * * *" ] || [ "${{ inputs.deep }}" = "true" ]; then
+            deep="--deep"
+          fi
+          python scripts/monitor.py $deep | tee -a "$GITHUB_STEP_SUMMARY"

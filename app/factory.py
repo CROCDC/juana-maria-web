@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from flask import Flask, Response, current_app, redirect, request, url_for
+from flask import Flask, Response, current_app, redirect, request, session, url_for
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -49,6 +49,13 @@ def _static_version() -> str | None:
         if value:
             return "".join(c for c in value if c.isalnum())[:32]
     return None
+
+def _int_env(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, str(default)))
+    except ValueError:
+        return default
+
 
 def canonical_root() -> str:
     base = current_app.config.get("CANONICAL_URL")
@@ -142,6 +149,35 @@ def create_app() -> Flask:
     def add_static_cache_headers(response: Response) -> Response:
         if request.path.startswith("/static/"):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+    # Public HTML is cached at Vercel's CDN so ordinary traffic — crawlers above all —
+    # stops reaching the function, and through it Postgres. What keeps Neon's CU-hour
+    # bill down is the length of the idle gaps, not the number of queries per render:
+    # a compute only suspends after five idle minutes, and the 2026-09-21 outage was
+    # the quota running out. `stale-while-revalidate` means no visitor ever waits for
+    # the refresh, so the only cost of a long window is how stale an edit can look.
+    cdn_seconds = _int_env("CDN_CACHE_SECONDS", 3600)
+    cdn_stale = _int_env("CDN_STALE_SECONDS", 86400)
+
+    @app.after_request
+    def add_cdn_cache_headers(response: Response) -> Response:
+        if cdn_seconds <= 0 or request.method not in ("GET", "HEAD"):
+            return response
+        if response.status_code != 200 or response.mimetype != "text/html":
+            return response
+        # An admin's page carries the editor's markup and their session; a shared copy
+        # of it would leak to visitors, and a shared copy of the public page would hide
+        # the edit they just made.
+        if request.path.startswith("/admin") or session.get("is_admin"):
+            return response
+        if "Cache-Control" in response.headers or "Set-Cookie" in response.headers:
+            return response
+        response.headers["Cache-Control"] = (
+            f"public, max-age=0, s-maxage={cdn_seconds}, "
+            f"stale-while-revalidate={cdn_stale}"
+        )
+        response.vary.add("Cookie")
         return response
 
     static_version = _static_version()
@@ -244,14 +280,13 @@ def create_app() -> Flask:
     def inject_topics() -> dict[str, object]:
         from app.content.topics import HOME_TOPIC, TOGGLEABLE_TOPICS
 
-        try:
-            from app.repositories.topic_visibility_repository import (
-                TopicVisibilityRepository,
-            )
+        from app.repositories.topic_visibility_repository import (
+            TopicVisibilityRepository,
+        )
 
-            state = TopicVisibilityRepository.get_state_map()
-        except Exception:  # noqa: BLE001 — never let nav rendering 500 the page
-            state = {}
+        # `published_state` already survives a database outage, and unlike the bare
+        # `except` it used to have, it keeps the nav populated instead of emptying it.
+        state = TopicVisibilityRepository.published_state().state
 
         published = [HOME_TOPIC] + [
             t for t in TOGGLEABLE_TOPICS if state.get(t.slug, False)
@@ -289,6 +324,7 @@ def create_app() -> Flask:
     # would ship the editor's private-use markers to every visitor as empty boxes.
     # `tests/test_sitecopy_pipeline.py` fails if these two lines ever swap.
     from app.admin_auth import is_logged_in, login_required
+    from app.alerts import install_error_alerts
     from app.content.copy_registry import REGISTRY
 
     # Uploads for the image/video fields (flask-sitecopy 0.4): the editor can upload a
@@ -333,5 +369,8 @@ def create_app() -> Flask:
         # Content-Security-Policy, so `text_sizes_css="link"` is not needed.
         text_sizes=True,
     )
+
+    # Last, so the signal covers every route and extension registered above.
+    install_error_alerts(app)
 
     return app

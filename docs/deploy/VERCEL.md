@@ -17,7 +17,7 @@ place this site runs. See [What was removed](#what-was-removed) for what went wi
 | Database | Postgres container | Neon (Vercel Marketplace) |
 | Editor uploads | `LocalFileStore` on a volume | Vercel Blob (`app/media_store.py`) |
 | Migrations | `docker-entrypoint.sh` at boot | GitHub Actions, before the prod deploy |
-| Metrics / logs | Prometheus + Loki | Vercel observability only |
+| Metrics / logs | Prometheus + Loki | Vercel observability, plus the alerts in [MONITORING.md](MONITORING.md) |
 
 ### Entrypoint
 
@@ -185,6 +185,9 @@ What went with it, and has no replacement here:
 - **Prometheus metrics** (`/metrics`, the app gauges, the postgres exporter) and the
   Grafana dashboard that read them.
 - **Loki logs** via promtail. Vercel's own runtime logs are the only logs now, and they
-  are short-lived — anything worth keeping has to be shipped somewhere.
+  are short-lived — anything worth keeping has to be shipped somewhere. What replaced
+  the *alerting* half of that stack, after the 2026-09-21 database outage went
+  unnoticed for hours, is [MONITORING.md](MONITORING.md): mail on an unhandled
+  exception, a scheduled synthetic check, and a warning before Neon's quota runs out.
 - **The nightly-ish safety of a second copy of the database.** Neon is now the only copy;
   its own backups are the whole story.

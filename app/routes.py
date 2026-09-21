@@ -1,5 +1,6 @@
 import hmac
 import json
+import os
 import re
 from collections.abc import Callable
 from datetime import date
@@ -16,12 +17,13 @@ from flask import (
     session,
     url_for,
 )
+from sqlalchemy import text as sa_text
 from werkzeug.wrappers import Response as WerkzeugResponse
 
 from app.admin_auth import login_required as _login_required
 from app.content.rumbos import RUMBOS_BY_KEY
 from app.content.topics import TOGGLEABLE_TOPICS, Topic, get_topic
-from app.factory import canonical_root
+from app.factory import canonical_root, db
 from app.repositories.crew_application_repository import CrewApplicationRepository
 from app.repositories.topic_visibility_repository import TopicVisibilityRepository
 
@@ -48,8 +50,9 @@ def _validate_crew_form(data: dict[str, str]) -> dict[str, str]:
 def _make_topic_view(topic: Topic) -> Callable[[], str]:
 
     def view() -> str:
-        if not TopicVisibilityRepository.is_enabled(topic.slug):
-            abort(404)
+        published = TopicVisibilityRepository.published_state()
+        if not published.state.get(topic.slug, False):
+            abort(404 if published.authoritative else 503)
         return render_template(topic.template, topic=topic)
 
     return view
@@ -68,8 +71,11 @@ def register_routes(app: Flask) -> None:
     @app.route("/crew-program", methods=["GET", "POST"], endpoint="topic_crew_program")
     def crew_program() -> Any:
         topic = get_topic(CREW_SLUG)
-        if topic is None or not TopicVisibilityRepository.is_enabled(CREW_SLUG):
+        published = TopicVisibilityRepository.published_state()
+        if topic is None:
             abort(404)
+        if not published.state.get(CREW_SLUG, False):
+            abort(404 if published.authoritative else 503)
 
         errors: dict[str, str] = {}
         if request.method == "POST":
@@ -191,7 +197,7 @@ def register_routes(app: Flask) -> None:
     @app.route("/sitemap.xml")
     def sitemap() -> Response:
         root = canonical_root()
-        state = TopicVisibilityRepository.get_state_map()
+        state = TopicVisibilityRepository.published_state().state
         locs = [root]
         locs += [
             f"{root.rstrip('/')}{t.path}"
@@ -211,6 +217,50 @@ def register_routes(app: Flask) -> None:
         )
         return Response(body, mimetype="application/xml")
 
+    @app.route("/healthz")
+    def healthz() -> tuple[Response, int]:
+        """What `scripts/monitor.py` polls: is this deploy actually serving the site?
+
+        The database round-trip is the point. During the 2026-09-21 Neon outage `/`
+        still answered 200 — its DB reads are wrapped in a `try` so the nav degrades
+        instead of 500ing — while every other page was down, so a check that only
+        looked at the home page would have reported the site healthy for hours.
+
+        `?db=0` answers without touching Postgres. A Neon compute suspends after five
+        idle minutes, so a frequent deep poll keeps it awake and bills the CU-hours
+        that caused the outage in the first place; see docs/deploy/MONITORING.md.
+        """
+        checks: dict[str, str] = {"app": "ok"}
+        status = 200
+
+        if request.args.get("db") != "0":
+            try:
+                db.session.execute(sa_text("select 1"))
+                TopicVisibilityRepository.get_state_map()
+                checks["db"] = "ok"
+            except Exception as exc:  # noqa: BLE001 — the report IS the error
+                checks["db"] = f"{type(exc).__name__}: {exc}"[:400]
+                status = 503
+
+        payload = {
+            "status": "ok" if status == 200 else "error",
+            "checks": checks,
+            "deploy": os.environ.get("VERCEL_DEPLOYMENT_ID", "local"),
+        }
+        response = Response(json.dumps(payload), mimetype="application/json")
+        # The CDN must never answer this: a cached "ok" is a monitor that cannot fail.
+        response.headers["Cache-Control"] = "no-store"
+        return response, status
+
     @app.errorhandler(404)
     def not_found(_error: object) -> tuple[str, int]:
         return render_template("404.html"), 404
+
+    @app.errorhandler(503)
+    def unavailable(_error: object) -> tuple[str, int, dict[str, str]]:
+        """Served when the database is down and this page's visibility is unknown.
+
+        A 404 here would tell Google the page is gone; a 503 with `Retry-After` is the
+        status that means "ask again shortly" and costs nothing in the index.
+        """
+        return render_template("503.html"), 503, {"Retry-After": "300"}

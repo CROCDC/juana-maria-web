@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Volvemos en un momento — {{ t('global.brand') }}{% endblock %}
+
+{% block head_extra %}<meta name="robots" content="noindex" />{% endblock %}
+
+{% block content %}
+<section class="section surface-dark error-page">
+  <div class="wrap error-page__inner">
+    <p class="error-page__code" aria-hidden="true">503</p>
+    <h1 class="h-display">Volvemos en un momento</h1>
+    <p class="lede">Esta página no está disponible temporalmente. Probá de nuevo en unos minutos.</p>
+    <a class="btn btn--solid" href="{{ url_for('index') }}">Ir al inicio</a>
+  </div>
+</section>
+{% endblock %}

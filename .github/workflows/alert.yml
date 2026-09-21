@@ -1,0 +1,55 @@
+# One mail, called by the other workflows from a job that only runs on failure.
+# Kept reusable so CI and the deploy report through the same path as the watchdog.
+name: Alert
+
+on:
+  workflow_call:
+    inputs:
+      subject:
+        required: true
+        type: string
+      body:
+        required: true
+        type: string
+    secrets:
+      RESEND_API_KEY:
+        required: true
+
+jobs:
+  mail:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL_TO: ${{ vars.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ vars.ALERT_EMAIL_FROM }}
+          SUBJECT: ${{ inputs.subject }}
+          BODY: ${{ inputs.body }}
+        # Through python so the subject and body are JSON-escaped rather than
+        # interpolated into a shell string, where a quote in a branch name would
+        # silently produce an invalid request.
+        run: |
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$ALERT_EMAIL_TO" ]; then
+            echo "RESEND_API_KEY or ALERT_EMAIL_TO unset — nothing sent" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY'
+          import json, os, urllib.request
+          payload = json.dumps({
+              "from": os.environ["ALERT_EMAIL_FROM"],
+              "to": [a.strip() for a in os.environ["ALERT_EMAIL_TO"].split(",") if a.strip()],
+              "subject": os.environ["SUBJECT"],
+              "text": os.environ["BODY"],
+          }).encode()
+          req = urllib.request.Request(
+              "https://api.resend.com/emails",
+              data=payload,
+              headers={
+                  "Authorization": f"Bearer {os.environ['RESEND_API_KEY']}",
+                  "Content-Type": "application/json",
+              },
+          )
+          with urllib.request.urlopen(req, timeout=15) as resp:
+              print("sent:", resp.status)
+          PY
