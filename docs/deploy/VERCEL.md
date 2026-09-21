@@ -17,7 +17,7 @@ place this site runs. See [What was removed](#what-was-removed) for what went wi
 | Database | Postgres container | Neon (Vercel Marketplace) |
 | Editor uploads | `LocalFileStore` on a volume | Vercel Blob (`app/media_store.py`) |
 | Migrations | `docker-entrypoint.sh` at boot | GitHub Actions, before the prod deploy |
-| Metrics / logs | Prometheus + Loki | Vercel observability only |
+| Metrics / logs | Prometheus + Loki | Vercel observability, plus the alerts in [MONITORING.md](MONITORING.md) |
 
 ### Entrypoint
 
@@ -126,6 +126,19 @@ variable unset — dev, Docker — the local store is used and nothing changes.
   because they share the production database and would move the schema ahead of the live
   code.
 
+  That ordering means **a database that is down blocks the deploy**, which is usually
+  right and occasionally backwards: during the 2026-09-21 Neon outage the change that
+  would have brought the public site back could not ship, because the migration step
+  could not connect. Hence `workflow_dispatch` with `skip_migrations`:
+
+  ```bash
+  gh workflow run vercel.yml -f skip_migrations=true
+  ```
+
+  Only for a diff that adds no migration — it deploys code against whatever schema is
+  live, which is exactly what you want for a fix that does not touch the schema and
+  exactly what you do not want for anything else.
+
 ## DNS cutover
 
 `velaclasica.ar` is on Cloudflare. Before the cutover both the apex and `www` were
@@ -185,6 +198,9 @@ What went with it, and has no replacement here:
 - **Prometheus metrics** (`/metrics`, the app gauges, the postgres exporter) and the
   Grafana dashboard that read them.
 - **Loki logs** via promtail. Vercel's own runtime logs are the only logs now, and they
-  are short-lived — anything worth keeping has to be shipped somewhere.
+  are short-lived — anything worth keeping has to be shipped somewhere. What replaced
+  the *alerting* half of that stack, after the 2026-09-21 database outage went
+  unnoticed for hours, is [MONITORING.md](MONITORING.md): mail on an unhandled
+  exception, a scheduled synthetic check, and a warning before Neon's quota runs out.
 - **The nightly-ish safety of a second copy of the database.** Neon is now the only copy;
   its own backups are the whole story.

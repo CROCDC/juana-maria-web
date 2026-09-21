@@ -10,6 +10,15 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      skip_migrations:
+        description: >-
+          Deploy without running `flask db upgrade`. For shipping a change that
+          touches no schema while the database is unreachable — a suspended Neon
+          compute fails the migration step and blocks a deploy that would otherwise
+          have brought the site back. Only use it when the diff adds no migration.
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -23,10 +32,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      # No `cache: pip` here, unlike ci.yml: pip only runs in the migrations step,
+      # which is skipped on a PR — and setup-python's post-run step now FAILS the job
+      # when it finds no ~/.cache/pip to save, turning every green preview red.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
 
       # Migrations run here, not in the app: a Vercel Function has no startup hook
       # to hang `flask db upgrade` on the way docker-entrypoint.sh does. Production
@@ -37,7 +48,9 @@ jobs:
       # which the pooler (PgBouncer, transaction mode) does not guarantee. The app
       # itself keeps using the pooled DATABASE_URL from the project's environment.
       - name: Apply database migrations
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: >-
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          && inputs.skip_migrations != true
         env:
           DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
           FLASK_APP: wsgi.py
@@ -61,3 +74,20 @@ jobs:
         run: |
           url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  # A failed production deploy leaves the previous one serving, so the site stays up
+  # and nothing about it is visible from outside — hence the mail.
+  alert:
+    needs: deploy
+    if: failure() && github.event_name != 'pull_request'
+    uses: ./.github/workflows/alert.yml
+    with:
+      subject: "🔴 juana-maria-web: el deploy a producción falló"
+      body: |
+        Falló el deploy a producción (migraciones o el deploy en sí). Producción sigue
+        sirviendo el deployment anterior.
+
+        Commit: ${{ github.sha }}
+        Run:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
