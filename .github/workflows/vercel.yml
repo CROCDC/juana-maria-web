@@ -32,10 +32,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      # No `cache: pip` here, unlike ci.yml: pip only runs in the migrations step,
+      # which is skipped on a PR — and setup-python's post-run step now FAILS the job
+      # when it finds no ~/.cache/pip to save, turning every green preview red.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
 
       # Migrations run here, not in the app: a Vercel Function has no startup hook
       # to hang `flask db upgrade` on the way docker-entrypoint.sh does. Production
