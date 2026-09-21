@@ -147,7 +147,7 @@ Secrets live in the Vercel project (for the app) and in the repo (for Actions).
 |---|---|---|
 | `RESEND_API_KEY` | Vercel env + GitHub **secret** | Resend API key |
 | `ALERT_EMAIL_TO` | Vercel env + GitHub **variable** | recipients, comma-separated |
-| `ALERT_EMAIL_FROM` | Vercel env + GitHub **variable** | a sender on a domain verified in Resend |
+| `ALERT_EMAIL_FROM` | Vercel env + GitHub **variable** | a sender on a domain verified in Resend, or `onboarding@resend.dev` |
 | `ALERT_THROTTLE_SECONDS` | Vercel env (optional) | default 900 |
 | `CDN_CACHE_SECONDS` | Vercel env (optional) | default 3600; `0` disables CDN caching |
 | `CDN_STALE_SECONDS` | Vercel env (optional) | default 86400 |
@@ -167,6 +167,15 @@ gh variable set ALERT_EMAIL_TO   --body 'crocdc1999@gmail.com'
 gh variable set ALERT_EMAIL_FROM --body 'alertas@velaclasica.ar'
 gh variable set NEON_PROJECT_ID  --body 'gentle-silence-96921676'
 ```
+
+### Starting without a verified domain
+
+`ALERT_EMAIL_FROM=onboarding@resend.dev` is Resend's shared sandbox sender and needs
+no DNS at all, but it only delivers **to the address the Resend account was opened
+with**; anything else comes back `403 validation_error`. Since the one recipient here
+is the account owner, that is a working configuration, not a stopgap — verify
+`velaclasica.ar` in Resend when the alerts should come from the site's own domain, or
+when a second recipient is added.
 
 Everything degrades to a no-op when unset: `send_alert()` logs a warning and returns
 `False`, and the quota check prints that it was skipped. The site never fails because
