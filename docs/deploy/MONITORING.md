@@ -86,11 +86,20 @@ every request simply never lets the database sleep.
 So public HTML is cached at Vercel's CDN (`add_cdn_cache_headers`, `app/factory.py`):
 
 ```
-Cache-Control: public, max-age=0, s-maxage=3600, stale-while-revalidate=86400
-Vercel-Cache-Tag: site-html
+Cache-Control:            public, max-age=0, must-revalidate
+CDN-Cache-Control:        public, s-maxage=86400, stale-while-revalidate=604800
+Vercel-CDN-Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+Vercel-Cache-Tag:         site-html
 ```
 
-- `max-age=0` — browsers revalidate, so a visitor never holds a stale copy.
+Three headers because they answer three different caches, and the split is not
+cosmetic. **`Cache-Control` alone did not work.** With `max-age=0` sitting next to
+`s-maxage` in the one header, production stayed `x-vercel-cache: MISS` on every single
+request — while static files on the same domain cached normally, which is what proved
+the problem was the header and not the CDN. `Vercel-CDN-Cache-Control` takes precedence
+for Vercel's cache, so the browser keeps its `max-age=0` (revalidate every time)
+without that zero having any say over the shared copy.
+
 - `s-maxage` (`CDN_CACHE_SECONDS`) — how long the CDN serves without asking the
   function. This is the dial that decides the Neon bill.
 - `stale-while-revalidate` (`CDN_STALE_SECONDS`) — nobody ever waits for a refresh.
@@ -116,12 +125,19 @@ public render — and it adds it in `save_session`, which runs *after* every
 already carry `Vercel-Cache-Tag` — the tag being the record of the app having decided
 the bytes do not depend on the cookie.
 
-If a page you expect to be cached comes back `x-vercel-cache: MISS`, check `Vary`
-first:
+### Checking it still works
+
+The only proof is production. `x-vercel-cache` must reach `HIT` on a repeat request:
 
 ```bash
-curl -sI https://velaclasica.ar/ | grep -iE 'x-vercel-cache|vary|cache-control'
+for i in 1 2 3; do curl -sI https://velaclasica.ar/ | grep -i x-vercel-cache; done
 ```
+
+If it is `MISS` every time, the caching is doing nothing at all and every visit is
+waking Postgres. Two causes have already cost a day each: a `Vary` naming `Cookie`,
+and `s-maxage` carried only in `Cache-Control`. Compare against a static asset —
+`/static/css/admin.css` should `HIT` on the second request. If the static file caches
+and the page does not, the problem is in the page's headers, not the CDN.
 
 ### Purging on write
 

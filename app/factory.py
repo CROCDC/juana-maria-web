@@ -220,10 +220,17 @@ def create_app() -> Flask:
         # are a guess. Caching it would keep the outage on screen after it ended.
         if g.get("visibility_degraded"):
             return response
-        response.headers["Cache-Control"] = (
-            f"public, max-age=0, s-maxage={cdn_seconds}, "
-            f"stale-while-revalidate={cdn_stale}"
-        )
+        shared = f"public, s-maxage={cdn_seconds}, stale-while-revalidate={cdn_stale}"
+        # Three headers, because they answer three different caches. Vercel's own
+        # examples for caching a function response use the targeted pair, and the
+        # single-header form did NOT work here: with `Cache-Control` alone carrying
+        # `max-age=0, s-maxage=…`, production stayed `x-vercel-cache: MISS` on every
+        # request while static files cached normally. `Vercel-CDN-Cache-Control` takes
+        # precedence for Vercel's CDN, so the browser can keep `max-age=0` — revalidate
+        # every time — without that zero having any say over the shared copy.
+        response.headers["Cache-Control"] = "public, max-age=0, must-revalidate"
+        response.headers["CDN-Cache-Control"] = shared
+        response.headers["Vercel-CDN-Cache-Control"] = shared
         # NOT `Vary: Cookie`. Vercel refuses to cache any response whose Vary names a
         # high-cardinality header, recording "Vary key denied" — it silently turned
         # every page here into a permanent MISS, so nothing was cached at all between
