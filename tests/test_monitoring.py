@@ -84,10 +84,14 @@ def test_home_page_alone_would_not_have_caught_the_outage(
 
 def test_public_page_is_cacheable_by_the_cdn(client: Any) -> None:
     headers = client.get("/").headers
-    assert "s-maxage=" in headers["Cache-Control"]
-    assert "stale-while-revalidate=" in headers["Cache-Control"]
+    # The targeted header is the one Vercel's CDN obeys; `Cache-Control` alone, with
+    # max-age=0 next to s-maxage, left production a permanent MISS.
+    assert "s-maxage=" in headers["Vercel-CDN-Cache-Control"]
+    assert "stale-while-revalidate=" in headers["Vercel-CDN-Cache-Control"]
+    assert "s-maxage=" in headers["CDN-Cache-Control"]
     # Browsers must revalidate, or an edit stays invisible to whoever already visited.
-    assert "max-age=0" in headers["Cache-Control"]
+    assert headers["Cache-Control"] == "public, max-age=0, must-revalidate"
+    assert "s-maxage" not in headers["Cache-Control"]
     assert headers["Vercel-Cache-Tag"] == "site-html"
 
 
@@ -106,17 +110,17 @@ def test_editor_and_preview_urls_are_never_cacheable(client: Any) -> None:
     """Vercel's cache key ignores cookies, so a cached anonymous `?edit=1` would hand
     the admin a page with no editor in it."""
     for url in ("/?edit=1", "/?preview=1"):
-        assert "s-maxage" not in client.get(url).headers.get("Cache-Control", "")
+        assert "Vercel-CDN-Cache-Control" not in client.get(url).headers
 
 
 def test_admin_pages_are_not_cacheable(client: Any) -> None:
-    assert "s-maxage" not in client.get("/admin/login").headers.get("Cache-Control", "")
+    assert "Vercel-CDN-Cache-Control" not in client.get("/admin/login").headers
 
 
 def test_logged_in_admin_response_is_not_cacheable(client: Any, app_instance: Any) -> None:
     app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
     client.post("/admin/login", data={"password": ADMIN_PW})
-    assert "s-maxage" not in client.get("/").headers.get("Cache-Control", "")
+    assert "Vercel-CDN-Cache-Control" not in client.get("/").headers
 
 
 def test_static_assets_keep_their_immutable_header(client: Any) -> None:
@@ -272,7 +276,7 @@ def test_a_degraded_page_is_not_handed_to_the_cdn(client: Any, db_down: None) ->
     """Caching an outage's output would keep it on screen long after it ended."""
     resp = client.get("/crew-program")
     assert resp.status_code == 200
-    assert "s-maxage" not in resp.headers.get("Cache-Control", "")
+    assert "Vercel-CDN-Cache-Control" not in resp.headers
 
 
 # ---------------------------------------------------------------- purga del CDN
