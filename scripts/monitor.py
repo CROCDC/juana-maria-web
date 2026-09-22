@@ -113,7 +113,7 @@ def check_health(base: str, *, deep: bool) -> list[str]:
     return [f"/healthz respondió {status or 'sin conexión'} — {detail or 'sin detalle'}"]
 
 
-def check_neon_quota() -> list[str]:
+def check_neon_quota() -> tuple[list[str], str | None]:
     """Warn before Neon's quota suspends the compute, which is what took the site down.
 
     Free plan allowances are not returned by the API (the `quota` object only holds
@@ -122,7 +122,7 @@ def check_neon_quota() -> list[str]:
     api_key, project_id = env("NEON_API_KEY"), env("NEON_PROJECT_ID")
     if not (api_key and project_id):
         print("  (Neon quota check skipped: NEON_API_KEY/NEON_PROJECT_ID unset)")
-        return []
+        return [], None
 
     def get(path: str) -> dict[str, Any]:
         req = urllib.request.Request(
@@ -137,7 +137,10 @@ def check_neon_quota() -> list[str]:
         project = get(f"/projects/{project_id}").get("project", {})
         branches = get(f"/projects/{project_id}/branches").get("branches", [])
     except (urllib.error.URLError, OSError, ValueError) as exc:
-        return [f"no se pudo leer la cuota de Neon: {exc}"]
+        # Not a quota warning: saying "close to the limit" when the truth is "could not
+        # ask" is how an alert channel stops being believed.
+        print(f"!! no se pudo leer la cuota de Neon: {exc}")
+        return [], f"no se pudo leer la cuota de Neon: {exc}"
 
     warn_at = env_float("NEON_QUOTA_WARN_PCT", 80) / 100
     used = {
@@ -164,7 +167,7 @@ def check_neon_quota() -> list[str]:
     if warnings:
         period = project.get("consumption_period_end", "?")
         warnings.append(f"El período de consumo cierra el {period}.")
-    return warnings
+    return warnings, None
 
 
 # -------------------------------------------------------------------------- state
@@ -203,7 +206,7 @@ def main() -> int:
 
     print(f"== {'deep' if args.deep else 'shallow'} check of {base}")
     failures = check_health(base, deep=args.deep) + check_pages(base, paths)
-    quota_warnings = check_neon_quota() if args.deep else []
+    quota_warnings, quota_error = check_neon_quota() if args.deep else ([], None)
 
     state = read_state(state_file)
     was_down = bool(state.get("down"))
@@ -235,10 +238,18 @@ def main() -> int:
     # Quota warnings are throttled to one a day: nothing gets better between runs, and
     # the point is to be reminded before the reset, not every hour.
     today = time.strftime("%Y-%m-%d", time.gmtime())
-    if quota_warnings and state.get("quota_warned_on") != today:
-        if send_mail(f"🟠 {base}: cuota de Neon cerca del límite", "\n".join(quota_warnings)):
+    subject, body = None, ""
+    if quota_warnings:
+        subject = f"🟠 {base}: cuota de Neon cerca del límite"
+        body = "\n".join(quota_warnings)
+    elif quota_error:
+        subject = f"🟠 {base}: no se pudo leer la cuota de Neon"
+        body = f"{quota_error}\n\nEl chequeo de cuota quedó ciego; el resto del monitor sigue andando."
+
+    if subject and state.get("quota_warned_on") != today:
+        if send_mail(subject, body):
             state["quota_warned_on"] = today
-    elif not quota_warnings and args.deep:
+    elif not subject and args.deep:
         state.pop("quota_warned_on", None)
 
     write_state(state_file, state)
