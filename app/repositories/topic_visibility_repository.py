@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple
 
-from flask import g, has_app_context
+from flask import g, has_app_context, has_request_context, request
 
 from app.content.topics import DEFAULT_ENABLED
 from app.factory import db
@@ -17,6 +17,14 @@ log = logging.getLogger(__name__)
 # that one emptied the nav. Per process, so a cold start during an outage falls through
 # to DEFAULT_ENABLED; it is a cache for staying up, never a source of truth.
 _last_known: dict[str, bool] | None = None
+
+# Seeding used to run at import, which opened a Postgres connection on every cold
+# start — waking Neon for five minutes even to serve a request that never needed the
+# database. It is only ever useful against an empty table, so it waits for one.
+_seed_attempted = False
+
+
+_REQUEST_CACHE_KEY = "_topic_visibility"
 
 
 class Visibility(NamedTuple):
@@ -36,8 +44,12 @@ class TopicVisibilityRepository:
     def get_state_map() -> dict[str, bool]:
         """The stored map. Raises if the database is unreachable — callers that must
         not lie (the admin panel, any write) need to hear about it."""
-        global _last_known
+        global _last_known, _seed_attempted
         state = {row.slug: row.enabled for row in TopicVisibility.query.all()}
+        if not state and not _seed_attempted:
+            _seed_attempted = True
+            TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
+            state = {row.slug: row.enabled for row in TopicVisibility.query.all()}
         _last_known = state
         return state
 
@@ -49,8 +61,16 @@ class TopicVisibilityRepository:
         The trade-off is deliberate: a topic that was switched off can reappear during
         an outage, which beats 500ing every page on the site.
         """
+        # Memoised per request: the nav asks once and the view asks again. Two SELECTs
+        # keep the compute awake exactly as long as one does, but during an outage the
+        # second call is a second connection TIMEOUT the visitor waits through.
+        if has_request_context():
+            cached = getattr(request, _REQUEST_CACHE_KEY, None)
+            if cached is not None:
+                return cached
+
         try:
-            return Visibility(TopicVisibilityRepository.get_state_map(), True)
+            answer = Visibility(TopicVisibilityRepository.get_state_map(), True)
         except Exception as exc:  # noqa: BLE001 — staying up is the whole point
             # Flagged so the response never reaches the CDN: a degraded page cached for
             # an hour would outlive the outage that produced it.
@@ -58,9 +78,14 @@ class TopicVisibilityRepository:
                 g.visibility_degraded = True
             if _last_known is not None:
                 log.warning("topic visibility from cache (%s)", exc)
-                return Visibility(_last_known, False)
-            log.warning("topic visibility from defaults (%s)", exc)
-            return Visibility(dict(DEFAULT_ENABLED), False)
+                answer = Visibility(_last_known, False)
+            else:
+                log.warning("topic visibility from defaults (%s)", exc)
+                answer = Visibility(dict(DEFAULT_ENABLED), False)
+
+        if has_request_context():
+            setattr(request, _REQUEST_CACHE_KEY, answer)
+        return answer
 
     @staticmethod
     def set_enabled(slug: str, enabled: bool) -> None:

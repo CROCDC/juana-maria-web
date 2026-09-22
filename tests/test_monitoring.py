@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from app import alerts
+from app import alerts, factory
 from app.repositories import topic_visibility_repository
 from app.repositories.topic_visibility_repository import TopicVisibilityRepository
 
@@ -88,7 +88,25 @@ def test_public_page_is_cacheable_by_the_cdn(client: Any) -> None:
     assert "stale-while-revalidate=" in headers["Cache-Control"]
     # Browsers must revalidate, or an edit stays invisible to whoever already visited.
     assert "max-age=0" in headers["Cache-Control"]
-    assert "Cookie" in headers["Vary"]
+    assert headers["Vercel-Cache-Tag"] == "site-html"
+
+
+def test_cacheable_page_does_not_vary_on_cookie(client: Any) -> None:
+    """Vercel caches nothing whose Vary names Cookie, and Flask adds it behind our back
+    the moment anything reads the session — which flask-sitecopy does on every page."""
+    assert "Cookie" not in client.get("/").headers.get("Vary", "")
+
+
+def test_uncacheable_page_keeps_flasks_vary_on_cookie(client: Any) -> None:
+    """The header is only dropped where we chose to share the response."""
+    assert "Cookie" in client.get("/admin/login").headers.get("Vary", "")
+
+
+def test_editor_and_preview_urls_are_never_cacheable(client: Any) -> None:
+    """Vercel's cache key ignores cookies, so a cached anonymous `?edit=1` would hand
+    the admin a page with no editor in it."""
+    for url in ("/?edit=1", "/?preview=1"):
+        assert "s-maxage" not in client.get(url).headers.get("Cache-Control", "")
 
 
 def test_admin_pages_are_not_cacheable(client: Any) -> None:
@@ -255,3 +273,46 @@ def test_a_degraded_page_is_not_handed_to_the_cdn(client: Any, db_down: None) ->
     resp = client.get("/crew-program")
     assert resp.status_code == 200
     assert "s-maxage" not in resp.headers.get("Cache-Control", "")
+
+
+# ---------------------------------------------------------------- purga del CDN
+
+
+@pytest.fixture()
+def purges(monkeypatch: pytest.MonkeyPatch) -> list[bool]:
+    calls: list[bool] = []
+    monkeypatch.setattr(factory, "invalidate_site_cache", lambda: calls.append(True))
+    return calls
+
+
+def test_saving_topics_purges_the_cdn(
+    client: Any, app_instance: Any, purges: list[bool]
+) -> None:
+    """Without this, a long s-maxage would hide the admin's change for an hour."""
+    app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
+    client.post("/admin/login", data={"password": ADMIN_PW})
+    assert client.post("/admin/topics", data={"enabled": ["seminars"]}).status_code == 302
+    assert purges == [True]
+
+
+def test_logging_in_does_not_purge(
+    client: Any, app_instance: Any, purges: list[bool]
+) -> None:
+    app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
+    client.post("/admin/login", data={"password": ADMIN_PW})
+    assert purges == []
+
+
+def test_reading_the_admin_does_not_purge(
+    client: Any, app_instance: Any, purges: list[bool]
+) -> None:
+    app_instance.config["ADMIN_PASSWORD"] = ADMIN_PW
+    client.post("/admin/login", data={"password": ADMIN_PW})
+    client.get("/admin/topics")
+    assert purges == []
+
+
+def test_a_public_form_post_does_not_purge(client: Any, purges: list[bool]) -> None:
+    """The crew form writes to the database but changes nothing a visitor can see."""
+    client.post("/crew-program", data={"full_name": "", "email": ""})
+    assert purges == []

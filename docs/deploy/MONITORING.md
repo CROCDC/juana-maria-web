@@ -79,33 +79,74 @@ Compute and transfer reset with the billing period; storage is a standing limit.
 The alert tells you the quota is about to blow; it does not stop it. What does is
 keeping traffic off the function, because **every HTML render queries Postgres**
 (sitecopy's texts, plus topic visibility) and every query buys another five minutes of
-awake compute. With crawlers hitting the site around the clock, an origin that renders
-on every request simply never lets the database sleep.
+awake compute — Neon's scale-to-zero delay is fixed at five minutes and cannot be
+lowered. With crawlers hitting the site around the clock, an origin that renders on
+every request simply never lets the database sleep.
 
 So public HTML is cached at Vercel's CDN (`add_cdn_cache_headers`, `app/factory.py`):
 
 ```
 Cache-Control: public, max-age=0, s-maxage=3600, stale-while-revalidate=86400
-Vary: Cookie
+Vercel-Cache-Tag: site-html
 ```
 
 - `max-age=0` — browsers revalidate, so a visitor never holds a stale copy.
 - `s-maxage` (`CDN_CACHE_SECONDS`) — how long the CDN serves without asking the
   function. This is the dial that decides the Neon bill.
 - `stale-while-revalidate` (`CDN_STALE_SECONDS`) — nobody ever waits for a refresh.
-- `Vary: Cookie`, and the header is skipped entirely for `/admin` and for a logged-in
-  admin, so an editor's page is never handed to a visitor.
-- Skipped too for a page rendered while Postgres was unreachable: its nav — and
-  whether it should exist at all — is a guess, and caching it for an hour would keep
-  the outage on screen long after it ended.
+- `Vercel-Cache-Tag` — what a save purges. See below.
 
-**The trade-off:** after a content edit, visitors can see the old page for up to
-`CDN_CACHE_SECONDS`. The admin, being logged in, always sees their own change
-immediately. Lower it if that hour is too long; know that you are buying freshness
-with CU-hours.
+The header is skipped entirely for `/admin`, for a logged-in admin, for `?edit=` and
+`?preview=` URLs, and for a page rendered while Postgres was unreachable — its nav,
+and whether it should exist at all, is a guess that would outlive the outage.
 
-`/healthz` always answers `Cache-Control: no-store` — a cached "ok" is a monitor that
-cannot fail.
+### The `Vary: Cookie` trap
+
+**Vercel caches nothing whose `Vary` names `Cookie`.** It treats it as a
+high-cardinality header, serves the response normally, and records `Vary key denied`
+in the runtime logs. The first version of this caching shipped with `Vary: Cookie` set
+deliberately, so between 2026-09-21 and 2026-09-22 the hit rate was exactly zero:
+every visit reached the function and woke Postgres, which is the opposite of the point.
+
+Removing our own header is not enough. **Flask adds `Vary: Cookie` by itself** the
+moment anything reads the session, and flask-sitecopy checks `is_logged_in` on every
+public render — and it adds it in `save_session`, which runs *after* every
+`after_request`, so it cannot be stripped from there. `CacheableSessionInterface`
+(`app/factory.py`) overrides that method and drops the header from responses that
+already carry `Vercel-Cache-Tag` — the tag being the record of the app having decided
+the bytes do not depend on the cookie.
+
+If a page you expect to be cached comes back `x-vercel-cache: MISS`, check `Vary`
+first:
+
+```bash
+curl -sI https://velaclasica.ar/ | grep -iE 'x-vercel-cache|vary|cache-control'
+```
+
+### Purging on write
+
+A long `s-maxage` and a working content editor are in direct conflict: the edit sits
+behind the cache until it expires. `purge_cdn_after_admin_write` resolves it — any
+successful non-GET under `/admin` (except signing in and out) calls
+`invalidate_site_cache()` (`app/cdn.py`), which marks the tag stale through
+`POST /v1/edge-cache/invalidate-by-tags`. Invalidate, not delete: the next visitor is
+served the stale copy instantly while the refresh happens behind them.
+
+It hangs off the request rather than a save hook because the editor's writes belong to
+flask-sitecopy, which exposes none — and this way a topic toggle, a copy edit and an
+image upload are all covered by one rule.
+
+With `VERCEL_PURGE_TOKEN` set, raising `CDN_CACHE_SECONDS` costs nothing but a longer
+wait for the rare visitor who is mid-page when an edit lands. Without it, the purge is
+a logged no-op and `CDN_CACHE_SECONDS` is the full staleness window — which is why the
+default stays at an hour.
+
+### What a render still costs
+
+`published_state()` is memoised per request, so the nav and the view share one SELECT
+instead of two. Seeding no longer runs at import: it used to open a connection on
+every cold start, waking the compute for five minutes even to serve a request that
+needed no data, and it is only ever useful against an empty table.
 
 ## Surviving the outage instead of reporting it
 
@@ -153,6 +194,9 @@ Secrets live in the Vercel project (for the app) and in the repo (for Actions).
 | `ALERT_EMAIL_FROM` | Vercel env + GitHub **variable** | a sender on a domain verified in Resend, or `onboarding@resend.dev` |
 | `ALERT_THROTTLE_SECONDS` | Vercel env (optional) | default 900 |
 | `CDN_CACHE_SECONDS` | Vercel env (optional) | default 3600; `0` disables CDN caching |
+| `VERCEL_PURGE_TOKEN` | Vercel env | a Vercel token with cache-purge rights; without it a save cannot clear the CDN |
+| `VERCEL_PROJECT_ID` | Vercel env | the project the purge targets |
+| `VERCEL_TEAM_ID` | Vercel env | `team_P9lSJA4rEEdw6QU6DWiolk6Y` (vela-clasica) |
 | `CDN_STALE_SECONDS` | Vercel env (optional) | default 86400 |
 | `NEON_API_KEY` | GitHub **secret** | from the Neon console; the quota check is skipped without it |
 | `NEON_PROJECT_ID` | GitHub **variable** | also injected into Vercel by the integration |

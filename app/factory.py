@@ -1,15 +1,19 @@
 import json
 import os
 from datetime import date, datetime, timedelta, timezone
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from flask import Flask, Response, current_app, g, redirect, request, session, url_for
+from flask.sessions import SecureCookieSessionInterface
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sitecopy import FileStore, LocalFileStore, SiteCopy
 from werkzeug.wrappers import Response as WerkzeugResponse
+
+from app.cdn import SITE_TAG, invalidate_site_cache
 
 load_dotenv()
 
@@ -49,6 +53,41 @@ def _static_version() -> str | None:
         if value:
             return "".join(c for c in value if c.isalnum())[:32]
     return None
+
+
+class CacheableSessionInterface(SecureCookieSessionInterface):
+    """Drops `Vary: Cookie` from responses the app already decided are shareable.
+
+    Flask adds that header whenever anything so much as reads the session, and on a
+    public page something always does — flask-sitecopy checks `is_logged_in` on every
+    render. Vercel refuses to cache any response whose `Vary` names `Cookie` (it logs
+    "Vary key denied"), so the site was 100% cache MISS without this, and every visit
+    reached the function and woke Postgres.
+
+    Removing it is only safe because `add_cdn_cache_headers` tags a response solely
+    when it is anonymous, outside `/admin`, and free of `?edit=`/`?preview=` — i.e.
+    when the bytes genuinely do not depend on the cookie. The tag is that decision,
+    which is why it is the signal read here. Flask writes the session cookie in this
+    same method, after every `after_request` has run, so this is the first point where
+    both facts are known.
+    """
+
+    def save_session(self, app: Flask, session: Any, response: Response) -> None:  # type: ignore[override]
+        super().save_session(app, session, response)
+        if not response.headers.get("Vercel-Cache-Tag"):
+            return
+        # Rewritten by hand rather than through `response.vary`: that property builds a
+        # fresh HeaderSet on every access and only writes back from some of its mutators
+        # — `discard()` silently changes nothing at all.
+        vary = response.headers.get("Vary")
+        if not vary:
+            return
+        kept = [v.strip() for v in vary.split(",") if v.strip().lower() != "cookie"]
+        if kept:
+            response.headers["Vary"] = ", ".join(kept)
+        else:
+            del response.headers["Vary"]
+
 
 def _int_env(name: str, default: int) -> int:
     try:
@@ -121,6 +160,8 @@ def create_app() -> Flask:
     )
     app.config["ADMIN_PASSWORD"] = os.environ.get("ADMIN_PASSWORD")
 
+    app.session_interface = CacheableSessionInterface()
+
     app.config["CANONICAL_URL"] = os.environ.get("CANONICAL_URL")
     app.config["REDIRECT_HOSTS"] = {
         h.strip().lower()
@@ -166,10 +207,12 @@ def create_app() -> Flask:
             return response
         if response.status_code != 200 or response.mimetype != "text/html":
             return response
-        # An admin's page carries the editor's markup and their session; a shared copy
-        # of it would leak to visitors, and a shared copy of the public page would hide
-        # the edit they just made.
         if request.path.startswith("/admin") or session.get("is_admin"):
+            return response
+        # The editor's canvas and the draft preview. Both render differently for an
+        # admin than for anyone else, and Vercel's cache key ignores cookies — a cached
+        # anonymous copy under these URLs would hand the admin a page with no editor.
+        if "edit" in request.args or "preview" in request.args:
             return response
         if "Cache-Control" in response.headers or "Set-Cookie" in response.headers:
             return response
@@ -181,7 +224,32 @@ def create_app() -> Flask:
             f"public, max-age=0, s-maxage={cdn_seconds}, "
             f"stale-while-revalidate={cdn_stale}"
         )
-        response.vary.add("Cookie")
+        # NOT `Vary: Cookie`. Vercel refuses to cache any response whose Vary names a
+        # high-cardinality header, recording "Vary key denied" — it silently turned
+        # every page here into a permanent MISS, so nothing was cached at all between
+        # 2026-09-21 and 2026-09-22. Keeping the admin out of the shared cache is the
+        # job of the checks above, which is where it belonged anyway.
+        response.headers["Vercel-Cache-Tag"] = SITE_TAG
+        return response
+
+    @app.after_request
+    def purge_cdn_after_admin_write(response: Response) -> Response:
+        """Any successful write under /admin drops the CDN's copy of the public site.
+
+        Hung off the request rather than off a save hook because the editor's writes
+        belong to flask-sitecopy, which exposes none — and this way a topic toggle, a
+        copy edit and an image upload are all covered by one rule.
+        """
+        if request.method in ("GET", "HEAD", "OPTIONS"):
+            return response
+        if not request.path.startswith("/admin"):
+            return response
+        # Signing in and out changes nothing a visitor can see.
+        if request.path in ("/admin/login", "/admin/logout"):
+            return response
+        if response.status_code >= 400:
+            return response
+        invalidate_site_cache()
         return response
 
     static_version = _static_version()
@@ -297,25 +365,16 @@ def create_app() -> Flask:
         ]
         return {"nav_topics": published}
 
+    # Seeding used to run here. It opened a Postgres connection on EVERY cold start,
+    # which on a scale-to-zero database means five more minutes of awake compute even
+    # for a request that never needed data. It now waits until a read comes back empty
+    # (`TopicVisibilityRepository.get_state_map`), which is the only time it does
+    # anything — a seeded database never pays for it again.
     with app.app_context():
-        from sqlalchemy import inspect as sa_inspect
-
         from app import models  # noqa: F401
-        from app.content.topics import DEFAULT_ENABLED
-        from app.repositories.topic_visibility_repository import (
-            TopicVisibilityRepository,
-        )
         from app.routes import register_routes
 
         register_routes(app)
-        try:
-            if sa_inspect(db.engine).has_table("topic_visibility"):
-                TopicVisibilityRepository.ensure_seeded(DEFAULT_ENABLED)
-        except Exception:  # noqa: BLE001 — seeding is best-effort
-            # Serverless runs this on every cold start, so letting it raise would turn
-            # a transient database error into a 500 for the whole site, not just for
-            # the DB-backed nav (which already degrades on its own).
-            pass
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the HTML — it must
