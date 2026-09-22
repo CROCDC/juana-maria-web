@@ -13,6 +13,7 @@ the pattern of HIT vs MISS says which one matters.
 | `/__cache/length` | text/plain | bare `s-maxage` | explicit `Content-Length` |
 | `/__cache/html` | text/html | bare `s-maxage` | string, no template |
 | `/__cache/render` | text/html | bare `s-maxage` | the real template stack |
+| `/__cache/vjson` | text/plain | set by `vercel.json`, not by the view | none |
 
 Delete this module and its registration once the answer is in — see
 docs/deploy/MONITORING.md.
@@ -70,6 +71,17 @@ def register_cache_probes(app: Flask) -> None:
         response = _probe("<!doctype html><title>probe</title>probe\n", "text/html")
         response.headers["Cache-Control"] = _SHARED
         return response
+
+    @app.route("/__cache/vjson")
+    def probe_vercel_json() -> Response:
+        """Deliberately sets NO cache header: `vercel.json` carries it instead.
+
+        Every probe above proved the app cannot make Vercel store a response, however
+        the header is written. This asks whether the layer that writes it is the point
+        — a `vercel.json` rule is part of the deployment's routing table rather than
+        something the catch-all function returns, and that is a different code path.
+        """
+        return _probe(BODY, "text/plain")
 
     @app.route("/__cache/render")
     def probe_render() -> Response:
