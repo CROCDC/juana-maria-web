@@ -207,14 +207,19 @@ def create_app() -> Flask:
             return response
         if response.status_code != 200 or response.mimetype != "text/html":
             return response
-        if request.path.startswith("/admin") or session.get("is_admin"):
+        if request.path.startswith("/admin"):
+            return response
+        # Checked before the session is read, because reading it makes Flask attach
+        # `Vary: Cookie` — which then has to be stripped again in save_session. A view
+        # that set its own Cache-Control has opted out anyway.
+        if "Cache-Control" in response.headers or "Set-Cookie" in response.headers:
             return response
         # The editor's canvas and the draft preview. Both render differently for an
         # admin than for anyone else, and Vercel's cache key ignores cookies — a cached
         # anonymous copy under these URLs would hand the admin a page with no editor.
         if "edit" in request.args or "preview" in request.args:
             return response
-        if "Cache-Control" in response.headers or "Set-Cookie" in response.headers:
+        if session.get("is_admin"):
             return response
         # Rendered while Postgres was unreachable, so its nav and its very existence
         # are a guess. Caching it would keep the outage on screen after it ended.
@@ -379,9 +384,12 @@ def create_app() -> Flask:
     # anything — a seeded database never pays for it again.
     with app.app_context():
         from app import models  # noqa: F401
+        from app.cache_probe import register_cache_probes
         from app.routes import register_routes
 
         register_routes(app)
+        # Temporary. Remove with app/cache_probe.py once the CDN answer is in.
+        register_cache_probes(app)
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the HTML — it must
