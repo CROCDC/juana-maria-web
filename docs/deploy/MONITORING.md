@@ -49,12 +49,23 @@ watchdog fail for the same reasons as the thing it watches.
 
 - **Shallow** (`*/15`) — `/healthz?db=0` plus the public pages. Cheap: those pages are
   served by the CDN and never reach Postgres.
-- **Deep** (hourly) — `/healthz` with a real database round-trip, plus Neon's quota.
+- **Deep** (every four hours) — `/healthz` with a real database round-trip, plus
+  Neon's quota.
 
-The two frequencies are not an accident. **A Neon compute stays awake for five minutes
-after each query**, so a deep poll every 15 minutes would keep the database running
-about a third of the time — roughly 60 of the free plan's 100 CU-hours a month. The
-watchdog would be causing the outage it is there to catch.
+The two frequencies are a budget, not a preference. **A Neon compute stays awake for
+five minutes after each query**, so the deep check costs 5 minutes of awake compute
+every time it runs:
+
+| deep interval | awake/month | CU-hours at 0.25 CU | share of the Free plan's 100 |
+|---|---|---|---|
+| every 15 min | ~240 h | 60 | 60% |
+| hourly | 60 h | 15 | 15% |
+| **every 4 h** | 15 h | 3.75 | **~4%** |
+
+Hourly was the first setting and it spent a sixth of the whole budget watching. Four
+hours gives that back; the latency it costs is covered by the shallow check every 15
+minutes and by the app-side exception mail, which arrives within seconds of a real
+visitor hitting the failure.
 
 Up/down state rides in the Actions cache (`.monitor-state`), so an outage mails once
 and recovery mails once, instead of every 15 minutes for as long as it lasts.
