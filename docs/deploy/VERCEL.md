@@ -61,9 +61,37 @@ variable unset — dev, Docker — the local store is used and nothing changes.
 
    ```bash
    npm i -g vercel@latest
-   vercel login
-   vercel link            # creates .vercel/project.json (gitignored)
+   vercel login --global-config ~/.config/vercel/vela-clasica
+   vercel link --global-config ~/.config/vercel/vela-clasica   # writes .vercel/project.json (gitignored)
    ```
+
+   **Use a per-account credentials directory.** The CLI stores exactly one login,
+   globally, and this project lives under the `vela-clasica` team
+   (`velaclasica.ar@gmail.com`) while the same machine also logs into other Vercel
+   accounts. Whenever the global login belongs to another account, every command here
+   fails with a generic **`Not authorized`**, `forbidden`, or `User not found` — and
+   `vercel ls` unhelpfully suggests deleting `.vercel/`, which would only unlink the
+   project. This cost time three separate times on 2026-09-21/22.
+
+   `--global-config DIR` points the CLI at its own `auth.json`, so each project can
+   hold its own account and none of them clobber the others. Pass it on **every**
+   command for this repo:
+
+   ```bash
+   vercel logs <deployment> --global-config ~/.config/vercel/vela-clasica
+   vercel env ls production  --global-config ~/.config/vercel/vela-clasica
+   ```
+
+   To check which account is answering before blaming permissions:
+
+   ```bash
+   vercel whoami --global-config ~/.config/vercel/vela-clasica   # velaclasicaar-9927
+   ```
+
+   A token works too (`--token`, or `VERCEL_TOKEN`), but mind the scope: a
+   **project-scoped** token (`vcp_…`) can purge the cache and read and write the
+   project's environment variables, yet `vercel logs` and `vercel whoami` are
+   user-scoped and reject it with `User not found`.
 
 2. **Provision Postgres** with `vercel integration add neon` (accepting the marketplace
    terms in the browser is a one-time manual step). Attaching it injects `DATABASE_URL`
