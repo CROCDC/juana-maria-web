@@ -384,12 +384,9 @@ def create_app() -> Flask:
     # anything — a seeded database never pays for it again.
     with app.app_context():
         from app import models  # noqa: F401
-        from app.cache_probe import register_cache_probes
         from app.routes import register_routes
 
         register_routes(app)
-        # Temporary. Remove with app/cache_probe.py once the CDN answer is in.
-        register_cache_probes(app)
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the HTML — it must
