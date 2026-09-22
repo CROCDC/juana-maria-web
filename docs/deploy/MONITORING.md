@@ -125,19 +125,56 @@ public render — and it adds it in `save_session`, which runs *after* every
 already carry `Vercel-Cache-Tag` — the tag being the record of the app having decided
 the bytes do not depend on the cookie.
 
-### Checking it still works
+### Vercel does not cache this function's responses at all
 
-The only proof is production. `x-vercel-cache` must reach `HIT` on a repeat request:
+**Measured on 2026-09-22 and unresolved.** Every page is `x-vercel-cache: MISS`, on
+every request, so none of the caching below is actually doing anything today. It is
+kept because it is correct and costs nothing the day the platform side is fixed —
+but do not read the headers as evidence that caching works. Measure:
 
 ```bash
 for i in 1 2 3; do curl -sI https://velaclasica.ar/ | grep -i x-vercel-cache; done
 ```
 
-If it is `MISS` every time, the caching is doing nothing at all and every visit is
-waking Postgres. Two causes have already cost a day each: a `Vary` naming `Cookie`,
-and `s-maxage` carried only in `Cache-Control`. Compare against a static asset —
-`/static/css/admin.css` should `HIT` on the second request. If the static file caches
-and the page does not, the problem is in the page's headers, not the CDN.
+What the investigation ruled out, so nobody pays for it twice. Five probe routes
+(since removed, see the `cache_probe` module in the history of #15/#16) stripped one
+layer at a time off a normal page:
+
+| probe | result |
+|---|---|
+| `text/plain`, bare `s-maxage`, no session, no template | **MISS** |
+| the targeted `Vercel-CDN-Cache-Control` pair | **MISS** |
+| explicit `Content-Length` + `ETag` | **MISS** |
+| `text/html`, and the full template stack | **MISS** |
+| header set by `vercel.json` instead of the view | **MISS** |
+| a static file on the same domain (control) | MISS, then **HIT** |
+
+Also ruled out: the custom domain (`juana-maria-web.vercel.app` misses too), and
+Deployment Protection (disabled, measured, restored — no change).
+
+The minimal probe met every documented cacheability criterion: `GET`, `200`, 12 bytes,
+`text/plain`, `Content-Length` and `ETag` present, no `Set-Cookie`, no `Vary: Cookie`.
+And Vercel clearly *reads* the directive — the response comes back as
+`cache-control: public`, i.e. with `s-maxage` and `stale-while-revalidate` stripped,
+which is what it does when it consumes them. It processes the header and stores
+nothing. Runtime logs report `cacheReason: ""` — not `vary_key_denied`, not
+`set-cookie`, no reason at all.
+
+Two real bugs were found and fixed along the way, both of which would have prevented
+caching on their own, and neither of which was the cause: a `Vary: Cookie` (see below)
+and an ordering bug that made the app read the session before deciding whether the
+response was shareable.
+
+Conclusion: responses from the `@vercel/python` Flask function are not stored by the
+CDN, and no change inside this repository will alter that. The next step is Vercel
+support, with the probe table above as the evidence.
+
+**What to do instead**, since the goal was never caching for its own sake but keeping
+Neon's compute asleep: cache the database reads *in the process*. Every render queries
+Postgres — sitecopy reads `site_texts` once per request and caches only within that
+request — so a process-level cache with a TTL would let a warm instance serve many
+requests without touching the database, and the compute could suspend even while the
+function keeps running. That path depends on nothing outside this repository.
 
 ### Purging on write
 
