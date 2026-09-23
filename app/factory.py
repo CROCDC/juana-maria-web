@@ -10,10 +10,13 @@ from flask.sessions import SecureCookieSessionInterface
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sitecopy import FileStore, LocalFileStore, SiteCopy
+from sitecopy import FileStore, LocalFileStore, SiteCopy, SQLAlchemyStore
 from werkzeug.wrappers import Response as WerkzeugResponse
 
+from app import snapshot
+from app.alerts import send_alert
 from app.cdn import SITE_TAG, invalidate_site_cache
+from app.rebuild import request_rebuild, triggers_rebuild
 
 load_dotenv()
 
@@ -261,7 +264,27 @@ def create_app() -> Flask:
             return response
         if response.status_code >= 400:
             return response
+
         invalidate_site_cache()
+
+        # Publishing changes what an anonymous visitor is served, and that lives in the
+        # bundled snapshot — so it takes a deployment, not just a cache purge.
+        if triggers_rebuild(request.path) and not request_rebuild():
+            send_alert(
+                "[velaclasica.ar] se publicó contenido sin poder pedir el deploy",
+                "\n".join(
+                    [
+                        f"Ruta: {request.method} {request.path}",
+                        "",
+                        "El cambio está guardado en la base, pero el sitio público sigue",
+                        "sirviendo el snapshot del deploy anterior hasta que corra uno nuevo.",
+                        "",
+                        "Para publicarlo a mano:",
+                        "  gh workflow run vercel.yml",
+                    ]
+                ),
+                dedup_key="rebuild-dispatch-failed",
+            )
         return response
 
     static_version = _static_version()
@@ -384,9 +407,11 @@ def create_app() -> Flask:
     # anything — a seeded database never pays for it again.
     with app.app_context():
         from app import models  # noqa: F401
+        from app.cli import register_cli
         from app.routes import register_routes
 
         register_routes(app)
+        register_cli(app)
 
     # In-place content editor at /admin/content. Wired AFTER Compress (Flask runs
     # after_request hooks in reverse order, and the editor rewrites the HTML — it must
@@ -423,10 +448,20 @@ def create_app() -> Flask:
             "/static/sitecopy-uploads",
         )
 
+    # The overrides come from the bundled snapshot on a public render and from Postgres
+    # for the admin, so an ordinary page view costs no query — the whole point of
+    # app/snapshot.py. `db` is still passed: the media version history rides on it.
+    from app.snapshot_store import SnapshotTextStore
+
     sitecopy.init_app(
         app,
         registry=REGISTRY,
         db=db,
+        store=SnapshotTextStore(
+            SQLAlchemyStore(db),
+            texts=snapshot.texts,
+            is_admin=is_logged_in,
+        ),
         login_required=login_required,
         is_logged_in=is_logged_in,
         pages=_editor_pages,

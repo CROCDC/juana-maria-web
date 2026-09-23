@@ -37,3 +37,7 @@ media-web/
 
 # VERCEL_OIDC_TOKEN, written by `vercel link`.
 .env.local
+
+# Content snapshot: generated from the database at deploy time (app/snapshot.py).
+# Committing it would ship whatever was live when somebody last ran the command.
+app/content/snapshot.json
