@@ -4,22 +4,21 @@
 # cannot report that the deploy is down. See docs/deploy/MONITORING.md.
 name: Monitor
 
+# Scheduled runs are OFF. The site's uptime is watched by a separate service, and the
+# only check here that touches the database costs CU-hours on a scale-to-zero Postgres
+# — the exact resource this repo spent a week learning not to spend. Nothing here is
+# free enough to run on a timer for a signal that already arrives another way.
+#
+# What still watches production, at no cost to the database:
+#   - app/alerts.py mails the traceback of any unhandled exception, on real traffic
+#   - ci.yml and vercel.yml mail a red CI on main or a failed production deploy
+#   - the external uptime service the owner already runs
+#
+# Run this by hand when you want the deep answer — a real database round-trip and
+# Neon's quota — or after an incident:
+#
+#   gh workflow run monitor.yml -f deep=true
 on:
-  schedule:
-    # Shallow: is the function serving at all? Cheap — the pages it fetches are
-    # served by the CDN and never reach Postgres.
-    - cron: "*/15 * * * *"
-    # Deep: a real database round-trip plus Neon's quota. Every four hours, and the
-    # interval is a budget, not a preference. A Neon compute stays awake for five
-    # minutes after each query, so this check alone costs 5 min x 6/day = 15 h/month
-    # of awake compute, about 3.75 CU-hours. Hourly cost 15 CU-hours — 15% of the free
-    # plan's 100, spent watching. Every 15 minutes would cost 60, and the watchdog
-    # would be causing the outage it exists to catch.
-    #
-    # The latency this gives up is covered elsewhere: the shallow check above still
-    # runs every 15 minutes, and a database failure during real traffic mails within
-    # seconds through app/alerts.py.
-    - cron: "37 */4 * * *"
   workflow_dispatch:
     inputs:
       deep:
@@ -57,7 +56,7 @@ jobs:
         run: |
           set -o pipefail
           deep=""
-          if [ "${{ github.event.schedule }}" = "37 */4 * * *" ] || [ "${{ inputs.deep }}" = "true" ]; then
+          if [ "${{ inputs.deep }}" = "true" ]; then
             deep="--deep"
           fi
           python scripts/monitor.py $deep | tee -a "$GITHUB_STEP_SUMMARY"
