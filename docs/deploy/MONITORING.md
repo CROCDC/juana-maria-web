@@ -26,7 +26,7 @@ pointed at the home page would have reported the site healthy the entire time.
 | Signal | Where it runs | What it catches | Latency |
 |---|---|---|---|
 | Unhandled exception | the app (`app/alerts.py`) | anything that 500s a real request, with the traceback | immediate, while there is traffic |
-| Synthetic check | GitHub Actions (`.github/workflows/monitor.yml`) | the site being down with nobody on it, including a deploy that cannot boot | 15 min (shallow) / 1 h (deep) |
+| Synthetic check | GitHub Actions (`.github/workflows/monitor.yml`) | the site being down with nobody on it, including a deploy that cannot boot | **on demand only** — see below |
 | Pipeline failure | `ci.yml` / `vercel.yml` → `alert.yml` | a red CI on `main`, a failed production deploy | immediate |
 
 ### Unhandled exceptions
@@ -41,45 +41,51 @@ same error from every route, and keying on the URL would mail once per page. The
 throttle lives in the function instance's memory, so Vercel running several instances
 multiplies it — the bound is "a handful per outage", not exactly one.
 
-### Synthetic checks
+### Synthetic checks — scheduled runs are OFF
 
 `scripts/monitor.py`, stdlib-only and self-contained on purpose: importing the app
 package would drag in Flask, SQLAlchemy and a `DATABASE_URL`, and would make the
 watchdog fail for the same reasons as the thing it watches.
 
-- **Shallow** (`*/15`) — `/healthz?db=0` plus the public pages. Cheap: those pages are
-  served by the CDN and never reach Postgres.
-- **Deep** (daily) — `/healthz` with a real database round-trip, plus Neon's quota.
-  The only check that touches the database, and so the only one that costs anything.
+**It no longer runs on a timer.** Uptime is covered by a separate service the owner
+already runs, and the one check here that touches the database costs CU-hours on a
+scale-to-zero Postgres — the exact resource this repo spent a week learning not to
+spend. Paying anything on a schedule for a signal that already arrives another way is
+the trade that started the 2026-09-21 outage, in miniature.
 
-The two frequencies are a budget, not a preference. **A Neon compute stays awake for
-five minutes after each query**, so the deep check costs 5 minutes of awake compute
-every time it runs:
+Run it by hand when you want the deep answer, or after an incident:
 
-| deep interval | awake/month | CU-hours at 0.25 CU | share of the Free plan's 100 |
+```bash
+gh workflow run monitor.yml -f deep=true
+```
+
+- **Shallow** — `/healthz?db=0` plus the public pages, which read the bundled snapshot.
+  Touches no database.
+- **Deep** — `/healthz` with a real database round-trip, plus Neon's quota. **This is
+  the only part that costs anything.** A Neon compute stays awake five minutes after
+  each query, so a deep check on a timer would have cost:
+
+| interval | awake/month | CU-hours at 0.25 CU | share of the Free plan's 100 |
 |---|---|---|---|
-| every 15 min | ~240 h | 60 | 60% |
+| every 15 min | 240 h | 60 | 60% |
 | hourly | 60 h | 15 | 15% |
 | every 4 h | 15 h | 3.75 | ~4% |
-| **daily** | 2.5 h | 0.6 | **<1%** |
+| daily | 2.5 h | 0.6 | <1% |
 
-Hourly was the first setting and it spent a sixth of the whole budget watching.
+Up/down state still rides in the Actions cache (`.monitor-state`), so a manual run
+after an outage will mail a recovery notice rather than nothing.
 
-**The shallow check is free** and stays at 15 minutes: `/healthz?db=0` and the public
-pages, which read the bundled snapshot rather than the database. It is what catches the
-site being down, and turning the monitoring off to save money would cost nothing and
-lose that.
-
-The deep check earns its daily run for a reason specific to the snapshot: with the site
-serving content from the bundle, **a dead database is invisible to visitors** and breaks
-only the admin. Nobody would find out until they tried to log in.
-
-Up/down state rides in the Actions cache (`.monitor-state`), so an outage mails once
-and recovery mails once, instead of every 15 minutes for as long as it lasts.
+**What this gives up, and what covers it.** With the site serving content from the
+bundled snapshot, a dead database is invisible to visitors and breaks only the admin —
+so nothing here will notice it automatically any more. Somebody finds out when they try
+to edit. That is a deliberate trade for a site whose content changes a few times a
+month; revisit it if the admin becomes busy, by putting the deep check back on a daily
+cron for 0.6 CU-hours.
 
 ### Neon quota
 
-The deep run reads `GET /projects/{id}` and `/branches` from Neon's API and warns at
+The deep run (manual, see above) reads `GET /projects/{id}` and `/branches` from
+Neon's API and warns at
 `NEON_QUOTA_WARN_PCT` (default 80%) of each free-plan allowance. Those allowances are
 configuration here, not something the API returns — its `quota` object only holds
 limits somebody set by hand.
