@@ -49,8 +49,8 @@ watchdog fail for the same reasons as the thing it watches.
 
 - **Shallow** (`*/15`) — `/healthz?db=0` plus the public pages. Cheap: those pages are
   served by the CDN and never reach Postgres.
-- **Deep** (every four hours) — `/healthz` with a real database round-trip, plus
-  Neon's quota.
+- **Deep** (daily) — `/healthz` with a real database round-trip, plus Neon's quota.
+  The only check that touches the database, and so the only one that costs anything.
 
 The two frequencies are a budget, not a preference. **A Neon compute stays awake for
 five minutes after each query**, so the deep check costs 5 minutes of awake compute
@@ -60,12 +60,19 @@ every time it runs:
 |---|---|---|---|
 | every 15 min | ~240 h | 60 | 60% |
 | hourly | 60 h | 15 | 15% |
-| **every 4 h** | 15 h | 3.75 | **~4%** |
+| every 4 h | 15 h | 3.75 | ~4% |
+| **daily** | 2.5 h | 0.6 | **<1%** |
 
-Hourly was the first setting and it spent a sixth of the whole budget watching. Four
-hours gives that back; the latency it costs is covered by the shallow check every 15
-minutes and by the app-side exception mail, which arrives within seconds of a real
-visitor hitting the failure.
+Hourly was the first setting and it spent a sixth of the whole budget watching.
+
+**The shallow check is free** and stays at 15 minutes: `/healthz?db=0` and the public
+pages, which read the bundled snapshot rather than the database. It is what catches the
+site being down, and turning the monitoring off to save money would cost nothing and
+lose that.
+
+The deep check earns its daily run for a reason specific to the snapshot: with the site
+serving content from the bundle, **a dead database is invisible to visitors** and breaks
+only the admin. Nobody would find out until they tried to log in.
 
 Up/down state rides in the Actions cache (`.monitor-state`), so an outage mails once
 and recovery mails once, instead of every 15 minutes for as long as it lasts.

@@ -9,17 +9,20 @@ on:
     # Shallow: is the function serving at all? Cheap — the pages it fetches are
     # served by the CDN and never reach Postgres.
     - cron: "*/15 * * * *"
-    # Deep: a real database round-trip plus Neon's quota. Every four hours, and the
-    # interval is a budget, not a preference. A Neon compute stays awake for five
-    # minutes after each query, so this check alone costs 5 min x 6/day = 15 h/month
-    # of awake compute, about 3.75 CU-hours. Hourly cost 15 CU-hours — 15% of the free
-    # plan's 100, spent watching. Every 15 minutes would cost 60, and the watchdog
-    # would be causing the outage it exists to catch.
+    # Deep: the only check that touches the database, and therefore the only one that
+    # costs anything. Daily, because once the public read path stops querying Postgres
+    # (app/snapshot.py) this is one of the few things left that wakes it at all, and a
+    # compute stays awake five minutes after each query:
     #
-    # The latency this gives up is covered elsewhere: the shallow check above still
-    # runs every 15 minutes, and a database failure during real traffic mails within
-    # seconds through app/alerts.py.
-    - cron: "37 */4 * * *"
+    #   every 15 min  240 h/month  60 CU-hours   60% of the free plan
+    #   hourly         60 h/month  15 CU-hours   15%
+    #   every 4 h      15 h/month   3.75         ~4%
+    #   daily         2.5 h/month   0.6          <1%
+    #
+    # It earns that much: with the site serving from the snapshot, a dead database is
+    # invisible to visitors and breaks only the admin, so this is the one thing that
+    # notices before somebody tries to log in.
+    - cron: "37 5 * * *"
   workflow_dispatch:
     inputs:
       deep:
@@ -57,7 +60,7 @@ jobs:
         run: |
           set -o pipefail
           deep=""
-          if [ "${{ github.event.schedule }}" = "37 */4 * * *" ] || [ "${{ inputs.deep }}" = "true" ]; then
+          if [ "${{ github.event.schedule }}" = "37 5 * * *" ] || [ "${{ inputs.deep }}" = "true" ]; then
             deep="--deep"
           fi
           python scripts/monitor.py $deep | tee -a "$GITHUB_STEP_SUMMARY"
