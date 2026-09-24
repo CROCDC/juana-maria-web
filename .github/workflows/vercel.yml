@@ -9,10 +9,10 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Fired by the app when an admin publishes: the content the public sees ships inside
-  # the bundle (app/snapshot.py), so publishing it means deploying it.
-  repository_dispatch:
-    types: [content-published]
+  # Also fired by the app when an admin publishes: the content the public sees ships
+  # inside the bundle (app/snapshot.py), so publishing it means deploying it. Dispatched
+  # as a workflow run rather than a repository_dispatch event, because the token that
+  # does it then needs only `Actions: write` instead of `Contents: write`.
   workflow_dispatch:
     inputs:
       skip_migrations:

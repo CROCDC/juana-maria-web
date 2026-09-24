@@ -244,6 +244,12 @@ editing session of fifty saves still produces one deployment. `app/rebuild.py` l
 three paths that change what an anonymous visitor is served — publish, revert, and the
 topic toggle — and nothing else fires a build.
 
+The deploy is asked for as a **workflow dispatch**, not a `repository_dispatch` event.
+They do the same job here and cost very different privileges: a fine-grained token for
+`repository_dispatch` needs `Contents: write` — the ability to push code to the
+repository — while a workflow dispatch needs only `Actions: write`. This token lives in
+a public web application's runtime environment, so it gets the smaller one.
+
 If the dispatch fails, the write is already committed to Postgres: the content is safe
 but unpublished, and an alert says exactly that. `gh workflow run vercel.yml` is the way
 through by hand.
@@ -300,7 +306,7 @@ Secrets live in the Vercel project (for the app) and in the repo (for Actions).
 | `VERCEL_PURGE_TOKEN` | Vercel env | a Vercel token with cache-purge rights; without it a save cannot clear the CDN |
 | `VERCEL_PROJECT_ID` | Vercel env | the project the purge targets |
 | `VERCEL_TEAM_ID` | Vercel env | `team_P9lSJA4rEEdw6QU6DWiolk6Y` (vela-clasica) |
-| `GITHUB_DISPATCH_TOKEN` | Vercel env | a token with `contents: write` on the repo; without it publishing does not deploy |
+| `GITHUB_DISPATCH_TOKEN` | Vercel env | fine-grained, this repo only, **`Actions: read and write`**; without it publishing does not deploy |
 | `GITHUB_REPOSITORY` | Vercel env | `CROCDC/juana-maria-web` |
 | `CDN_STALE_SECONDS` | Vercel env (optional) | default 86400 |
 | `NEON_API_KEY` | GitHub **secret** | from the Neon console; the quota check is skipped without it |

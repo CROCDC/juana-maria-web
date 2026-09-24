@@ -5,10 +5,16 @@ it is written at deploy time. So the moment an admin changes what the public sho
 see, the site needs a new deployment — otherwise the change sits in the database and
 nobody outside the admin ever sees it.
 
-This fires GitHub's `repository_dispatch`, which the deploy workflow listens for. It is
-deliberately soft: the write has already been committed to Postgres by the time this
-runs, so a failure here means the content is safe but unpublished, and the alert says
-exactly that. `gh workflow run vercel.yml` is the manual way through.
+This fires the deploy workflow through GitHub's **workflow dispatch**, not
+`repository_dispatch`. The two do the same job here and cost very different privileges:
+a fine-grained token for `repository_dispatch` needs `Contents: write`, which is the
+ability to push code to the repository, while workflow dispatch needs only
+`Actions: write` — run workflows, nothing else. This token sits in a web application's
+runtime environment, so it gets the smaller of the two.
+
+It is deliberately soft: the write has already been committed to Postgres by the time
+this runs, so a failure here means the content is safe but unpublished, and the alert
+says exactly that. `gh workflow run vercel.yml` is the manual way through.
 """
 
 from __future__ import annotations
@@ -20,8 +26,6 @@ import urllib.error
 import urllib.request
 
 log = logging.getLogger(__name__)
-
-EVENT_TYPE = "content-published"
 
 # The admin is waiting on the response this runs inside.
 _TIMEOUT_SECONDS = 5
@@ -50,9 +54,12 @@ def request_rebuild() -> bool:
         log.info("rebuild not requested (GITHUB_DISPATCH_TOKEN/GITHUB_REPOSITORY unset)")
         return False
 
+    workflow = os.environ.get("GITHUB_DEPLOY_WORKFLOW", "vercel.yml")
+    ref = os.environ.get("GITHUB_DEPLOY_REF", "main")
+
     req = urllib.request.Request(
-        f"https://api.github.com/repos/{repo}/dispatches",
-        data=json.dumps({"event_type": EVENT_TYPE}).encode(),
+        f"https://api.github.com/repos/{repo}/actions/workflows/{workflow}/dispatches",
+        data=json.dumps({"ref": ref}).encode(),
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
