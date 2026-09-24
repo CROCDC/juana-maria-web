@@ -180,12 +180,9 @@ Conclusion: responses from the `@vercel/python` Flask function are not stored by
 CDN, and no change inside this repository will alter that. The next step is Vercel
 support, with the probe table above as the evidence.
 
-**What to do instead**, since the goal was never caching for its own sake but keeping
-Neon's compute asleep: cache the database reads *in the process*. Every render queries
-Postgres — sitecopy reads `site_texts` once per request and caches only within that
-request — so a process-level cache with a TTL would let a warm instance serve many
-requests without touching the database, and the compute could suspend even while the
-function keeps running. That path depends on nothing outside this repository.
+**What was done instead** — see "The content snapshot" below. Since the goal was never
+caching for its own sake but keeping Neon's compute asleep, the database came off the
+public read path entirely.
 
 ### Purging on write
 
@@ -211,6 +208,54 @@ default stays at an hour.
 instead of two. Seeding no longer runs at import: it used to open a connection on
 every cold start, waking the compute for five minutes even to serve a request that
 needed no data, and it is only ever useful against an empty table.
+
+## The content snapshot
+
+**This is what actually keeps the database asleep.** Every HTML render used to query
+Postgres, and on a scale-to-zero database each query buys another five minutes of
+billed compute — which is why crawler traffic alone exhausted a month's quota in
+nineteen days.
+
+So the public read path no longer goes over the network at all:
+
+```
+build (GitHub Actions)  reads Postgres once  →  app/content/snapshot.json  →  bundle
+public render           reads the bundled file                   ← no query, no quota
+admin                   reads and writes Postgres, as always
+publish                 repository_dispatch → deploy → new snapshot
+```
+
+The file ships inside the function bundle next to `image_manifest.json`, which is the
+same pattern for the same reason. `flask snapshot build` generates it (and
+`flask snapshot show` prints what a deployment would serve). It is **not committed** —
+a checked-in snapshot would ship whatever was live when somebody last ran the command.
+
+**Postgres stays the single source of truth.** The snapshot is derived and disposable:
+no runtime writer, nothing to reconcile, and any build regenerates it. When the file is
+missing or its `version` does not match, the readers fall back to the database, so this
+is an optimization and never a dependency — `tests/test_snapshot.py` asserts that by
+breaking the database on purpose and requiring the page to render anyway.
+
+### Why publishing takes a deploy
+
+flask-sitecopy already separates the two: `save` writes a **draft** that only the admin
+sees, and `/publish` promotes it. So the deploy hangs off publishing, not saving, and an
+editing session of fifty saves still produces one deployment. `app/rebuild.py` lists the
+three paths that change what an anonymous visitor is served — publish, revert, and the
+topic toggle — and nothing else fires a build.
+
+The deploy is asked for as a **workflow dispatch**, not a `repository_dispatch` event.
+They do the same job here and cost very different privileges: a fine-grained token for
+`repository_dispatch` needs `Contents: write` — the ability to push code to the
+repository — while a workflow dispatch needs only `Actions: write`. This token lives in
+a public web application's runtime environment, so it gets the smaller one.
+
+If the dispatch fails, the write is already committed to Postgres: the content is safe
+but unpublished, and an alert says exactly that. `gh workflow run vercel.yml` is the way
+through by hand.
+
+The cost, stated plainly: a publish takes a minute or two to reach the public, and it
+depends on CI being green. The admin sees their own change immediately.
 
 ## Surviving the outage instead of reporting it
 
@@ -261,6 +306,8 @@ Secrets live in the Vercel project (for the app) and in the repo (for Actions).
 | `VERCEL_PURGE_TOKEN` | Vercel env | a Vercel token with cache-purge rights; without it a save cannot clear the CDN |
 | `VERCEL_PROJECT_ID` | Vercel env | the project the purge targets |
 | `VERCEL_TEAM_ID` | Vercel env | `team_P9lSJA4rEEdw6QU6DWiolk6Y` (vela-clasica) |
+| `GITHUB_DISPATCH_TOKEN` | Vercel env | fine-grained, this repo only, **`Actions: read and write`**; without it publishing does not deploy |
+| `GITHUB_REPOSITORY` | Vercel env | `CROCDC/juana-maria-web` |
 | `CDN_STALE_SECONDS` | Vercel env (optional) | default 86400 |
 | `NEON_API_KEY` | GitHub **secret** | from the Neon console; the quota check is skipped without it |
 | `NEON_PROJECT_ID` | GitHub **variable** | also injected into Vercel by the integration |

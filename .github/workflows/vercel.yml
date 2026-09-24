@@ -9,6 +9,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Also fired by the app when an admin publishes: the content the public sees ships
+  # inside the bundle (app/snapshot.py), so publishing it means deploying it. Dispatched
+  # as a workflow run rather than a repository_dispatch event, because the token that
+  # does it then needs only `Actions: write` instead of `Contents: write`.
   workflow_dispatch:
     inputs:
       skip_migrations:
@@ -49,7 +53,7 @@ jobs:
       # itself keeps using the pooled DATABASE_URL from the project's environment.
       - name: Apply database migrations
         if: >-
-          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+          github.event_name != 'pull_request'
           && inputs.skip_migrations != true
         env:
           DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
@@ -58,13 +62,26 @@ jobs:
           pip install -r requirements.txt
           python -m flask db upgrade
 
+      # The content the public sees ships as a file inside the bundle, so a page view
+      # costs no database query and no quota (app/snapshot.py). It is generated here,
+      # from the database the migrations just ran against, and picked up by the deploy
+      # below because `vercel deploy` uploads the working directory.
+      - name: Build the content snapshot
+        if: github.event_name != 'pull_request'
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATIONS_DATABASE_URL }}
+          FLASK_APP: wsgi.py
+        run: |
+          pip install -r requirements.txt
+          python -m flask snapshot build
+
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
 
       # Vercel builds server-side (not --prebuilt) so the project's own environment
       # variables are present at build time.
       - name: Deploy production
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         run: |
           url=$(vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "Deployed to production: $url" >> "$GITHUB_STEP_SUMMARY"

@@ -5,6 +5,8 @@ from typing import NamedTuple
 
 from flask import g, has_app_context, has_request_context, request
 
+from app import snapshot
+from app.admin_auth import is_logged_in
 from app.content.topics import DEFAULT_ENABLED
 from app.factory import db
 from app.models import TopicVisibility
@@ -68,6 +70,17 @@ class TopicVisibilityRepository:
             cached = getattr(request, _REQUEST_CACHE_KEY, None)
             if cached is not None:
                 return cached
+
+        # The bundled snapshot IS the published state for a visitor, so there is no
+        # query to make. The admin is excluded: they have just toggled something and
+        # need to see it, and the snapshot only changes when a deploy rebuilds it.
+        if not (has_request_context() and is_logged_in()):
+            from_snapshot = snapshot.topic_visibility()
+            if from_snapshot is not None:
+                answer = Visibility(from_snapshot, True)
+                if has_request_context():
+                    setattr(request, _REQUEST_CACHE_KEY, answer)
+                return answer
 
         try:
             answer = Visibility(TopicVisibilityRepository.get_state_map(), True)
